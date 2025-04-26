@@ -4,7 +4,7 @@ export async function uploadToGitHub(imageFile, fileName) {
     const repoOwner = "SmollCoo";
     const repoName = "DevGate-storage";
     const branch = "main";
-    const token = import.meta.TOKEN;
+    const token = process.env.VUE_APP_TOKEN;
 
     if (!token) {
         throw new Error(

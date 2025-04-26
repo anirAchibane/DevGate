@@ -2,8 +2,20 @@ import { createRouter, createWebHistory } from "vue-router";
 import Homeview from "../views/HomeView.vue";
 import ProfileView from "../views/ProfileView.vue";
 import LoginView from "../views/LoginView.vue";
+import SignupView from "../views/SignupView.vue";
+import { auth, db } from "../firebase/config"; // Import Firebase auth
 
 const routes = [
+    {
+        path: "/",
+        name: "login",
+        component: LoginView,
+    },
+    {
+        path: "/signup",
+        name: "signup",
+        component: SignupView,
+    },
     {
         path: "/home",
         name: "Home",
@@ -14,11 +26,6 @@ const routes = [
         name: "Profil",
         component: ProfileView,
     },
-    {
-        path: "/",
-        name: "login",
-        component: LoginView
-    }
 ];
 
 const router = createRouter({
