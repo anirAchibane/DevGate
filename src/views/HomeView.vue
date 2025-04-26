@@ -1,7 +1,24 @@
 <template>
-    <div class="home">
-        <h1>Welcome to the Home Page</h1>
-        <p>This is a simple Vue.js application.</p>
-        <router-link to="/about">Go to About Page</router-link>
+    <div class="all">
+      <mini-navbar />
     </div>
-</template>
+  </template>
+  
+  <script setup>
+  import MiniNavbar from "@/components/MiniNavbar.vue";
+  </script>
+  
+<style>
+html, body, #app {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+  
+.all {
+    background-color: #0D1117;
+    width: 100%;
+    height: 100%;
+}
+</style>
+  
