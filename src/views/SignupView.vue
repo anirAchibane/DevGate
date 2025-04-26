@@ -330,19 +330,55 @@ const signup = async () => {
 const addUser = async (pfpUrl) => {
     const user = auth.currentUser;
     const uid = user.uid;
+    const currentDate = new Date();
 
+    // Create main user document
     const userData = {
         username: username.value,
-        bio: bio.value,
+        bio: bio.value || "",
         email: email.value,
-        role: "user",
-        status: true,
-        pfp: pfpUrl,
-        lastOnline: new Date(),
+        avatar: pfpUrl, // Changed from pfp to avatar to match schema
+        createdAt: currentDate,
     };
 
+    // Create user document
     await db.collection("users").doc(uid).set(userData);
-    console.log("User added to database.");
+
+    // Initialize sub-collections with an empty document
+    await db
+        .collection("users")
+        .doc(uid)
+        .collection("objectives")
+        .doc("init")
+        .set({
+            lastUpdated: currentDate,
+            startDate: currentDate,
+            status: "initialized",
+            title: "Collection initialized",
+        });
+
+    await db
+        .collection("users")
+        .doc(uid)
+        .collection("projects")
+        .doc("init")
+        .set({
+            createdAt: currentDate,
+            description: "Collection initialized",
+            githubURL: "",
+            stack: [],
+            title: "Collection initialized",
+            visibility: "private",
+        });
+
+    await db.collection("users").doc(uid).collection("skills").doc("init").set({
+        acquiredAt: currentDate,
+        level: "beginner",
+        name: "Collection initialized",
+        updatedAt: currentDate,
+    });
+
+    console.log("User and sub-collections added to database.");
 };
 </script>
 
