@@ -1,114 +1,98 @@
 <template>
-    <div class="container py-5">
-        <div class="row justify-content-center">
-            <div class="col-md-6 col-lg-5">
-                <div class="card shadow-lg rounded-xl">
-                    <div class="card-body p-4 p-md-5">
-                        <h1 class="card-title text-center mb-4 fw-bold">
-                            Login
-                        </h1>
+    <div class="auth-container">
+        <div class="auth-card-wrapper">
+            <div class="auth-card">
+                <div class="auth-header">
+                    <h1>Login</h1>
+                </div>
 
-                        <!-- ALERTS -->
-                        <div
-                            v-if="alert.message"
-                            class="alert d-flex align-items-center"
-                            :class="alert.type"
-                            role="alert"
-                        >
-                            <i
-                                class="fas"
-                                :class="
-                                    alert.type === 'alert-success'
-                                        ? 'fa-check-circle'
-                                        : 'fa-exclamation-circle'
-                                "
-                            ></i>
-                            <div class="ms-2">{{ alert.message }}</div>
+                <!-- ALERTS -->
+                <div
+                    v-if="alert.message"
+                    class="auth-alert"
+                    :class="alert.type"
+                    role="alert"
+                >
+                    <i
+                        class="fas"
+                        :class="
+                            alert.type === 'alert-success'
+                                ? 'fa-check-circle'
+                                : 'fa-exclamation-circle'
+                        "
+                    ></i>
+                    <div class="alert-message">{{ alert.message }}</div>
+                </div>
+
+                <form @submit.prevent="login" class="auth-form">
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">
+                                <i class="fas fa-envelope"></i>
+                            </span>
+                            <input
+                                type="email"
+                                id="email"
+                                placeholder="Enter your email"
+                                v-model="email"
+                                :class="{ 'is-invalid': emailError }"
+                            />
                         </div>
-
-                        <form @submit.prevent="login">
-                            <div class="mb-4">
-                                <label for="email" class="form-label"
-                                    >Email</label
-                                >
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light">
-                                        <i
-                                            class="fas fa-envelope text-muted"
-                                        ></i>
-                                    </span>
-                                    <input
-                                        type="email"
-                                        class="form-control"
-                                        placeholder="Enter your email"
-                                        v-model="email"
-                                        :class="{ 'is-invalid': emailError }"
-                                    />
-                                    <div class="invalid-feedback">
-                                        {{ emailError }}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="mb-4">
-                                <label for="password" class="form-label"
-                                    >Password</label
-                                >
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light">
-                                        <i class="fas fa-lock text-muted"></i>
-                                    </span>
-                                    <input
-                                        :type="
-                                            showPassword ? 'text' : 'password'
-                                        "
-                                        class="form-control"
-                                        placeholder="Enter your password"
-                                        v-model="password"
-                                        :class="{ 'is-invalid': passwordError }"
-                                    />
-                                    <button
-                                        type="button"
-                                        class="btn btn-outline-secondary"
-                                        @click="togglePasswordVisibility"
-                                    >
-                                        <i
-                                            :class="
-                                                showPassword
-                                                    ? 'fas fa-eye-slash'
-                                                    : 'fas fa-eye'
-                                            "
-                                        ></i>
-                                    </button>
-                                    <div class="invalid-feedback">
-                                        {{ passwordError }}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <button
-                                class="btn btn-primary w-100 py-2 rounded-md shadow-sm"
-                                type="submit"
-                                :disabled="isLoading"
-                            >
-                                <span
-                                    v-if="isLoading"
-                                    class="spinner-border spinner-border-sm me-2"
-                                    role="status"
-                                ></span>
-                                {{ isLoading ? "Logging in..." : "Login" }}
-                            </button>
-                        </form>
-
-                        <div class="mt-4 text-center">
-                            <p class="mb-0">
-                                New to this website?
-                                <router-link to="/signup" class="fw-medium"
-                                    >Create an account</router-link
-                                >
-                            </p>
+                        <div class="error-feedback" v-if="emailError">
+                            {{ emailError }}
                         </div>
                     </div>
+
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">
+                                <i class="fas fa-lock"></i>
+                            </span>
+                            <input
+                                :type="showPassword ? 'text' : 'password'"
+                                id="password"
+                                placeholder="Enter your password"
+                                v-model="password"
+                                :class="{ 'is-invalid': passwordError }"
+                            />
+                            <button
+                                type="button"
+                                class="toggle-password"
+                                @click="togglePasswordVisibility"
+                            >
+                                <i
+                                    :class="
+                                        showPassword
+                                            ? 'fas fa-eye-slash'
+                                            : 'fas fa-eye'
+                                    "
+                                ></i>
+                            </button>
+                        </div>
+                        <div class="error-feedback" v-if="passwordError">
+                            {{ passwordError }}
+                        </div>
+                    </div>
+
+                    <button
+                        class="auth-button"
+                        type="submit"
+                        :disabled="isLoading"
+                    >
+                        <span v-if="isLoading" class="spinner"></span>
+                        {{ isLoading ? "Logging in..." : "Login" }}
+                    </button>
+                </form>
+
+                <div class="auth-footer">
+                    <p>
+                        New to DevGate?
+                        <router-link to="/signup"
+                            >Create an account</router-link
+                        >
+                    </p>
                 </div>
             </div>
         </div>
@@ -203,95 +187,307 @@ const togglePasswordVisibility = () => {
 </script>
 
 <style scoped>
-.card {
-    border: none;
-    background-color: #ffffff;
+.auth-container {
+    min-height: 100vh;
+    padding: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #010508;
+    background-image: radial-gradient(
+            circle at top right,
+            rgba(13, 17, 23, 0.5) 0%,
+            transparent 35%
+        ),
+        radial-gradient(
+            circle at bottom left,
+            rgba(13, 17, 23, 0.5) 0%,
+            transparent 35%
+        );
 }
 
-.card-title {
-    color: #284b63;
+.auth-card-wrapper {
+    width: 100%;
+    max-width: 450px;
 }
 
-.alert {
-    border-radius: 0.5rem;
+.auth-card {
+    background-color: #0d1117;
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    padding: 2.5rem;
+    border: 1px solid #555d69;
+}
+
+.auth-header {
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.auth-header h1 {
+    color: #ffffff;
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin: 0;
+}
+
+.auth-alert {
+    display: flex;
+    align-items: center;
     padding: 0.75rem 1rem;
+    border-radius: 6px;
+    margin-bottom: 1.5rem;
 }
 
 .alert-success {
-    background-color: rgba(60, 110, 113, 0.1);
-    color: #3c6e71;
-    border: 1px solid rgba(60, 110, 113, 0.2);
+    background-color: rgba(46, 204, 113, 0.2);
+    border: 1px solid rgba(46, 204, 113, 0.3);
+    color: #2ecc71;
 }
 
 .alert-danger {
-    background-color: rgba(40, 75, 99, 0.1);
-    color: #284b63;
-    border: 1px solid rgba(40, 75, 99, 0.2);
+    background-color: rgba(231, 76, 60, 0.2);
+    border: 1px solid rgba(231, 76, 60, 0.3);
+    color: #e74c3c;
 }
 
-.form-label {
-    font-weight: 500;
+.alert-message {
+    margin-left: 0.5rem;
+}
+
+.auth-form {
+    margin-bottom: 1.5rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
     margin-bottom: 0.5rem;
-    color: #353535;
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 0.95rem;
 }
 
-.form-control,
-.input-group-text {
+.input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: stretch;
+}
+
+.input-icon {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #3498db;
+    font-size: 1rem;
+    z-index: 2;
+}
+
+.input-wrapper input {
+    width: 100%;
+    background-color: #1a2233;
+    border: 1px solid #555d69;
+    border-radius: 6px;
+    padding: 0.75rem 1rem 0.75rem 2.75rem;
+    color: #ffffff;
+    font-size: 1rem;
+    transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
+}
+
+.input-wrapper input::placeholder {
+    color: #7d8590;
+}
+
+.input-wrapper input:hover {
+    background-color: #202a3c;
+    border-color: #3498db;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(52, 152, 219, 0.2);
+}
+
+.input-wrapper input:focus {
+    outline: none;
+    background-color: #202a3c;
+    border-color: #3498db;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.25);
+}
+
+.input-wrapper input.is-invalid {
+    border-color: #e74c3c;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #7d8590;
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 0.25rem 0.5rem;
+    transition: all 0.2s;
+}
+
+.toggle-password:hover,
+.toggle-password:focus {
+    color: #3498db;
+    outline: none;
+    transform: translateY(-2px) scale(1.1);
+}
+
+.error-feedback {
+    margin-top: 0.5rem;
+    color: #e74c3c;
+    font-size: 0.85rem;
+}
+
+.auth-button {
+    width: 100%;
     height: 48px;
-    border-color: #d9d9d9;
-}
-
-.form-control {
-    color: #353535;
-    background-color: #ffffff;
-}
-
-.form-control:focus {
-    border-color: #3c6e71;
-    box-shadow: 0 0 0 0.25rem rgba(60, 110, 113, 0.25);
-}
-
-.input-group-text {
-    width: 50px;
+    background-color: #3498db;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    padding: 0.875rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
     display: flex;
     justify-content: center;
-    background-color: #ffffff;
-    color: #284b63;
+    align-items: center;
+    margin-top: 1rem;
+    position: relative;
+    overflow: hidden;
 }
 
-.input-group-text i {
-    font-size: 1rem;
-    color: #284b63;
+.auth-button::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 5px;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.3);
+    opacity: 0;
+    border-radius: 100%;
+    transform: scale(1, 1) translate(-50%);
+    transform-origin: 50% 50%;
 }
 
-.btn-primary {
-    background-color: #284b63;
-    border-color: #284b63;
-    color: #ffffff;
+.auth-button:focus:not(:active)::after {
+    animation: ripple 1s ease-out;
 }
 
-.btn-primary:hover:not(:disabled) {
-    background-color: #3c6e71;
-    border-color: #3c6e71;
+.auth-button:hover:not(:disabled) {
+    background-color: #2980b9;
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+    letter-spacing: 0.5px;
 }
 
-.btn-primary:disabled {
-    background-color: #d9d9d9;
-    border-color: #d9d9d9;
-    color: #353535;
+.auth-button:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
 }
 
-a {
-    color: #3c6e71;
+.auth-button:disabled {
+    background-color: #555d69;
+    color: #bec3c9;
+    cursor: not-allowed;
+}
+
+.auth-footer {
+    text-align: center;
+    margin-top: 1.5rem;
+    color: #bec3c9;
+}
+
+.auth-footer a {
+    color: #3498db;
+    font-weight: 600;
     text-decoration: none;
+    position: relative;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+    display: inline-block;
 }
 
-a:hover {
-    color: #284b63;
-    text-decoration: underline;
+.auth-footer a:hover {
+    color: white;
+    background-color: rgba(52, 152, 219, 0.15);
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 6px 12px rgba(52, 152, 219, 0.25);
 }
 
-.spinner-border {
-    border-right-color: #ffffff;
+.auth-footer a::after {
+    content: "";
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: -1px;
+    left: 50%;
+    background-color: #3498db;
+    transform: translateX(-50%);
+    transition: width 0.3s ease;
+}
+
+.auth-footer a:hover::after {
+    width: 80%;
+}
+
+.auth-footer a:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.4);
+}
+
+.spinner {
+    display: inline-block;
+    width: 1.25rem;
+    height: 1.25rem;
+    margin-right: 0.5rem;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: #ffffff;
+    border-radius: 50%;
+    animation: spinner 0.8s linear infinite;
+}
+
+@keyframes spinner {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes ripple {
+    0% {
+        transform: scale(0, 0);
+        opacity: 1;
+    }
+    20% {
+        transform: scale(25, 25);
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+        transform: scale(40, 40);
+    }
+}
+
+@media (max-width: 480px) {
+    .auth-card {
+        padding: 1.5rem;
+    }
+
+    .auth-header h1 {
+        font-size: 1.75rem;
+    }
 }
 </style>

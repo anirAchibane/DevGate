@@ -1,0 +1,764 @@
+<template>
+    <div class="auth-container">
+        <!-- Loading overlay -->
+        <div v-if="isLoading" class="loading-overlay">
+            <div class="spinner-large"></div>
+            <p>Creating your account...</p>
+        </div>
+
+        <div class="auth-card-wrapper">
+            <div class="auth-card">
+                <div class="auth-header">
+                    <h1>Create Account</h1>
+                </div>
+
+                <form @submit.prevent="signup" class="auth-form">
+                    <div class="form-columns">
+                        <!-- Left Column -->
+                        <div class="form-column">
+                            <div class="form-group">
+                                <label for="email">Email</label>
+                                <div class="input-wrapper">
+                                    <span class="input-icon">
+                                        <i class="fas fa-envelope"></i>
+                                    </span>
+                                    <input
+                                        type="email"
+                                        id="email"
+                                        placeholder="Enter your email"
+                                        v-model="email"
+                                    />
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="password">Password</label>
+                                <div class="input-wrapper">
+                                    <span class="input-icon">
+                                        <i class="fas fa-lock"></i>
+                                    </span>
+                                    <input
+                                        type="password"
+                                        id="password"
+                                        placeholder="Enter your password"
+                                        v-model="password"
+                                    />
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="confirmPassword"
+                                    >Confirm Password</label
+                                >
+                                <div class="input-wrapper">
+                                    <span class="input-icon">
+                                        <i class="fas fa-lock"></i>
+                                    </span>
+                                    <input
+                                        type="password"
+                                        id="confirmPassword"
+                                        placeholder="Confirm your password"
+                                        v-model="confirmPassword"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Column -->
+                        <div class="form-column">
+                            <div class="form-group">
+                                <label for="username">Username</label>
+                                <div class="input-wrapper">
+                                    <span class="input-icon">
+                                        <i class="fas fa-user"></i>
+                                    </span>
+                                    <input
+                                        type="text"
+                                        id="username"
+                                        placeholder="Choose a username"
+                                        v-model="username"
+                                    />
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="bio">Bio (optional)</label>
+                                <div class="input-wrapper">
+                                    <span class="input-icon">
+                                        <i class="fas fa-info-circle"></i>
+                                    </span>
+                                    <input
+                                        type="text"
+                                        id="bio"
+                                        placeholder="Tell us something about yourself"
+                                        v-model="bio"
+                                    />
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Profile Picture (optional)</label>
+                                <div class="profile-container">
+                                    <div
+                                        class="profile-preview-wrapper"
+                                        @click="triggerFileInput"
+                                    >
+                                        <img
+                                            :src="profilePreview"
+                                            alt="Profile"
+                                            class="profile-preview"
+                                        />
+                                        <div class="profile-overlay">
+                                            <i class="fas fa-camera"></i>
+                                        </div>
+                                    </div>
+                                    <div class="profile-controls">
+                                        <input
+                                            type="file"
+                                            ref="fileInput"
+                                            accept="image/*"
+                                            @change="handleFileChange"
+                                            class="file-input"
+                                        />
+                                        <button
+                                            type="button"
+                                            class="profile-button profile-button-upload"
+                                            @click="triggerFileInput"
+                                        >
+                                            Choose Image
+                                        </button>
+                                        <button
+                                            v-if="profileFile"
+                                            type="button"
+                                            class="profile-button profile-button-clear"
+                                            @click="clearProfilePic"
+                                        >
+                                            Clear
+                                        </button>
+                                    </div>
+                                    <div
+                                        v-if="uploadingPic"
+                                        class="upload-status"
+                                    >
+                                        <div class="spinner"></div>
+                                        <span>Uploading image...</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button
+                        class="auth-button"
+                        type="submit"
+                        :disabled="isLoading"
+                    >
+                        <span v-if="isLoading" class="spinner"></span>
+                        {{ isLoading ? "Creating account..." : "Sign Up" }}
+                    </button>
+                </form>
+
+                <div class="auth-footer">
+                    <p>
+                        Already have an account?
+                        <router-link to="/">Login</router-link>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script setup>
+import { ref } from "vue";
+import { useRouter } from "vue-router";
+import { db, auth } from "../firebase/config";
+import { uploadToGitHub } from "@/composables/uploadToGitHub";
+
+const email = ref("");
+const password = ref("");
+const username = ref("");
+const bio = ref("");
+const confirmPassword = ref("");
+const router = useRouter();
+const profileFile = ref(null);
+const profileUrl = ref("");
+const profilePreview = ref("/src/assets/pfp_default.jpg");
+const fileInput = ref(null);
+const uploadingPic = ref(false);
+const isLoading = ref(false);
+
+const triggerFileInput = () => {
+    fileInput.value.click();
+};
+
+const handleFileChange = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Validate file (max 2MB, only images)
+    if (file.size > 2 * 1024 * 1024) {
+        alert("File size should not exceed 2MB");
+        return;
+    }
+
+    if (!file.type.startsWith("image/")) {
+        alert("Only image files are allowed");
+        return;
+    }
+
+    profileFile.value = file;
+
+    // Create a preview URL
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        profilePreview.value = e.target.result;
+    };
+    reader.readAsDataURL(file);
+};
+
+const clearProfilePic = () => {
+    profileFile.value = null;
+    profilePreview.value = "";
+    profileUrl.value = "";
+    if (fileInput.value) {
+        fileInput.value.value = "";
+    }
+};
+
+const uploadProfilePic = async () => {
+    if (!profileFile.value) return "";
+
+    try {
+        uploadingPic.value = true;
+        const timestamp = new Date().getTime();
+        const fileName = `signup_${timestamp}_${profileFile.value.name}`;
+        const url = await uploadToGitHub(profileFile.value, fileName);
+        return url;
+    } catch (error) {
+        console.error("Error uploading profile picture:", error);
+        alert("Failed to upload profile picture, but signup will continue.");
+        return "";
+    } finally {
+        uploadingPic.value = false;
+    }
+};
+
+const signup = async () => {
+    try {
+        isLoading.value = true;
+
+        // 2. Check for matching passwords
+        if (password.value !== confirmPassword.value) {
+            alert("Passwords do not match.");
+            return;
+        }
+
+        // 3. Upload profile picture if one was selected
+        let pfpUrl = profilePreview.value;
+        if (profileFile.value) {
+            pfpUrl = await uploadProfilePic();
+        }
+
+        // 4. Create user in Firebase Auth
+        const res = await auth.createUserWithEmailAndPassword(
+            email.value,
+            password.value
+        );
+
+        // 5. Save extra user data in Firestore with the profile picture URL
+        await addUser(pfpUrl);
+
+        // 6. Set display name
+        await res.user.updateProfile({
+            displayName: username.value,
+        });
+
+        console.log("Signup successful:", res);
+        router.push("/home");
+    } catch (err) {
+        console.log("Signup error:", err.message);
+        alert("Signup failed: " + err.message);
+    } finally {
+        isLoading.value = false;
+    }
+};
+
+// Add user to Firestore
+const addUser = async (pfpUrl) => {
+    const user = auth.currentUser;
+    const uid = user.uid;
+
+    const userData = {
+        username: username.value,
+        bio: bio.value,
+        email: email.value,
+        role: "user",
+        status: true,
+        pfp: pfpUrl,
+        lastOnline: new Date(),
+    };
+
+    await db.collection("users").doc(uid).set(userData);
+    console.log("User added to database.");
+};
+</script>
+
+<style scoped>
+.auth-container {
+    min-height: 100vh;
+    padding: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #010508;
+    background-image: radial-gradient(
+            circle at top right,
+            rgba(13, 17, 23, 0.5) 0%,
+            transparent 35%
+        ),
+        radial-gradient(
+            circle at bottom left,
+            rgba(13, 17, 23, 0.5) 0%,
+            transparent 35%
+        );
+}
+
+.auth-card-wrapper {
+    width: 100%;
+    max-width: 800px;
+}
+
+.auth-card {
+    background-color: #0d1117;
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    padding: 2.5rem;
+    border: 1px solid #555d69;
+}
+
+.auth-header {
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.auth-header h1 {
+    color: #ffffff;
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin: 0;
+}
+
+.auth-form {
+    margin-bottom: 1.5rem;
+}
+
+.form-columns {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    margin-bottom: 1rem;
+}
+
+.form-column {
+    flex: 1;
+    min-width: 250px;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: stretch;
+}
+
+.input-icon {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #3498db;
+    font-size: 1rem;
+    z-index: 2;
+}
+
+.input-wrapper input {
+    width: 100%;
+    height: 48px;
+    background-color: #1a2233;
+    border: 1px solid #555d69;
+    border-radius: 6px;
+    padding: 0.75rem 1rem 0.75rem 2.75rem;
+    color: #ffffff;
+    font-size: 1rem;
+    transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
+}
+
+.input-wrapper input::placeholder {
+    color: #7d8590;
+}
+
+.input-wrapper input:hover {
+    background-color: #202a3c;
+    border-color: #3498db;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(52, 152, 219, 0.2);
+}
+
+.profile-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.profile-preview-wrapper {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    overflow: hidden;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    transition: box-shadow 0.3s ease;
+}
+
+.profile-preview-wrapper:hover {
+    box-shadow: 0 8px 16px rgba(52, 152, 219, 0.5);
+    transform: translateY(-3px);
+}
+
+.profile-preview {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border: 2px solid #3498db;
+    background-color: #1a2233;
+    transition: transform 0.3s ease;
+}
+
+.profile-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(13, 17, 23, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.profile-preview-wrapper:hover .profile-overlay {
+    opacity: 1;
+    background: rgba(13, 17, 23, 0.6);
+}
+
+.profile-preview-wrapper:hover .profile-preview {
+    transform: scale(1.08);
+    border-color: #2ecc71;
+}
+
+.profile-overlay i {
+    color: #ffffff;
+    font-size: 2rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.profile-controls {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+}
+
+.file-input {
+    display: none;
+}
+
+.profile-button {
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+    border: 1px solid;
+    position: relative;
+    overflow: hidden;
+}
+
+.profile-button::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 5px;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.3);
+    opacity: 0;
+    border-radius: 100%;
+    transform: scale(1, 1) translate(-50%);
+    transform-origin: 50% 50%;
+}
+
+.profile-button:focus:not(:active)::after {
+    animation: ripple 1s ease-out;
+}
+
+.profile-button-upload {
+    background-color: transparent;
+    color: #3498db;
+    border-color: #3498db;
+}
+
+.profile-button-upload:hover {
+    background-color: #3498db;
+    color: #ffffff;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(52, 152, 219, 0.4);
+    letter-spacing: 0.5px;
+}
+
+.profile-button-upload:active {
+    transform: translateY(0);
+}
+
+.profile-button-clear {
+    background-color: transparent;
+    color: #e74c3c;
+    border-color: #e74c3c;
+}
+
+.profile-button-clear:hover {
+    background-color: #e74c3c;
+    color: #ffffff;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(231, 76, 60, 0.4);
+    letter-spacing: 0.5px;
+}
+
+.profile-button-clear:active {
+    transform: translateY(0);
+}
+
+.upload-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #3498db;
+    font-size: 0.9rem;
+}
+
+.auth-button {
+    width: 100%;
+    height: 48px;
+    background-color: #3498db;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    padding: 0.875rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 1rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.auth-button::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 5px;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.3);
+    opacity: 0;
+    border-radius: 100%;
+    transform: scale(1, 1) translate(-50%);
+    transform-origin: 50% 50%;
+}
+
+.auth-button:focus:not(:active)::after {
+    animation: ripple 1s ease-out;
+}
+
+.auth-button:hover:not(:disabled) {
+    background-color: #2980b9;
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+    letter-spacing: 0.5px;
+}
+
+.auth-button:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+}
+
+.auth-button:disabled {
+    background-color: #555d69;
+    color: #bec3c9;
+    cursor: not-allowed;
+}
+
+.auth-footer {
+    text-align: center;
+    margin-top: 1.5rem;
+    color: #bec3c9;
+}
+
+.auth-footer a {
+    color: #3498db;
+    font-weight: 600;
+    text-decoration: none;
+    position: relative;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+    display: inline-block;
+}
+
+.auth-footer a:hover {
+    color: white;
+    background-color: rgba(52, 152, 219, 0.15);
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 6px 12px rgba(52, 152, 219, 0.25);
+}
+
+.auth-footer a::after {
+    content: "";
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: -1px;
+    left: 50%;
+    background-color: #3498db;
+    transform: translateX(-50%);
+    transition: width 0.3s ease;
+}
+
+.auth-footer a:hover::after {
+    width: 80%;
+}
+
+.auth-footer a:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.4);
+}
+
+.spinner {
+    display: inline-block;
+    width: 1.25rem;
+    height: 1.25rem;
+    margin-right: 0.5rem;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: #ffffff;
+    border-radius: 50%;
+    animation: spinner 0.8s linear infinite;
+}
+
+.spinner-large {
+    width: 3.5rem;
+    height: 3.5rem;
+    border: 0.35rem solid rgba(52, 152, 219, 0.2);
+    border-top-color: #3498db;
+    border-radius: 50%;
+    animation: spinner 0.8s linear infinite;
+}
+
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(1, 5, 8, 0.9);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    backdrop-filter: blur(4px);
+}
+
+.loading-overlay p {
+    margin-top: 1.25rem;
+    font-size: 1.25rem;
+    color: #ffffff;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
+
+@keyframes spinner {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes ripple {
+    0% {
+        transform: scale(0, 0);
+        opacity: 1;
+    }
+    20% {
+        transform: scale(25, 25);
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+        transform: scale(40, 40);
+    }
+}
+
+@media (max-width: 768px) {
+    .form-columns {
+        flex-direction: column;
+        gap: 0;
+    }
+
+    .form-column {
+        width: 100%;
+    }
+
+    .auth-card-wrapper {
+        max-width: 500px;
+    }
+}
+
+@media (max-width: 576px) {
+    .auth-card {
+        padding: 1.5rem;
+    }
+
+    .auth-header h1 {
+        font-size: 1.75rem;
+    }
+
+    .profile-controls {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .profile-button {
+        width: 100%;
+    }
+}
+</style>
