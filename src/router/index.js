@@ -10,7 +10,7 @@ const routes = [
         component: Homeview,
     },
     {
-        path: "/profil",
+        path: "/profil/:id",
         name: "Profil",
         component: ProfileView,
     },
