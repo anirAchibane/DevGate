@@ -12,6 +12,24 @@
                     <h1>Create Account</h1>
                 </div>
 
+                <!-- ALERTS -->
+                <div
+                    v-if="alert.message"
+                    class="auth-alert"
+                    :class="alert.type"
+                    role="alert"
+                >
+                    <i
+                        class="fas"
+                        :class="
+                            alert.type === 'alert-success'
+                                ? 'fa-check-circle'
+                                : 'fa-exclamation-circle'
+                        "
+                    ></i>
+                    <div class="alert-message">{{ alert.message }}</div>
+                </div>
+
                 <form @submit.prevent="signup" class="auth-form">
                     <div class="form-columns">
                         <!-- Left Column -->
@@ -183,10 +201,15 @@ const confirmPassword = ref("");
 const router = useRouter();
 const profileFile = ref(null);
 const profileUrl = ref("");
-const profilePreview = ref("/src/assets/pfp_default.jpg");
+const profilePreview = ref(require("@/assets/default_pfp.jpg"));
 const fileInput = ref(null);
 const uploadingPic = ref(false);
 const isLoading = ref(false);
+
+const alert = ref({
+    message: "",
+    type: "", // 'alert-success' | 'alert-danger'
+});
 
 const triggerFileInput = () => {
     fileInput.value.click();
@@ -219,7 +242,7 @@ const handleFileChange = async (event) => {
 
 const clearProfilePic = () => {
     profileFile.value = null;
-    profilePreview.value = "";
+    profilePreview.value = require("@/assets/default_pfp.jpg");
     profileUrl.value = "";
     if (fileInput.value) {
         fileInput.value.value = "";
@@ -248,16 +271,35 @@ const signup = async () => {
     try {
         isLoading.value = true;
 
+        // 1. Validate required fields
+        if (!email.value || !password.value || !username.value) {
+            alert("Email, password and username are required fields.");
+            isLoading.value = false;
+            return;
+        }
+
         // 2. Check for matching passwords
         if (password.value !== confirmPassword.value) {
             alert("Passwords do not match.");
+            isLoading.value = false;
             return;
         }
 
         // 3. Upload profile picture if one was selected
-        let pfpUrl = profilePreview.value;
+        let pfpUrl = require("@/assets/default_pfp.jpg"); // Default image
         if (profileFile.value) {
-            pfpUrl = await uploadProfilePic();
+            try {
+                pfpUrl = await uploadProfilePic();
+                if (!pfpUrl) {
+                    console.warn(
+                        "Using default profile picture due to upload failure"
+                    );
+                    pfpUrl = require("@/assets/default_pfp.jpg");
+                }
+            } catch (uploadError) {
+                console.error("Profile picture upload failed:", uploadError);
+                // Continue with signup process even if upload fails
+            }
         }
 
         // 4. Create user in Firebase Auth
@@ -705,6 +747,30 @@ const addUser = async (pfpUrl) => {
     color: #ffffff;
     font-weight: 500;
     letter-spacing: 0.5px;
+}
+
+.auth-alert {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
+    margin-bottom: 1.5rem;
+}
+
+.alert-success {
+    background-color: rgba(46, 204, 113, 0.2);
+    border: 1px solid rgba(46, 204, 113, 0.3);
+    color: #2ecc71;
+}
+
+.alert-danger {
+    background-color: rgba(231, 76, 60, 0.2);
+    border: 1px solid rgba(231, 76, 60, 0.3);
+    color: #e74c3c;
+}
+
+.alert-message {
+    margin-left: 0.5rem;
 }
 
 @keyframes spinner {
