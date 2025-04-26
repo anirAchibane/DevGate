@@ -1,7 +1,7 @@
 import axios from "axios";
 
 export async function uploadToGitHub(imageFile, fileName) {
-    const repoOwner = "SmollCoo";
+    const repoOwner = "SmollCoco";
     const repoName = "DevGate-storage";
     const branch = "main";
     const token = process.env.VUE_APP_TOKEN;
