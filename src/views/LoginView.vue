@@ -77,11 +77,11 @@
                     </div>
 
                     <button
-                        class="auth-button"
+                        class="btn btn-primary btn-block"
                         type="submit"
                         :disabled="isLoading"
+                        :class="{ 'btn-loading': isLoading }"
                     >
-                        <span v-if="isLoading" class="spinner"></span>
                         {{ isLoading ? "Logging in..." : "Login" }}
                     </button>
                 </form>

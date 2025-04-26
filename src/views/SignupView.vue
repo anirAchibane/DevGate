@@ -140,17 +140,23 @@
                                         />
                                         <button
                                             type="button"
-                                            class="profile-button profile-button-upload"
+                                            class="btn btn-outline btn-sm"
                                             @click="triggerFileInput"
                                         >
+                                            <i
+                                                class="fas fa-upload btn-icon"
+                                            ></i>
                                             Choose Image
                                         </button>
                                         <button
                                             v-if="profileFile"
                                             type="button"
-                                            class="profile-button profile-button-clear"
+                                            class="btn btn-outline-danger btn-sm"
                                             @click="clearProfilePic"
                                         >
+                                            <i
+                                                class="fas fa-times btn-icon"
+                                            ></i>
                                             Clear
                                         </button>
                                     </div>
@@ -167,11 +173,11 @@
                     </div>
 
                     <button
-                        class="auth-button"
+                        class="btn btn-primary btn-block"
                         type="submit"
                         :disabled="isLoading"
+                        :class="{ 'btn-loading': isLoading }"
                     >
-                        <span v-if="isLoading" class="spinner"></span>
                         {{ isLoading ? "Creating account..." : "Sign Up" }}
                     </button>
                 </form>
@@ -254,13 +260,20 @@ const uploadProfilePic = async () => {
 
     try {
         uploadingPic.value = true;
-        const timestamp = new Date().getTime();
-        const fileName = `signup_${timestamp}_${profileFile.value.name}`;
+        // Get current user UID or generate a temporary ID if not yet available
+        const userId = auth.currentUser
+            ? auth.currentUser.uid
+            : "temp_" + Date.now();
+        const fileName = `profile_pics/${userId}_${profileFile.value.name}`;
         const url = await uploadToGitHub(profileFile.value, fileName);
         return url;
     } catch (error) {
         console.error("Error uploading profile picture:", error);
-        alert("Failed to upload profile picture, but signup will continue.");
+        alert.value = {
+            message:
+                "Failed to upload profile picture, but signup will continue.",
+            type: "alert-danger",
+        };
         return "";
     } finally {
         uploadingPic.value = false;

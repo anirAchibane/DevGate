@@ -11,6 +11,9 @@ import { BootstrapVue3 } from "bootstrap-vue-3";
 import "@fortawesome/fontawesome-free/css/all.css";
 import "@fortawesome/fontawesome-free/js/all.js";
 
+// Import custom styles
+import "@/assets/styles/buttons.css";
+
 const app = createApp(App);
 
 // Use plugins
