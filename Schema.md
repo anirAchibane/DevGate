@@ -1,0 +1,42 @@
+-> users:
+    - bio: str
+    - createdAt: datetime
+    - email: str
+    - avatar: str
+    - username: str
+    -> objectives: 
+        - lastUpdated: datetime
+        - startDate: datetime
+        - status: str
+        - title: str
+    -> projects:
+        - createdAt: datetime
+        - description: str
+        - githubURL: str
+        - stack: array of str
+        - title: str
+        - visibility: str
+    -> skills:
+        - acquiredAt: datetime
+        - level: str
+        - name: str
+        - updatedAt: datetime
+
+-> publicProjects:
+    - createdAt: datetime
+    - stack: array of str
+    - title: str
+    - uid: str
+
+-> publicFeed:
+    - addedAt: datetime
+    - content: str
+    - pid: str
+    - summary: str
+    - type: str
+    - uid: str
+    -> comments:
+        - content: str
+        - createdAt: datetime
+        - parentId: str (only if its a reply)
+        - uid: str
