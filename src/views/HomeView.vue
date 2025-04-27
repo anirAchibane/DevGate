@@ -1,7 +1,6 @@
 <template>
     <div class="all">
         <mini-navbar />
-        <h1 class="page-title">HomeView.vue</h1>
         <div class="content-container">
             <!-- Sample sections with filler data -->
             <div class="content-sections">
