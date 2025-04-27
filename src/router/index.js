@@ -3,6 +3,7 @@ import Homeview from "../views/HomeView.vue";
 import ProfileView from "../views/ProfileView.vue";
 import LoginView from "../views/LoginView.vue";
 import SignupView from "../views/SignupView.vue";
+import ChatView from "../views/ChatView.vue"; // Import ChatView
 import { auth, db } from "../firebase/config"; // Import Firebase auth
 
 const routes = [
@@ -25,6 +26,12 @@ const routes = [
         path: "/profil/:id",
         name: "Profil",
         component: ProfileView,
+    },
+    {
+        path: "/messages",
+        name: "Messages",
+        component: ChatView,
+        meta: { requiresAuth: true },
     },
 ];
 

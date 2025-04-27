@@ -41,3 +41,15 @@
         - createdAt: datetime
         - parentId: str (only if its a reply)
         - uid: str
+
+-> chat:
+    -createdAt: timestamp
+    -lastUpdate: timestamp
+    -lastMessage: map
+        - content: str
+        - sender_id: str
+    -users : array of str
+    ->messages
+        -content : str
+        -created_at : timestamp
+        -sender_id : str
