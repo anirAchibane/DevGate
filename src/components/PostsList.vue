@@ -21,7 +21,7 @@
 
 
 <script setup>
-import PostItem from '@/components/PostItem.vue';
+import PostItem from '@/components/PostItem';
 import { getPosts } from '@/composables/getPost';
 import { ref, onMounted, onUnmounted, watchEffect } from 'vue';
 
