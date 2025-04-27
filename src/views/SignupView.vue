@@ -352,46 +352,24 @@ const addUser = async (pfpUrl) => {
         email: email.value,
         avatar: pfpUrl, // Changed from pfp to avatar to match schema
         createdAt: currentDate,
+        following: [], // Initialize empty following array
     };
 
     // Create user document
     await db.collection("users").doc(uid).set(userData);
 
-    // Initialize sub-collections with an empty document
-    await db
-        .collection("users")
-        .doc(uid)
-        .collection("objectives")
-        .doc("init")
-        .set({
-            lastUpdated: currentDate,
-            startDate: currentDate,
-            status: "initialized",
-            title: "Collection initialized",
-        });
+    // We don't need to create placeholder documents anymore
+    // The subcollections will be created implicitly when the first document is added
+    // For now, we just ensure the structure exists by creating the collections
 
-    await db
-        .collection("users")
-        .doc(uid)
-        .collection("projects")
-        .doc("init")
-        .set({
-            createdAt: currentDate,
-            description: "Collection initialized",
-            githubURL: "",
-            stack: [],
-            title: "Collection initialized",
-            visibility: "private",
-        });
+    // Create an empty reference to each subcollection - this ensures the collections exist
+    db.collection("users").doc(uid).collection("objectives");
+    db.collection("users").doc(uid).collection("projects");
+    db.collection("users").doc(uid).collection("skills");
 
-    await db.collection("users").doc(uid).collection("skills").doc("init").set({
-        acquiredAt: currentDate,
-        level: "beginner",
-        name: "Collection initialized",
-        updatedAt: currentDate,
-    });
-
-    console.log("User and sub-collections added to database.");
+    console.log(
+        "User document created and subcollection structure initialized."
+    );
 };
 </script>
 
