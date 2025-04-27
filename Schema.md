@@ -35,6 +35,7 @@
     - summary: str
     - type: str
     - uid: str
+    - picture: str
     -> comments:
         - content: str
         - createdAt: datetime
