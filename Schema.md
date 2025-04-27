@@ -1,42 +1,54 @@
--> users:
-    - bio: str
-    - createdAt: datetime
-    - email: str
-    - avatar: str
-    - username: str
-    -> objectives: 
-        - lastUpdated: datetime
-        - startDate: datetime
-        - status: str
-        - title: str
-    -> projects:
-        - createdAt: datetime
-        - description: str
-        - githubURL: str
-        - stack: array of str
-        - title: str
-        - visibility: str
-    -> skills:
-        - acquiredAt: datetime
-        - level: str
-        - name: str
-        - updatedAt: datetime
+# Data Structure
 
--> publicProjects:
-    - createdAt: datetime
-    - stack: array of str
-    - title: str
-    - uid: str
+## Users
+- **bio**: `string`
+- **createdAt**: `datetime`
+- **email**: `string`
+- **avatar**: `string`
+- **username**: `string`
 
--> publicFeed:
-    - addedAt: datetime
-    - content: str
-    - pid: str
-    - summary: str
-    - type: str
-    - uid: str
-    -> comments:
-        - content: str
-        - createdAt: datetime
-        - parentId: str (only if its a reply)
-        - uid: str
+### Subcollections
+
+#### Objectives
+- **lastUpdated**: `datetime`
+- **startDate**: `datetime`
+- **status**: `string`
+- **title**: `string`
+
+#### Projects
+- **createdAt**: `datetime`
+- **description**: `string`
+- **githubURL**: `string`
+- **stack**: `array of strings`
+- **title**: `string`
+- **visibility**: `string`
+
+#### Skills
+- **acquiredAt**: `datetime`
+- **level**: `string`
+- **name**: `string`
+- **updatedAt**: `datetime`
+
+---
+
+## Public Projects
+- **createdAt**: `datetime`
+- **stack**: `array of strings`
+- **title**: `string`
+- **uid**: `string`
+
+---
+
+## Public Feed
+- **addedAt**: `datetime`
+- **content**: `string`
+- **pid**: `string`
+- **summary**: `string`
+- **type**: `string`
+- **uid**: `string`
+
+### Subcollection: Comments
+- **content**: `string`
+- **createdAt**: `datetime`
+- **parentId**: `string` (only if it’s a reply)
+- **uid**: `string`
