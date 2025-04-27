@@ -1,6 +1,6 @@
 <template>
     <mini-navbar></mini-navbar>
-    <div style="color: white">ProfileView.vue</div>
+    
 </template>
 
 <script setup>
@@ -13,13 +13,13 @@ const userId = route.params.id;
 console.log(userId); // This will log the user ID from the URL
 </script>
 
-<style scoped>
+<style >
 html,
 body,
 #app {
     height: 100%;
     margin: 0;
     padding: 0;
-    background-color: #0d1117;
+    background-color: #0D1117;
 }
 </style>

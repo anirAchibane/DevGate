@@ -4,9 +4,9 @@
             <div class="ele">
                 <router-link to="/home" class="navlink">
                     <div
-                        class="nav-item d-flex align-items-center btn btn-outline btn-sm"
+                        class="nav-item d-flex align-items-center btn btn-sm"
                     >
-                        <div class="nav-icon-wrapper me-2">
+                        <div class=" me-2">
                             <i class="fa-solid fa-house"></i>
                         </div>
                         <span>Home</span>
@@ -21,9 +21,9 @@
                     class="navlink"
                 >
                     <div
-                        class="nav-item d-flex align-items-center btn btn-outline btn-sm"
+                        class="nav-item d-flex align-items-center btn btn-sm"
                     >
-                        <div class="nav-icon-wrapper me-2">
+                        <div class=" me-2">
                             <i class="fa-solid fa-user"></i>
                         </div>
                         <span>Profile</span>
@@ -32,7 +32,7 @@
             </div>
 
             <div
-                class="nav-item d-flex align-items-center btn btn-outline-danger btn-sm logout-btn"
+                class="nav-item d-flex align-items-center btn btn-sm logout-btn"
                 @click="logout()"
             >
                 <div class="nav-icon-wrapper me-2">
@@ -44,7 +44,8 @@
     </div>
 </template>
 
-<style>
+<style scoped>
+
 html,
 body,
 #app {
@@ -56,7 +57,7 @@ body,
 
 #navbar {
     width: 100%;
-    background-color: #0d1117;
+    background-color: #010508;
     border-bottom: 1px solid #555d69;
     color: #7d8796;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
@@ -83,23 +84,14 @@ body,
 
 .navlink,
 .nav-item {
+    color: #cfd8dc;
     text-decoration: none;
-    color: inherit;
     position: relative;
     padding: 0.5rem 0.75rem;
     border-radius: 6px;
     transition: all 0.3s ease;
     font-weight: 500;
     letter-spacing: 0.02em;
-}
-
-.navlink:hover,
-.nav-item:hover {
-    color: white;
-    cursor: pointer;
-    background-color: rgba(255, 255, 255, 0.05);
-    transform: translateY(-2px);
-    text-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
 }
 
 .nav-icon-wrapper {
@@ -115,6 +107,7 @@ body,
     font-size: 16px;
 }
 
+/* By default, no underline */
 .navlink::after,
 .nav-item::after {
     content: "";
@@ -123,40 +116,44 @@ body,
     height: 2px;
     bottom: -2px;
     left: 50%;
-    background-color: #3498db;
     transform: translateX(-50%);
-    transition: width 0.3s ease;
+    background-color: white;
+    transition: width 0.3s ease, background-color 0.3s ease;
 }
 
+/* On hover, small underline */
 .navlink:hover::after,
 .nav-item:hover::after {
     width: 80%;
+    background-color: white;
 }
 
-.router-link-active {
-    color: #3498db !important;
+/* Active page -> keep the underline */
+.router-link-active .nav-item::after {
+    width: 70%;
+    background-color: white;
+}
+
+/* Active page -> highlight text */
+.router-link-active .nav-item {
+    color: white !important;
     font-weight: 600;
 }
 
-.router-link-active::after {
+.router-link-active::after{
     width: 70%;
-    background-color: #3498db;
-}
-
-.router-link-active:hover::after {
-    width: 90%;
+    background-color: white;
 }
 
 .logout-btn {
-    border: 1px solid rgba(255, 255, 255, 0.1);
     background-color: rgba(255, 255, 255, 0.03);
     transition: all 0.3s ease;
+    border: none; /* removed the border */
 }
 
 .logout-btn:hover {
     background-color: rgba(255, 255, 255, 0.08);
-    border-color: rgba(255, 255, 255, 0.2);
-    color: #f44336;
+    color: white;
 }
 
 @media (max-width: 768px) {
@@ -175,6 +172,8 @@ body,
         height: 20px;
     }
 }
+
+
 </style>
 
 <script setup>
