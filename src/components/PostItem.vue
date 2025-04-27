@@ -14,7 +14,7 @@
 
             <div class="post-info">
                 <div class="post-header">
-                    <span class="post-type-badge" :class="'type-' + post.type">{{ post.type }}</span>
+                    <!-- <span class="post-type-badge" :class="'type-' + post.type">{{ post.type }}</span> -->
                     <h4 class="post-title">{{ post.summary }}</h4>
                 </div>
 
@@ -63,11 +63,13 @@
                 <div class="post-images" v-if="post.picture">
                     <img :src="post.picture" alt="Post Image" class="post-image" />
                 </div>
-                <!-- <div class="comment">
-                    <button class="comment-btn" @click="ShowComments(post.id)">
-                        <i class="bi bi-chat-dots"></i>
-                    </button>
-                </div> -->
+
+            </div>
+            <div class="comment">
+
+                <button class="comment-btn" @click="ShowComments(post.id)">
+                    <i class="fa-solid fa-comment-dots"></i> Comment
+                </button>
             </div>
         </div>
     </div>
@@ -242,10 +244,10 @@ function formatDate(timestamp) {
     background-color: #0D1117;
     border: 1px solid #555d69;
     border-radius: 8px;
-    padding: 1.5rem;
     margin-bottom: 1.5rem;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
+    padding: 1rem;
 }
 
 .post-item:hover {
@@ -265,6 +267,7 @@ function formatDate(timestamp) {
     align-items: center;
     gap: 1rem;
     margin-bottom: 0.5rem;
+    padding: 1.5rem;
 }
 
 .avatar {
@@ -310,7 +313,7 @@ function formatDate(timestamp) {
     letter-spacing: 0.5px;
 }
 
-.type-project {
+/* .type-project {
     background-color: rgba(52, 152, 219, 0.15);
     color: #5dade2;
     border: 1px solid rgba(52, 152, 219, 0.3);
@@ -332,7 +335,7 @@ function formatDate(timestamp) {
     background-color: rgba(155, 89, 182, 0.15);
     color: #bb8fce;
     border: 1px solid rgba(155, 89, 182, 0.3);
-}
+} */
 
 .post-info {
     color: #ffffff;
@@ -349,6 +352,7 @@ function formatDate(timestamp) {
     margin-bottom: 1rem;
     color: #cfd8dc;
     line-height: 1.5;
+    text-align: left;
 }
 
 /* Project specific styles */
@@ -494,6 +498,26 @@ function formatDate(timestamp) {
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
     border: 1px solid #555d69;
+}
+
+.comment-btn {
+    background-color: #0D1117;
+    width: 50%;
+    color: white;
+    border: 1px solid #3498db;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+    /* transition: background-color 0.3s ease, transform 0.3s ease; */
+    text-align: center;
+    align-self: center;
+    /* margin-bottom: 1rem; */
+}
+
+.comment-btn:hover {
+    background-color: #2980b9;
+    transform: translateY(-2px);
 }
 
 /* Responsive styles */

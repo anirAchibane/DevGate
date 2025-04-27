@@ -1,6 +1,5 @@
 <template>
     <div class="container">
-        <h1 class="text-center">Posts</h1>
         <div class="row">
             <div v-if="loading" class="col-12 text-center">
                 <p>Loading...</p>
