@@ -1,25 +1,34 @@
 import { ref } from 'vue';
 import { db } from '@/firebase/config';
 
-
 async function getComments(postID) {
     const comments = ref([]);
     const error = ref(null);
     const loading = ref(true);
 
     try {
+        // First fetch top-level comments (without filtering and ordering together)
         const snapshot = await db
             .collection('publicFeed')
             .doc(postID)
             .collection('comments')
-            .where('parentId', '==', null)
-            .orderBy('createdAt', 'asc')
             .get();
+            
+        // Filter top-level comments (parentId == null) manually
+        const commentsData = snapshot.docs
+            .map(doc => ({ id: doc.id, ...doc.data(), replies: [] }))
+            .filter(comment => comment.parentId === null)
+            .sort((a, b) => {
+                // Sort by createdAt if available
+                if (a.createdAt && b.createdAt) {
+                    return a.createdAt.seconds - b.createdAt.seconds;
+                }
+                return 0;
+            });
 
-        const commentsData = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data(), replies: [] }));
-
+        // Fetch replies for each comment
         for (const comment of commentsData) {
-            comment.replies = await fetchReplies(comment.id);
+            comment.replies = await fetchReplies(postID, comment.id);
         }
 
         comments.value = commentsData;
@@ -31,23 +40,33 @@ async function getComments(postID) {
         loading.value = false;
     }
 
-    return { comments, error, loading };
+    return { comments: comments.value, error: error.value, loading: loading.value };
 }
 
-async function fetchReplies(parentId) {
+async function fetchReplies(postID, parentId) {
     try {
+        // Fetch replies without complex query
         const snapshot = await db
             .collection('publicFeed')
-            .doc(parentId)
+            .doc(postID)
             .collection('comments')
-            .where('parentId', '==', parentId)
-            .orderBy('createdAt', 'asc')
             .get();
+            
+        // Filter replies manually
+        const replies = snapshot.docs
+            .map(doc => ({ id: doc.id, ...doc.data(), replies: [] }))
+            .filter(comment => comment.parentId === parentId)
+            .sort((a, b) => {
+                // Sort by createdAt if available
+                if (a.createdAt && b.createdAt) {
+                    return a.createdAt.seconds - b.createdAt.seconds;
+                }
+                return 0;
+            });
 
-        const replies = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data(), replies: [] }));
-
+        // Recursively fetch nested replies
         for (const reply of replies) {
-            reply.replies = await fetchReplies(reply.id);
+            reply.replies = await fetchReplies(postID, reply.id);
         }
 
         return replies;
@@ -57,4 +76,4 @@ async function fetchReplies(parentId) {
     }
 }
 
-export { getComments , fetchReplies };
+export { getComments, fetchReplies };
