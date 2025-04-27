@@ -33,7 +33,7 @@
     - content: str
     - pid: str
     - summary: str
-    - type: str
+    - type: str ("project" or "objective" or "skill" or "text")
     - uid: str
     - picture: str
     -> comments:
