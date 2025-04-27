@@ -1,5 +1,5 @@
 import { ref } from 'vue';
-import { db } from '../firebase';
+import { db } from '@/firebase/config';
 
 
 async function getComments(postID) {

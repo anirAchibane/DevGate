@@ -9,9 +9,9 @@
                 <p>Error: {{ error }}</p>
             </div>
             <div v-else class="col-12">
-                <div class="row">
+                <div class="column">
                     <div v-for="post in posts" :key="post" class="col-md-4 mb-4">
-                        <PostItem :postId="post" />
+                        <post-item :postId="post" />
                     </div>
                 </div>
             </div>
@@ -21,7 +21,7 @@
 
 
 <script setup>
-import PostItem from '../PostItem.vue';
+import PostItem from '@/components/PostItem.vue';
 import { getPosts } from '@/composables/getPost';
 import { ref, onMounted, onUnmounted, watchEffect } from 'vue';
 

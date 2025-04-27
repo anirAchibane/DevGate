@@ -1,6 +1,6 @@
 // function to get all posts and function to get a single post from post id
 import { ref } from 'vue';
-import { db } from '../firebase'; 
+import { db } from '@/firebase/config'; 
 // import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
 
 function getPosts() {
