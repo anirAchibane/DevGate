@@ -3,10 +3,8 @@
         <div id="navbar-content" class="nav-items d-flex">
             <div class="ele">
                 <router-link to="/home" class="navlink">
-                    <div
-                        class="nav-item d-flex align-items-center btn btn-sm"
-                    >
-                        <div class=" me-2">
+                    <div class="nav-item d-flex align-items-center btn btn-sm">
+                        <div class="me-2">
                             <i class="fa-solid fa-house"></i>
                         </div>
                         <span>Home</span>
@@ -20,10 +18,8 @@
                     }"
                     class="navlink"
                 >
-                    <div
-                        class="nav-item d-flex align-items-center btn btn-sm"
-                    >
-                        <div class=" me-2">
+                    <div class="nav-item d-flex align-items-center btn btn-sm">
+                        <div class="me-2">
                             <i class="fa-solid fa-user"></i>
                         </div>
                         <span>Profile</span>
@@ -45,7 +41,6 @@
 </template>
 
 <style scoped>
-
 html,
 body,
 #app {
@@ -140,7 +135,7 @@ body,
     font-weight: 600;
 }
 
-.router-link-active::after{
+.router-link-active::after {
     width: 70%;
     background-color: white;
 }
@@ -171,9 +166,11 @@ body,
         width: 20px;
         height: 20px;
     }
+
+    #navbar-content {
+        padding: 0 0.5rem;
+    }
 }
-
-
 </style>
 
 <script setup>
