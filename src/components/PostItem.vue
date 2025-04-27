@@ -66,11 +66,15 @@
 
             </div>
             <div class="comment">
-
-                <button class="comment-btn" @click="ShowComments(post.id)">
-                    <i class="fa-solid fa-comment-dots"></i> Comment
+                <button class="comment-btn" @click="showComments = !showComments">
+                    <i class="fa-solid fa-comment-dots"></i> {{ showComments ? 'Hide Comments' : 'Comment' }}
                 </button>
             </div>
+            <transition name="comments-fade">
+                <div v-if="showComments" class="comments-section">
+                    <comments-item :postId="post.id" />
+                </div>
+            </transition>
         </div>
     </div>
 </template>
@@ -79,6 +83,7 @@
 import { ref, onMounted, watch, defineProps } from 'vue'
 import { getUser } from '@/composables/getUser'
 import { getPost } from '@/composables/getPost'
+import CommentsItem from '@/components/CommentsItem'
 import { db } from '@/firebase/config'
 // import router from '@/router'
 
@@ -91,6 +96,7 @@ const props = defineProps({
 })
 
 // State variables
+const showComments = ref(false)
 const post = ref(null)
 const posterror = ref(null)
 const postloading = ref(true)
@@ -520,6 +526,41 @@ function formatDate(timestamp) {
     transform: translateY(-2px);
 }
 
+/* Comments section styling */
+.comments-section {
+    max-height: 800px;
+    overflow: hidden;
+    margin-top: 1rem;
+    border-top: 1px solid #1e2a38;
+    padding-top: 1rem;
+}
+
+/* Enhanced transitions for comments */
+.comments-fade-enter-active {
+    transition: all 0.5s ease-out;
+    max-height: 800px;
+    transform-origin: top;
+}
+
+.comments-fade-leave-active {
+    transition: all 0.5s ease-in;
+    max-height: 800px;
+    transform-origin: top;
+}
+
+.comments-fade-enter-from,
+.comments-fade-leave-to {
+    opacity: 0;
+    max-height: 0;
+    transform: scaleY(0.8);
+}
+
+.comment {
+    display: flex;
+    justify-content: center;
+    margin: 1rem 0;
+}
+
 /* Responsive styles */
 @media (max-width: 768px) {
     .post-item {
@@ -537,6 +578,10 @@ function formatDate(timestamp) {
     .avatar {
         width: 40px;
         height: 40px;
+    }
+
+    .comments-section {
+        max-height: 600px;
     }
 }
 </style>
