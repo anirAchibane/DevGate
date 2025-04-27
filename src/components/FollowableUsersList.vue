@@ -71,7 +71,7 @@
                         </span>
                     </button>
                     <router-link
-                        :to="{ name: 'Profile', params: { id: user.id } }"
+                        :to="{ name: 'Profil', params: { id: user.id } }"
                         class="btn btn-sm btn-outline view-profile"
                     >
                         <i class="fas fa-user-circle"></i> View
