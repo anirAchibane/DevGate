@@ -9,7 +9,11 @@
             </div>
             <div v-else class="col-12">
                 <div class="column">
-                    <div v-for="post in posts" :key="post" class="col-md-4 mb-4">
+                    <div
+                        v-for="post in posts"
+                        :key="post"
+                        class="col-md-4 mb-4"
+                    >
                         <post-item :postId="post" />
                     </div>
                 </div>
@@ -18,11 +22,10 @@
     </div>
 </template>
 
-
 <script setup>
-import PostItem from '@/components/PostItem';
-import { getPosts } from '@/composables/getPost';
-import { ref, onMounted, onUnmounted, watchEffect } from 'vue';
+import PostItem from "@/components/PostItem";
+import { getPosts } from "@/composables/getPost";
+import { ref, onMounted, onUnmounted, watchEffect } from "vue";
 
 const posts = ref([]);
 const loading = ref(true);
@@ -47,7 +50,7 @@ onUnmounted(() => {
     // Cleanup subscription when component is destroyed
     if (unsubscribe) {
         unsubscribe();
-        console.log('Unsubscribed from posts feed');
+        console.log("Unsubscribed from posts feed");
     }
 });
 </script>
