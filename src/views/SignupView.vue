@@ -12,22 +12,22 @@
                     <h1>Create Account</h1>
                 </div>
 
-                <!-- ALERTS -->
+                <!-- alertS -->
                 <div
-                    v-if="alert.message"
+                    v-if="alerting.message"
                     class="auth-alert"
-                    :class="alert.type"
+                    :class="alerting.type"
                     role="alert"
                 >
                     <i
                         class="fas"
                         :class="
-                            alert.type === 'alert-success'
+                            alerting.type === 'alert-success'
                                 ? 'fa-check-circle'
                                 : 'fa-exclamation-circle'
                         "
                     ></i>
-                    <div class="alert-message">{{ alert.message }}</div>
+                    <div class="alert-message">{{ alerting.message }}</div>
                 </div>
 
                 <form @submit.prevent="signup" class="auth-form">
@@ -212,9 +212,9 @@ const fileInput = ref(null);
 const uploadingPic = ref(false);
 const isLoading = ref(false);
 
-const alert = ref({
+const alerting = ref({
     message: "",
-    type: "", // 'alert-success' | 'alert-danger'
+    type: "", // 'alerting-success' | 'alerting-danger'
 });
 
 const triggerFileInput = () => {
@@ -260,16 +260,16 @@ const uploadProfilePic = async () => {
 
     try {
         uploadingPic.value = true;
-        // Get current user UID or generate a temporary ID if not yet available
-        const userId = auth.currentUser
-            ? auth.currentUser.uid
-            : "temp_" + Date.now();
+
+        // By this point, auth.currentUser should exist since we create the user first
+        const userId = auth.currentUser.uid;
         const fileName = `profile_pics/${userId}_${profileFile.value.name}`;
+
         const url = await uploadToGitHub(profileFile.value, fileName);
         return url;
     } catch (error) {
         console.error("Error uploading profile picture:", error);
-        alert.value = {
+        alerting.value = {
             message:
                 "Failed to upload profile picture, but signup will continue.",
             type: "alert-danger",
@@ -298,7 +298,18 @@ const signup = async () => {
             return;
         }
 
-        // 3. Upload profile picture if one was selected
+        // 3. Create user in Firebase Auth first
+        const res = await auth.createUserWithEmailAndPassword(
+            email.value,
+            password.value
+        );
+
+        // 4. Set display name
+        await res.user.updateProfile({
+            displayName: username.value,
+        });
+
+        // 5. Upload profile picture if one was selected (AFTER user is created)
         let pfpUrl = require("@/assets/default_pfp.jpg"); // Default image
         if (profileFile.value) {
             try {
@@ -315,19 +326,8 @@ const signup = async () => {
             }
         }
 
-        // 4. Create user in Firebase Auth
-        const res = await auth.createUserWithEmailAndPassword(
-            email.value,
-            password.value
-        );
-
-        // 5. Save extra user data in Firestore with the profile picture URL
+        // 6. Save extra user data in Firestore with the profile picture URL
         await addUser(pfpUrl);
-
-        // 6. Set display name
-        await res.user.updateProfile({
-            displayName: username.value,
-        });
 
         console.log("Signup successful:", res);
         router.push("/home");
