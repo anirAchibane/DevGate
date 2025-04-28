@@ -3,11 +3,11 @@
         <h2 class="section-title">People You Might Want to Follow</h2>
 
         <div v-if="loading" class="loading-container">
-            <div class="loading-spinner"></div>
-            <p>Loading users...</p>
+            <LoadingOverlay message="Loading users..." transparent />
         </div>
 
         <div v-else-if="users.length === 0" class="empty-state">
+            <i class="fas fa-users empty-icon"></i>
             <p>No users found to follow at the moment.</p>
         </div>
 
@@ -96,6 +96,7 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import { db, auth, firebase } from "@/firebase/config";
+import LoadingOverlay from "@/components/LoadingOverlay.vue";
 
 const users = ref([]);
 const currentUserFollowing = ref([]);
@@ -346,6 +347,7 @@ onMounted(() => {
     overflow: hidden;
     text-overflow: ellipsis;
     display: -webkit-box;
+    line-clamp: 2;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
 }
@@ -390,31 +392,24 @@ onMounted(() => {
 }
 
 .loading-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 40px;
-}
-
-.loading-spinner {
-    width: 40px;
-    height: 40px;
-    border: 3px solid rgba(52, 152, 219, 0.2);
-    border-top-color: #3498db;
-    border-radius: 50%;
-    animation: spinner 1s linear infinite;
-    margin-bottom: 16px;
+    width: 100%;
+    height: 300px;
+    position: relative;
 }
 
 .empty-state {
     text-align: center;
-    padding: 40px;
-    color: #7d8796;
-    font-size: 16px;
+    padding: 40px 20px;
     background-color: rgba(26, 34, 51, 0.6);
     border-radius: 8px;
     border: 1px dashed #555d69;
+    color: #cfd8dc;
+}
+
+.empty-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: #555d69;
 }
 
 .load-more {
