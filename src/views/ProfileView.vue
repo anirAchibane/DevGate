@@ -1,70 +1,106 @@
 <template>
     <mini-navbar></mini-navbar>
-    <div class="main">
-
-        <div class="sidebar">
-            <div class="UserInfo">
-                <p class="pfp">Profile pic</p>
-                <p class="username">{{ userData.username }}</p>
-                <p v-if="userData.bio !== ''">Bio: {{ userData.bio }}</p>
-                <p v-else>Bio: no bio</p>
-                <p>email: {{ userData.email }}</p>
-                <button v-if ="isCurrent" @click="settings()">Settings</button>
-                <button v-else @click="follow()">Follow</button>
-            </div>
-
-            <div class="UserSkills">
-                <h2>Skills</h2>
-                <div class="skills">
-                    <div v-for="skill in userSkills" :key="skill.id" class="skill">
-                        <p>{{ skill.name }} : {{ skill.level }}</p>
-                    </div>
-                </div>
-            </div>
+    <div class="container-fluid mt-3">
+        <div class="d-flex  justify-content-center align-items-center">
+        <router-link 
+      v-if="isCurrent"
+      :to="`/add/${auth.currentUser.uid}`" 
+      class="btn btn-success"
+    >
+      What's New
+    </router-link>
         </div>
-
-        <div class="mainbar">
-            <div class="buttons d-flex flex-row" v-if="isCurrent">
-                <h2>Select</h2>
-                <select v-model="selectedType">
-                    <option value="Project">Project</option>
-                    <option value="Objective">Objective</option>
-                    <option value="Skill">Skill</option>
-                </select>
-                <button @click="New">Add</button>
-            </div>
-
-            <div class="UserProjects">
-                <h2>Projects</h2>
-                <div class="projects">
-                    <div v-for="project in userProjects" :key="project.id" class="project">
-                        <p>{{ project.name }}</p>
-                        <p v-if="project.description !== ''">Description: {{ project.description }}</p>
-                        <p v-else>Description: no description</p>
-                        <p>Type: {{ project.type }}</p>
-                        <p>Language: {{ project.language }}</p>
-                        <p v-if="project.isPublic">Public</p>
-                        <p v-else>Private</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="UserObjectives">
-                <h2>Objectives</h2>
-                <div class="objectives">
-                    <div v-for="objective in userObjectives" :key="objective.id" class="objective">
-                        <p>{{ objective.name }}</p>
-                        <p v-if="objective.description !== ''">Description: {{ objective.description }}</p>
-                        <p v-else>Description: no description</p>
-                        <p>Type: {{ objective.type }}</p>
-                        <p>Language: {{ objective.language }}</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
     </div>
-</template>
+    <div class="container-fluid py-4">
+      <div class="main row">
+  
+        <!-- Sidebar -->
+        <div class="sidebar">
+          <div class="card text-white bg-dark mb-4">
+            <div class="card-body text-center">
+              <p class="pfp mb-3">Profile pic</p>
+              <h4 class="username card-title">{{ userData.username }}</h4>
+              <p v-if="userData.bio !== ''" class="card-text">Bio: {{ userData.bio }}</p>
+              <p v-else class="card-text">Bio: no bio</p>
+              <p class="card-text">Email: {{ userData.email }}</p>
+  
+              <div class="mt-3">
+                <button v-if="isCurrent" @click="settings()" class="btn btn-outline-light btn-sm" style="background-color: white; color: black;" >
+                  Settings
+                </button>
+                <button v-else @click="follow()" class="btn btn-primary btn-sm">
+                  Follow
+                </button>
+              </div>
+            </div>
+          </div>
+  
+          <div class="card text-white bg-dark">
+            <div class="card-header">
+              <h5>Skills</h5>
+            </div>
+            <div class="card-body">
+              <div class="skills">
+                <div v-for="skill in userSkills" :key="skill.id" class="skill mb-2">
+                  <p class="mb-1">{{ skill.name }} : {{ skill.level }}</p>
+                  <p class="mb-1"> Skill aquired at : {{ formatFirestoreTimestamp(skill.acquiredAt ) }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+  
+        <!-- Mainbar -->
+        <div class="mainbar">
+        
+  
+          <div class="card text-white bg-dark mb-4">
+            <div class="card-header">
+              <h5>Projects</h5>
+            </div>
+            <div class="card-body">
+              <div class="projects">
+                <div v-for="project in userProjects" :key="project.id" class="project mb-3 p-3 border rounded bg-secondary">
+                  <p class="mb-1 fw-bold">{{ project.title }}</p>
+                  <p v-if="project.description " class="mb-1">Description: {{ project.description }}</p>
+                  <p v-else class="mb-1">Description: no description</p>
+                  <p class="mb-1">
+                    Github URL :
+                    <a :href="project.githubURL" target="_blank" rel="noopener noreferrer">
+                      {{ project.githubURL }}
+                    </a>
+                  </p>
+                  <p class="mb-0" v-if="project.visibility">Public</p>
+                  <p class="mb-0" v-else>Private</p>
+                  <p class="mb-0"> Created at : {{ formatFirestoreTimestamp(project.createdAt) }} </p>
+                </div>
+              </div>
+            </div>
+          </div>
+  
+          <div class="card text-white bg-dark">
+            <div class="card-header">
+              <h5>Objectives</h5>
+            </div>
+            <div class="card-body">
+              <div class="objectives">
+                <div v-for="objective in userObjectives" :key="objective.id" class="objective mb-3 p-3 border rounded bg-secondary">
+                  <p class="mb-1 fw-bold">{{ objective.name }}</p>
+                  <p v-if="objective.description !== ''" class="mb-1">Description: {{ objective.description }}</p>
+                  <p v-else class="mb-1">Description: no description</p>
+                  <p class="mb-1">Type: {{ objective.type }}</p>
+                  <p class="mb-0">Language: {{ objective.language }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+  
+        </div>
+  
+      </div>
+    </div>
+  </template>
+  
 
 <script setup>
 import MiniNavbar from "@/components/MiniNavbar.vue";
@@ -72,6 +108,7 @@ import {ref } from "vue";
 import { db, auth  } from "@/firebase/config.js";
 import { useRoute, useRouter  } from "vue-router";
 import { onMounted } from "vue";
+
 
 const route = useRoute();
 const router = useRouter();
@@ -84,7 +121,6 @@ const userProjects = ref([]);   // stores user's projects ( all projects if isCu
 const userObjectives = ref([]); // stores user's objectives
 const userSkills = ref([]);     // stores user's skills
 
-const selectedType = ref("project"); // stores the selected type of item to add (project, objective, skill)
 
 onMounted(async () => {
     // fetching data:
@@ -144,10 +180,40 @@ onMounted(async () => {
 
 });
 
+
 const settings = () => {
     // Redirect to the settings page
     router.push("/settings");
 }
+
+
+
+function formatFirestoreTimestamp(timestamp) {
+    if (!timestamp) return "N/A";
+
+    // Handle both Firestore Timestamp object or plain object
+    let date;
+    if (timestamp.toDate) {
+        // If it's an actual Firestore Timestamp object
+        date = timestamp.toDate();
+    } else if (timestamp.seconds !== undefined) {
+        // If it's a plain object { seconds: ..., nanoseconds: ... }
+        date = new Date(timestamp.seconds * 1000);
+    } else {
+        return "Invalid Timestamp";
+    }
+
+    // Format nicely
+    return date.toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+    });
+}
+
+
 
 </script>
 
@@ -162,28 +228,28 @@ body,
     background-color: #0d1117;
 }
 
-.main{
+.main {
     display: flex;
     flex-direction: row;
-
+    gap: 20px; /* you can adjust */
     padding: 20px;
-    text-align: center;
-    gap: 10px;
 }
 
-.sidebar{
-    width: 30%;
-    height: 100%;
-    padding: 20px;
-    border-radius: 10px;
-    border: 1px solid #3D434C;;
-}
+/* REMOVE display: flex and flex-direction from .main */
 
-.mainbar{
-    width: 70%;
-    height: 100%;
+.sidebar {
+    flex: 0 0 25%;
     padding: 20px;
     border-radius: 10px;
     border: 1px solid #3D434C;
 }
+
+.mainbar {
+    flex: 1; /* take the rest */
+    padding: 20px;
+    border-radius: 10px;
+    border: 1px solid #3D434C;
+}
+
+
 </style>

@@ -337,6 +337,7 @@ const projects = ref([]);
 const showCustomizationModal = ref(false);
 const currentItem = ref(null);
 const currentItemType = ref("");
+const currentItemCollection = ref(""); // Reference to store the collection type
 const customPostText = ref("");
 const postImage = ref(null);
 const uploadingImage = ref(false);
@@ -467,6 +468,21 @@ const createPostFromItem = (item, type) => {
     customTags.value = item.stack && type === "project" ? [...item.stack] : [];
     customTagInput.value = "";
 
+    // Update item's visibility to public if not already set
+    console.log("Updating visibility for item:", item, "type:", type);
+    let collectionType = null;
+    if (type === "objective") {
+        collectionType = "objectives";
+    } else if (type === "skill") {
+        collectionType = "skills";
+    } else if (type === "project") {
+        collectionType = "projects";
+    }
+
+    // Store the collection type for later use when posting
+    // but don't update visibility yet
+    currentItemCollection.value = collectionType;
+
     // Close selection modals and open customization modal
     closeAllModals();
     showCustomizationModal.value = true;
@@ -538,6 +554,31 @@ const saveCustomizedPost = async () => {
     savingPost.value = true;
 
     try {
+        // Ensure the item's visibility is set to public
+        let collectionType = currentItemCollection.value;
+
+        // Update visibility to public
+        if (currentItem.value && collectionType) {
+            await db
+                .collection("users")
+                .doc(props.userId)
+                .collection(collectionType)
+                .doc(currentItem.value.id)
+                .update({ visibility: true });
+
+            console.log(
+                `${currentItemType.value} visibility set to public for post creation`
+            );
+
+            // Show alert that visibility has been set to public
+            alert(
+                `${
+                    currentItemType.value.charAt(0).toUpperCase() +
+                    currentItemType.value.slice(1)
+                } visibility set to public`
+            );
+        }
+
         let summary = "";
 
         // Create appropriate summary based on item type
@@ -581,8 +622,19 @@ const saveCustomizedPost = async () => {
             docRef.id
         );
 
-        // Close modal and reset values
-        closeCustomizationModal();
+        // Close all modals and reset values
+        showObjectiveModal.value = false;
+        showSkillModal.value = false;
+        showProjectModal.value = false;
+        showCustomizationModal.value = false;
+
+        // Reset all state
+        currentItem.value = null;
+        currentItemType.value = "";
+        customPostText.value = "";
+        postImage.value = null;
+        customTags.value = [];
+        customTagInput.value = "";
 
         // Emit event to notify parent component
         emit("post-created", docRef.id);
