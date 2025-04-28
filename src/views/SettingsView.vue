@@ -6,12 +6,48 @@
             <div class="user-form d-flex flex-column">
 
                 <div class="user-form-row">
-
-                    <!-- Add Avatar editor inside this div !!! -->
-
+                    <label>Profile Picture:</label>
+                    <div class="profile-container">
+                        <div class="profile-preview-wrapper" @click="triggerFileInput">
+                            <img :src="profilePreview" alt="Profile" class="profile-preview" />
+                            <div class="profile-overlay">
+                                <i class="fas fa-camera"></i>
+                            </div>
+                        </div>
+                        <div class="profile-controls">
+                            <input
+                                type="file"
+                                ref="fileInput"
+                                accept="image/*"
+                                @change="handleFileChange"
+                                class="file-input"
+                            />
+                            <button
+                                type="button"
+                                class="btn btn-outline btn-sm"
+                                @click="triggerFileInput"
+                            >
+                                <i class="fas fa-upload btn-icon"></i>
+                                Choose Image
+                            </button>
+                            <button
+                                v-if="profileFile"
+                                type="button"
+                                class="btn btn-outline-danger btn-sm"
+                                @click="clearProfilePic"
+                            >
+                                <i class="fas fa-times btn-icon"></i>
+                                Clear
+                            </button>
+                        </div>
+                        <div v-if="uploadingPic" class="upload-status">
+                            <div class="spinner"></div>
+                            <span>Uploading image...</span>
+                        </div>
+                    </div>
                 </div>
 
-                <div   class="user-form-row">
+                <div class="user-form-row">
                     <label for="username">Username:</label>
                     <input v-model="username" type="text" id="username" />
                 </div>
@@ -87,6 +123,7 @@ import { ref } from 'vue';
 import { db, auth } from '@/firebase/config';
 import { getFollowers, getFollowing } from '@/composables/userFollow';
 import { useRouter } from 'vue-router';
+import { uploadToGitHub } from "@/composables/uploadToGitHub";
 
 const router = useRouter();
 
@@ -96,6 +133,12 @@ let following = ref([]);
 const username = ref('');
 const bio = ref('');
 const email = ref('');
+// Profile picture related refs
+const profileFile = ref(null);
+const profilePreview = ref(require("@/assets/default_pfp.jpg"));
+const fileInput = ref(null);
+const uploadingPic = ref(false);
+const currentAvatar = ref('');
 
 const followerFilter = ref("");
 const followingFilter = ref("");
@@ -110,7 +153,12 @@ onMounted(async () => {
       username.value = doc.data().username || '';
       bio.value = doc.data().bio || '';
       email.value = doc.data().email || '';
-
+      
+      // Set current avatar and preview if available
+      if (doc.data().avatar) {
+        currentAvatar.value = doc.data().avatar;
+        profilePreview.value = doc.data().avatar;
+      }
     } else {
       console.log("No such document!");
     }
@@ -133,22 +181,38 @@ onMounted(async () => {
 const updateProfile = async () => {
     if (confirm("Are you sure you want to update your profile?")) {
         try {
+            // Show loading state
+            uploadingPic.value = profileFile.value !== null;
+            
+            // If there's a new profile picture, upload it first
+            let avatarUrl = currentAvatar.value;
+            if (profileFile.value) {
+                avatarUrl = await uploadProfilePic();
+            }
+            
             const userRef = db.collection("users").doc(auth.currentUser.uid);
             const updatedData = {
                 username: username.value,
                 bio: bio.value,
-                email: email.value
+                email: email.value,
+                avatar: avatarUrl
             };
+            
+            await userRef.update(updatedData);
+            
+            // Update currentAvatar with the new URL
+            currentAvatar.value = avatarUrl;
+            
             alert("Profile updated successfully!!");
             router.push("/profil/" + auth.currentUser.uid);
-            await userRef.update(updatedData);
             console.log("Profile updated successfully");
         } catch (error) {
             alert("Error updating profile: " + error.message);
             console.error("Error updating profile:", error);
+        } finally {
+            uploadingPic.value = false;
         }
     }
-
 };
 
 const deleteAccount = async () => {
@@ -168,6 +232,65 @@ const deleteAccount = async () => {
 
 const deleteAll = async () => {
 
+};
+
+// Profile picture handling functions
+const triggerFileInput = () => {
+    fileInput.value.click();
+};
+
+const handleFileChange = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Validate file (max 2MB, only images)
+    if (file.size > 2 * 1024 * 1024) {
+        alert("File size should not exceed 2MB");
+        return;
+    }
+
+    if (!file.type.startsWith("image/")) {
+        alert("Only image files are allowed");
+        return;
+    }
+
+    profileFile.value = file;
+
+    // Create a preview URL
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        profilePreview.value = e.target.result;
+    };
+    reader.readAsDataURL(file);
+};
+
+const clearProfilePic = () => {
+    profileFile.value = null;
+    profilePreview.value = currentAvatar.value || require("@/assets/default_pfp.jpg");
+    if (fileInput.value) {
+        fileInput.value.value = "";
+    }
+};
+
+const uploadProfilePic = async () => {
+    if (!profileFile.value) return currentAvatar.value;
+
+    try {
+        uploadingPic.value = true;
+
+        // Upload with user id in filename
+        const userId = auth.currentUser.uid;
+        const fileName = `profile_pics/${userId}_${Date.now()}_${profileFile.value.name}`;
+
+        const url = await uploadToGitHub(profileFile.value, fileName);
+        return url;
+    } catch (error) {
+        console.error("Error uploading profile picture:", error);
+        alert("Failed to upload profile picture, using previous avatar.");
+        return currentAvatar.value;
+    } finally {
+        uploadingPic.value = false;
+    }
 };
 
 const filteredFollowers = computed(() => {
@@ -227,6 +350,104 @@ const filteredFollowing = computed(() => {
     display: flex;
     justify-content: space-between;
     align-items: center;
+}
+
+/* Profile picture styles */
+.profile-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.profile-preview-wrapper {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    overflow: hidden;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    transition: box-shadow 0.3s ease;
+}
+
+.profile-preview-wrapper:hover {
+    box-shadow: 0 8px 16px rgba(52, 152, 219, 0.5);
+    transform: translateY(-3px);
+}
+
+.profile-preview {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border: 2px solid #3498db;
+    background-color: #1a2233;
+    transition: transform 0.3s ease;
+}
+
+.profile-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(13, 17, 23, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.profile-preview-wrapper:hover .profile-overlay {
+    opacity: 1;
+    background: rgba(13, 17, 23, 0.6);
+}
+
+.profile-preview-wrapper:hover .profile-preview {
+    transform: scale(1.08);
+    border-color: #2ecc71;
+}
+
+.profile-overlay i {
+    color: #ffffff;
+    font-size: 2rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.profile-controls {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+}
+
+.file-input {
+    display: none;
+}
+
+.upload-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #3498db;
+    font-size: 0.9rem;
+}
+
+.spinner {
+    display: inline-block;
+    width: 1.25rem;
+    height: 1.25rem;
+    margin-right: 0.5rem;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: #ffffff;
+    border-radius: 50%;
+    animation: spinner 0.8s linear infinite;
+}
+
+@keyframes spinner {
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 .user-card {
