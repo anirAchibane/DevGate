@@ -4,6 +4,7 @@
     - email: str
     - avatar: str
     - username: str
+    - following: array of strs (ids of followings)
     -> objectives: 
         - lastUpdated: datetime
         - startDate: datetime

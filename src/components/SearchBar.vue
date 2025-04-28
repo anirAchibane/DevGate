@@ -11,7 +11,10 @@
                 class="search-input"
             />
             <div class="search-icon">
-                <i class="fa-solid fa-search"></i>
+                <i
+                    class="fa-solid"
+                    :class="loading ? 'fa-spinner fa-spin' : 'fa-search'"
+                ></i>
             </div>
         </div>
         <div
@@ -19,9 +22,11 @@
             class="search-results"
         >
             <div v-if="loading" class="search-loading">
-                <i class="fa-solid fa-spinner fa-spin"></i> Searching...
+                <LoadingOverlay message="Searching..." transparent />
             </div>
-            <div v-else-if="noResults" class="no-results">No results found</div>
+            <div v-else-if="noResults" class="no-results">
+                <i class="fas fa-search-minus"></i> No results found
+            </div>
             <div v-else>
                 <!-- Users section -->
                 <div v-if="userResults.length > 0" class="result-section">
@@ -118,6 +123,7 @@ import { ref, computed, watch } from "vue";
 import { db } from "@/firebase/config.js";
 import { useRouter } from "vue-router";
 import { debounce } from "lodash"; // Make sure to install lodash if not already
+import LoadingOverlay from "@/components/LoadingOverlay.vue";
 
 const router = useRouter();
 const searchQuery = ref("");
@@ -343,17 +349,19 @@ watch(searchQuery, (newValue) => {
 }
 
 .search-loading {
-    padding: 12px;
+    position: relative;
+    height: 100px;
+}
+
+.no-results {
+    padding: 16px;
     color: #7d8796;
     font-size: 14px;
     text-align: center;
 }
 
-.no-results {
-    padding: 12px;
-    color: #7d8796;
-    font-size: 14px;
-    text-align: center;
+.no-results i {
+    margin-right: 8px;
 }
 
 .result-section {

@@ -3,8 +3,15 @@ import Homeview from "../views/HomeView.vue";
 import ProfileView from "../views/ProfileView.vue";
 import LoginView from "../views/LoginView.vue";
 import SignupView from "../views/SignupView.vue";
+
 import MessagesView from "@/views/MessagesView.vue"; 
+
+import SettingsView from "../views/SettingsView.vue";
+import AddNewView from "../views/AddNewView";
+
+
 import { auth, db } from "../firebase/config"; // Import Firebase auth
+
 
 const routes = [
     {
@@ -28,11 +35,23 @@ const routes = [
         component: ProfileView,
     },
     {
+
         path: "/messages",
         name: "Messages",
         component: MessagesView,
         meta: { requiresAuth: true },
     },
+
+        path: "/settings",
+        name: "Settings",
+        component: SettingsView,
+    },
+    {
+        path: "/add/:id",
+        name: "Add",
+        component: AddNewView,
+    }
+
 ];
 
 const router = createRouter({
