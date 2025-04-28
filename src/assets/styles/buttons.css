@@ -29,7 +29,7 @@
     overflow: hidden;
     transition: all 0.25s cubic-bezier(0.3, 0, 0.2, 1);
     letter-spacing: 0.01em;
-    user-select: none;
+    /* user-select: none; */
     text-decoration: none;
 }
 

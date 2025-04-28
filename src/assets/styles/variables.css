@@ -1,0 +1,122 @@
+:root {
+    /* Color palette */
+    --dark-blue: #010508;
+    --lighter-dark-blue: #0D1117;
+    --borders-grey: #555d69;
+    --lighter-blue: #3498db;
+
+    /* Extended palette based on the main colors */
+    --background-primary: var(--lighter-dark-blue);
+    --background-secondary: var(--dark-blue);
+    --text-primary: #ffffff;
+    --text-secondary: #e1e4e8;
+    --text-muted: #8b949e;
+
+    /* Interactive elements */
+    --primary-color: var(--lighter-blue);
+    --primary-hover: #2980b9;
+    --accent-color: #5ca5e0;
+    --accent-hover: #4891ca;
+    --danger-color: #e74c3c;
+    --success-color: #2ecc71;
+    --warning-color: #f39c12;
+    --info-color: #3498db;
+
+    /* Borders and shadows */
+    --border-color: var(--borders-grey);
+    --border-light: rgba(85, 93, 105, 0.3);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.15), 0 3px 6px rgba(0, 0, 0, 0.10);
+
+    /* Spacing */
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
+
+    /* Border radius */
+    --radius-sm: 0.25rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 1rem;
+    --radius-full: 9999px;
+
+    /* Message specific */
+    --sent-message-bg: var(--primary-color);
+    --sent-message-color: white;
+    --received-message-bg: #1a1e24;
+    --received-message-color: var(--text-primary);
+
+    /* Transitions */
+    --transition-fast: 150ms ease;
+    --transition-normal: 250ms ease;
+    --transition-slow: 350ms ease;
+}
+
+/* Dark theme - default for this app */
+body {
+    background-color: var(--background-primary);
+    color: var(--text-primary);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    margin: 0;
+    padding: 0;
+    transition: background-color var(--transition-normal);
+    line-height: 1.5;
+}
+
+/* Modern scrollbar styling */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(13, 17, 23, 0.7);
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: var(--borders-grey);
+    border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background-color: var(--lighter-blue);
+}
+
+/* Common utility classes */
+.text-primary {
+    color: var(--primary-color) !important;
+}
+
+.bg-primary {
+    background-color: var(--primary-color) !important;
+    color: white !important;
+}
+
+.text-muted {
+    color: var(--text-muted) !important;
+}
+
+.shadow-hover {
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.shadow-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.card {
+    background-color: var(--background-secondary);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow var(--transition-normal), transform var(--transition-normal);
+}
+
+.card:hover {
+    box-shadow: var(--shadow-md);
+}
+
+/* Buttons styling will be extended in buttons.css */
