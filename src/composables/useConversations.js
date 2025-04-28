@@ -24,17 +24,46 @@ export function useConversations() {
         });
         
         // Sort conversations by lastUpdate timestamp, most recent first
-        conversations.value.sort((a, b) => {
-          const timestampA = a.lastUpdate?.toMillis ? a.lastUpdate.toMillis() : 0;
-          const timestampB = b.lastUpdate?.toMillis ? b.lastUpdate.toMillis() : 0;
-          return timestampB - timestampA;
-        });
+        sortConversations();
         
         loading.value = false;
       });
 
     return () => unsubscribe();
   });
+  
+  // Function to sort conversations by lastUpdate timestamp
+  const sortConversations = () => {
+    conversations.value.sort((a, b) => {
+      const timestampA = a.lastUpdate?.toMillis ? a.lastUpdate.toMillis() : 0;
+      const timestampB = b.lastUpdate?.toMillis ? b.lastUpdate.toMillis() : 0;
+      return timestampB - timestampA;
+    });
+  };
+  
+  // Add a method to manually refresh a conversation to the top
+  const refreshConversation = (chatId) => {
+    if (!chatId) return;
+    
+    // Find the conversation in our local data
+    const index = conversations.value.findIndex(conv => conv.id === chatId);
+    if (index >= 0) {
+      // Update its lastUpdate timestamp to now
+      const updatedConversation = {
+        ...conversations.value[index],
+        lastUpdate: {
+          toMillis: () => Date.now(),
+          toDate: () => new Date()
+        }
+      };
+      
+      // Replace the conversation in the array
+      conversations.value[index] = updatedConversation;
+      
+      // Re-sort the conversations
+      sortConversations();
+    }
+  };
 
-  return { conversations, loading };
+  return { conversations, loading, refreshConversation };
 }
