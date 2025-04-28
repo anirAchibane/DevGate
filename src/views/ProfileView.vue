@@ -64,9 +64,6 @@
         </div>
 
     </div>
-
-    
-
 </template>
 
 <script setup>
@@ -148,7 +145,7 @@ onMounted(() => {
 
 </script>
 
-<style >
+<style>
 html,
 body,
 #app {
@@ -156,7 +153,7 @@ body,
     height: 100%;
     margin: 0;
     padding: 0;
-    background-color: #0D1117;
+    background-color: #0d1117;
 }
 
 .main{

@@ -4,6 +4,7 @@
     - email: str
     - avatar: str
     - username: str
+    - following: array of strs (ids of followings)
     -> objectives: 
         - lastUpdated: datetime
         - startDate: datetime
@@ -33,7 +34,7 @@
     - content: str
     - pid: str
     - summary: str
-    - type: str
+    - type: str ("project" or "objective" or "skill" or "text")
     - uid: str
     - picture: str
     -> comments:
