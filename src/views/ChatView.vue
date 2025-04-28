@@ -831,6 +831,11 @@ onMounted(async () => {
     align-items: center;
     background-color: #101822;
 }
+.active-chat-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
 
 .message-input {
     flex: 1;
