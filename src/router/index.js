@@ -42,7 +42,7 @@ const routes = [
         meta: { requiresAuth: true },
     },
 
-        path: "/settings",
+    {  path: "/settings",
         name: "Settings",
         component: SettingsView,
     },
