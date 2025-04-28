@@ -1,6 +1,6 @@
 <template>
     <div class="followable-users-container">
-        <h2 class="section-title">People You Might Want to Follow</h2>
+        <h2 v-if="!compact" class="section-title">People You Might Want to Follow</h2>
 
         <div v-if="loading" class="loading-container">
             <LoadingOverlay message="Loading users..." transparent />
@@ -11,25 +11,29 @@
             <p>No users found to follow at the moment.</p>
         </div>
 
-        <div v-else class="user-list">
-            <div v-for="user in users" :key="user.id" class="user-card">
+        <div v-else class="user-list" :class="{ 'compact-list': compact }">
+            <div v-for="user in limitedUsers" :key="user.id" class="user-card" :class="{ 'compact-card': compact }">
                 <div class="user-info">
                     <div class="user-avatar">
-                        <img
-                            :src="
-                                user.avatar ||
-                                require('@/assets/default_pfp.jpg')
-                            "
-                            alt="User avatar"
-                        />
+                        <router-link :to="{ name: 'Profil', params: { id: user.id } }">
+                            <img
+                                :src="
+                                    user.avatar ||
+                                    require('@/assets/default_pfp.jpg')
+                                "
+                                alt="User avatar"
+                            />
+                        </router-link>
                     </div>
                     <div class="user-details">
-                        <h3 class="username">{{ user.username }}</h3>
-                        <p class="bio">{{ user.bio || "No bio available" }}</p>
+                        <router-link :to="{ name: 'Profil', params: { id: user.id } }" class="username-link">
+                            <h3 class="username">{{ user.username }}</h3>
+                        </router-link>
+                        <p v-if="!compact" class="bio">{{ user.bio || "No bio available" }}</p>
 
                         <div
                             class="skill-tags"
-                            v-if="getUserSkills(user).length > 0"
+                            v-if="getUserSkills(user).length > 0 && !compact"
                         >
                             <span
                                 v-for="skill in getUserSkills(user).slice(0, 3)"
@@ -48,10 +52,10 @@
                     </div>
                 </div>
 
-                <div class="action-buttons">
+                <div class="action-buttons" :class="{ 'compact-buttons': compact }">
                     <button
-                        class="btn btn-outline btn-sm"
-                        :class="{ 'btn-primary': isFollowing(user.id) }"
+                        class="btn btn-outline btn-sm follow-btn"
+                        :class="{ 'btn-primary': isFollowing(user.id), 'compact-follow-btn': compact }"
                         @click="toggleFollow(user.id)"
                         :disabled="followInProgress === user.id"
                     >
@@ -67,10 +71,11 @@
                                         : 'fas fa-user-plus'
                                 "
                             ></i>
-                            {{ isFollowing(user.id) ? "Following" : "Follow" }}
+                            <span v-if="!compact">{{ isFollowing(user.id) ? "Following" : "Follow" }}</span>
                         </span>
                     </button>
                     <router-link
+                        v-if="!compact"
                         :to="{ name: 'Profil', params: { id: user.id } }"
                         class="btn btn-sm btn-outline view-profile"
                     >
@@ -80,7 +85,7 @@
             </div>
         </div>
 
-        <div v-if="!loading && hasMore" class="load-more">
+        <div v-if="!loading && hasMore && users.length > maxUsers && !compact" class="load-more">
             <button
                 class="btn btn-outline"
                 @click="loadMore"
@@ -90,13 +95,30 @@
                 <span v-else>Load More</span>
             </button>
         </div>
+        
+        <div v-if="!loading && users.length > 0 && compact && users.length > maxUsers" class="view-all-link">
+            <router-link to="/explore-users" class="view-all">
+                View all suggestions
+            </router-link>
+        </div>
     </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed, defineProps } from "vue";
 import { db, auth, firebase } from "@/firebase/config";
 import LoadingOverlay from "@/components/LoadingOverlay.vue";
+
+const props = defineProps({
+    maxUsers: {
+        type: Number,
+        default: 6
+    },
+    compact: {
+        type: Boolean,
+        default: false
+    }
+});
 
 const users = ref([]);
 const currentUserFollowing = ref([]);
@@ -105,7 +127,12 @@ const loadingMore = ref(false);
 const lastVisible = ref(null);
 const followInProgress = ref(null);
 const hasMore = ref(true);
-const limit = 6;
+const limit = computed(() => props.maxUsers * 2);
+
+// Computed property to limit the number of users shown
+const limitedUsers = computed(() => {
+    return users.value.slice(0, props.maxUsers);
+});
 
 // Check if user is being followed
 const isFollowing = (userId) => currentUserFollowing.value.includes(userId);
@@ -143,7 +170,7 @@ const loadUsers = async () => {
                 currentUser.uid
             )
             .orderBy(firebase.firestore.FieldPath.documentId())
-            .limit(limit);
+            .limit(limit.value);
 
         const snapshot = await query.get();
         if (snapshot.empty) {
@@ -162,7 +189,7 @@ const loadUsers = async () => {
             createdAt: doc.data().createdAt?.toDate() || new Date(),
         }));
 
-        hasMore.value = snapshot.docs.length === limit;
+        hasMore.value = snapshot.docs.length === limit.value;
     } catch (error) {
         console.error("Error loading users:", error);
     } finally {
@@ -192,7 +219,7 @@ const loadMore = async () => {
             )
             .orderBy(firebase.firestore.FieldPath.documentId())
             .startAfter(lastVisible.value)
-            .limit(limit);
+            .limit(limit.value);
 
         const snapshot = await query.get();
 
@@ -209,7 +236,7 @@ const loadMore = async () => {
             }));
 
             users.value = [...users.value, ...newUsers];
-            hasMore.value = snapshot.docs.length === limit;
+            hasMore.value = snapshot.docs.length === limit.value;
         } else {
             hasMore.value = false;
         }
@@ -270,9 +297,6 @@ onMounted(() => {
 <style scoped>
 .followable-users-container {
     width: 100%;
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 20px 0;
 }
 
 .section-title {
@@ -290,6 +314,10 @@ onMounted(() => {
     gap: 16px;
 }
 
+.compact-list {
+    gap: 10px;
+}
+
 .user-card {
     display: flex;
     justify-content: space-between;
@@ -298,13 +326,18 @@ onMounted(() => {
     background-color: #1a2233;
     border-radius: 8px;
     border: 1px solid #555d69;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
 }
 
 .user-card:hover {
     transform: translateY(-3px);
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
     border-color: #3498db;
+}
+
+.compact-card {
+    padding: 10px;
+    margin-bottom: 5px;
 }
 
 .user-info {
@@ -326,6 +359,16 @@ onMounted(() => {
     object-fit: cover;
     border: 2px solid #3498db;
     background-color: #0d1117;
+    transition: transform 0.2s ease;
+}
+
+.compact-card .user-avatar img {
+    width: 40px;
+    height: 40px;
+}
+
+.user-avatar img:hover {
+    transform: scale(1.05);
 }
 
 .user-details {
@@ -338,6 +381,20 @@ onMounted(() => {
     font-weight: 600;
     margin: 0 0 4px 0;
     color: #ffffff;
+    transition: color 0.2s ease;
+}
+
+.username-link {
+    text-decoration: none;
+}
+
+.username-link:hover .username {
+    color: #3498db;
+}
+
+.compact-card .username {
+    font-size: 14px;
+    margin-bottom: 0;
 }
 
 .bio {
@@ -380,6 +437,29 @@ onMounted(() => {
     gap: 10px;
 }
 
+.compact-buttons {
+    gap: 5px;
+}
+
+.follow-btn {
+    min-width: 90px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    transition: all 0.2s ease;
+}
+
+.compact-follow-btn {
+    min-width: 40px;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 .view-profile {
     background-color: transparent;
     color: #cfd8dc;
@@ -393,13 +473,13 @@ onMounted(() => {
 
 .loading-container {
     width: 100%;
-    height: 300px;
+    height: 200px;
     position: relative;
 }
 
 .empty-state {
     text-align: center;
-    padding: 40px 20px;
+    padding: 20px;
     background-color: rgba(26, 34, 51, 0.6);
     border-radius: 8px;
     border: 1px dashed #555d69;
@@ -407,15 +487,33 @@ onMounted(() => {
 }
 
 .empty-icon {
-    font-size: 3rem;
+    font-size: 2.5rem;
     margin-bottom: 1rem;
     color: #555d69;
 }
 
 .load-more {
-    margin-top: 24px;
+    margin-top: 20px;
     display: flex;
     justify-content: center;
+}
+
+.view-all-link {
+    margin-top: 10px;
+    text-align: center;
+}
+
+.view-all {
+    color: #3498db;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+.view-all:hover {
+    color: #2980b9;
+    text-decoration: underline;
 }
 
 @keyframes spinner {
@@ -430,15 +528,29 @@ onMounted(() => {
         align-items: flex-start;
     }
 
+    .compact-card {
+        flex-direction: row;
+    }
+
     .action-buttons {
         margin-top: 16px;
         width: 100%;
         justify-content: space-between;
     }
 
+    .compact-buttons {
+        margin-top: 0;
+        width: auto;
+    }
+
     .user-avatar img {
         width: 50px;
         height: 50px;
+    }
+
+    .compact-card .user-avatar img {
+        width: 40px;
+        height: 40px;
     }
 }
 </style>

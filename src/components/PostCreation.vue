@@ -640,7 +640,7 @@ const saveCustomizedPost = async () => {
         emit("post-created", docRef.id);
 
         // Redirect to home page after post creation with reload flag
-        router.push({ path: "/home", query: { reload: Date.now() } });
+        router.push("/home");
     } catch (error) {
         console.error(`Error creating customized post:`, error);
         alert("Error creating post. Please try again.");
