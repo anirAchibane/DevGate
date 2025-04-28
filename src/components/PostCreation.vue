@@ -467,6 +467,24 @@ const createPostFromItem = (item, type) => {
     customTags.value = item.stack && type === "project" ? [...item.stack] : [];
     customTagInput.value = "";
 
+    // Update item's visibility to public if not already set
+    if (item) {
+        db.collection("users")
+            .doc(props.userId)
+            .collection(type)
+            .doc(item.id)
+            .update({ visibility: true })
+            .then(() => {
+                console.log(`${type} visibility set to public`);
+                alert(
+                    `${
+                        type.charAt(0).toUpperCase() + type.slice(1)
+                    } visibility set to public`
+                );
+            })
+            .catch((err) => console.error("Error updating visibility:", err));
+    }
+
     // Close selection modals and open customization modal
     closeAllModals();
     showCustomizationModal.value = true;
