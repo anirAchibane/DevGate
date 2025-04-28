@@ -21,9 +21,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted, defineProps } from "vue";
+import { ref, onMounted, defineProps, watch, computed , onUnmounted} from "vue";
 import { auth, db } from "@/firebase/config";
-import sendMessageToChat from "@/composables/sendMessageToChat";
+import { useSendMessage } from "@/composables/getChatMessages"; // Update import if needed
 
 const props = defineProps({
     chat: { type: Object, required: true }
@@ -32,25 +32,60 @@ const props = defineProps({
 const messages = ref([]);
 const newMessage = ref("");
 const currentUserId = auth.currentUser.uid;
+const unsubscribe = ref(null);
 
-const chatRef = db.collection("chat").doc(props.chat.id);
+// Reactive chat reference
+const chatRef = computed(() => db.collection("chat").doc(props.chat.id));
+
+const { sendMessage: sendMessageComposable, error } = useSendMessage(chatRef.value.id);
+console.log(error.value); // Log the error if needed
 
 const sendMessage = async () => {
     if (!newMessage.value.trim()) return;
-    await sendMessageToChat(props.chat.id, {
-        content: newMessage.value,
-        sender_id: currentUserId
-    });
+    await sendMessageComposable(newMessage.value);
     newMessage.value = "";
 };
 
-onMounted(() => {
-    chatRef.collection("messages")
+const setupListener = () => {
+    // Clear existing listener
+    if (unsubscribe.value) {
+        unsubscribe.value();
+    }
+
+    unsubscribe.value = chatRef.value.collection("messages")
         .orderBy("created_at")
         .onSnapshot(snapshot => {
-            messages.value = snapshot.docs.map(doc => doc.data());
+            messages.value = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+            scrollToBottom();
         });
+};
+
+onMounted(() => {
+    setupListener();
 });
+
+watch(() => props.chat.id, (newVal) => {
+    if (newVal) {
+        setupListener();
+    }
+});
+
+// Cleanup listener when component unmounts
+onUnmounted(() => {
+    if (unsubscribe.value) {
+        unsubscribe.value();
+    }
+});
+
+const scrollToBottom = () => {
+    const messagesBox = document.querySelector(".messages-box");
+    if (messagesBox) {
+        messagesBox.scrollTop = messagesBox.scrollHeight;
+    }
+};
 </script>
 
 <style scoped>
