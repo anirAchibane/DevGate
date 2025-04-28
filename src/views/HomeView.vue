@@ -69,8 +69,9 @@
             <div class="right-sidebar">
                 <!-- People to follow section -->
                 <div class="follow-suggestions-card">
-                    <h3 class="sidebar-title">Add to your feed</h3>
-                    <followable-users-list :max-users="3" />
+                    <h3 class="sidebar-title">Suggested Connections</h3>
+                    <p class="sidebar-subtitle">People you might want to follow</p>
+                    <followable-users-list :max-users="5" :compact="true" />
                 </div>
             </div>
         </div>
@@ -505,6 +506,13 @@ body,
     margin-bottom: 15px;
     color: #ffffff;
     font-size: 16px;
+}
+
+.sidebar-subtitle {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #cfd8dc;
+    font-size: 14px;
 }
 
 /* Post modal styles */
