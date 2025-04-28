@@ -1,3 +1,4 @@
 dark blue: #010508
 lighter dark blue: #0D1117
 borders grey: #555d69
+lighter blue: #3498db
