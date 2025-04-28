@@ -53,15 +53,15 @@
                     <div class="sort-option">
                         <span>Sort by:</span>
                         <select v-model="sortOption" class="sort-select">
-                            <option value="recent">Recent</option>
-                            <option value="top">Top</option>
+                            <option value="newest">Newest</option>
+                            <option value="oldest">Oldest</option>
                         </select>
                     </div>
                 </div>
 
                 <!-- Posts feed -->
                 <div class="posts-feed">
-                    <posts-list />
+                    <posts-list :sort-option="sortOption" />
                 </div>
             </div>
 
@@ -153,7 +153,7 @@ import { uploadToGitHub } from "@/composables/uploadToGitHub";
 
 const user = ref(null);
 const userData = ref(null);
-const sortOption = ref("recent");
+const sortOption = ref("newest");
 const userLoading = ref(true);
 const initialLoading = ref(true);
 
