@@ -32,15 +32,32 @@
 import PostItem from "@/components/PostItem";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import { getPosts } from "@/composables/getPost";
-import { ref, onMounted, onUnmounted, watchEffect } from "vue";
+import {
+    ref,
+    onMounted,
+    onUnmounted,
+    watchEffect,
+    defineProps,
+    watch,
+} from "vue";
+
+const props = defineProps({
+    sortOption: {
+        type: String,
+        default: "newest",
+    },
+});
 
 const posts = ref([]);
 const loading = ref(true);
 const error = ref(null);
 let unsubscribe = null;
+let postsData = null;
 
 onMounted(() => {
-    const postsData = getPosts();
+    // Initial sorting direction based on sortOption
+    const initialSortDirection = props.sortOption === "newest" ? "desc" : "asc";
+    postsData = getPosts(initialSortDirection);
 
     // Use watchEffect to sync reactive references
     watchEffect(() => {
@@ -52,6 +69,34 @@ onMounted(() => {
     // Store unsubscribe function to clean up when component unmounts
     unsubscribe = postsData.unsubscribe;
 });
+
+// Watch for sort option changes
+watch(
+    () => props.sortOption,
+    (newSortOption) => {
+        // Cleanup previous subscription
+        if (unsubscribe) {
+            unsubscribe();
+        }
+
+        // Create a new subscription with the updated sort direction
+        const sortDirection = newSortOption === "newest" ? "desc" : "asc";
+        console.log("Changing sort direction to:", sortDirection);
+
+        loading.value = true;
+        postsData = getPosts(sortDirection);
+
+        // Update the unsubscribe function
+        unsubscribe = postsData.unsubscribe;
+
+        // Sync the new data
+        watchEffect(() => {
+            posts.value = postsData.posts.value;
+            error.value = postsData.error.value;
+            loading.value = postsData.loading.value;
+        });
+    }
+);
 
 onUnmounted(() => {
     // Cleanup subscription when component is destroyed
