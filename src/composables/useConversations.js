@@ -22,6 +22,14 @@ export function useConversations() {
             otherUsername: otherUserId || "Unknown"
           };
         });
+        
+        // Sort conversations by lastUpdate timestamp, most recent first
+        conversations.value.sort((a, b) => {
+          const timestampA = a.lastUpdate?.toMillis ? a.lastUpdate.toMillis() : 0;
+          const timestampB = b.lastUpdate?.toMillis ? b.lastUpdate.toMillis() : 0;
+          return timestampB - timestampA;
+        });
+        
         loading.value = false;
       });
 

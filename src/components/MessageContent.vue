@@ -21,9 +21,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted, defineProps, watch, computed , onUnmounted} from "vue";
+import { ref, onMounted, defineProps, watch, computed, onUnmounted } from "vue";
 import { auth, db } from "@/firebase/config";
-import { useSendMessage } from "@/composables/getChatMessages"; // Update import if needed
+import { useSendMessage } from "@/composables/getChatMessages";
 
 const props = defineProps({
     chat: { type: Object, required: true }
@@ -37,11 +37,16 @@ const unsubscribe = ref(null);
 // Reactive chat reference
 const chatRef = computed(() => db.collection("chat").doc(props.chat.id));
 
-const { sendMessage: sendMessageComposable, error } = useSendMessage(chatRef.value.id);
-console.log(error.value); // Log the error if needed
+// Use a computed property to get the current chat ID
+const currentChatId = computed(() => props.chat.id);
 
+// Initialize sendMessage composable with a function that always uses the current chat ID
 const sendMessage = async () => {
     if (!newMessage.value.trim()) return;
+
+    // Create a new instance of the sendMessage composable with the current chat ID
+    const { sendMessage: sendMessageComposable } = useSendMessage(currentChatId.value);
+
     await sendMessageComposable(newMessage.value);
     newMessage.value = "";
 };

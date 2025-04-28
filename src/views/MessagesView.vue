@@ -16,6 +16,19 @@
                 </div>
             </div>
             <div class="col-md-8">
+                <!-- Chat header with user profile info -->
+                <div v-if="selectedChat && otherUserDetails" class="chat-header mb-3 p-3 rounded shadow-sm"
+                    @click="goToUserProfile(otherUserDetails.id)">
+                    <div class="d-flex align-items-center">
+                        <img :src="otherUserDetails.profilePicture || '/default_pfp.jpg'" class="rounded-circle me-3"
+                            alt="Profile Picture"
+                            style="width: 48px; height: 48px; object-fit: cover; cursor: pointer;">
+                        <div>
+                            <h5 class="mb-0">{{ otherUserDetails.username }}</h5>
+                            <small class="text-muted">Click to view profile</small>
+                        </div>
+                    </div>
+                </div>
                 <MessageContent v-if="selectedChat" :chat="selectedChat" />
                 <div v-else class="text-center mt-5 text-muted">
                     Select a conversation
@@ -54,15 +67,46 @@ import { useConversations } from "@/composables/useConversations";
 import ConversationItem from "@/components/ConversationItem.vue";
 import MessageContent from "@/components/MessageContent.vue";
 import { db, auth } from "@/firebase/config";
+import { useRouter } from "vue-router";
 
+const router = useRouter();
 const { conversations, loading } = useConversations();
 const selectedChat = ref(null);
 const showAddChatModal = ref(false);
 const searchUsername = ref("");
 const searchResults = ref([]);
+const otherUserDetails = ref(null);
 
-const selectChat = (chat) => {
+const selectChat = async (chat) => {
     selectedChat.value = chat;
+
+    // Get the other user in the conversation
+    if (chat && chat.users) {
+        const currentUserId = auth.currentUser?.uid;
+        const otherUserId = chat.users.find(id => id !== currentUserId);
+
+        if (otherUserId) {
+            try {
+                const userDoc = await db.collection("users").doc(otherUserId).get();
+                if (userDoc.exists) {
+                    otherUserDetails.value = {
+                        id: otherUserId,
+                        ...userDoc.data()
+                    };
+                }
+            } catch (error) {
+                console.error("Error fetching user details:", error);
+                otherUserDetails.value = null;
+            }
+        }
+    }
+};
+
+// Navigate to user profile
+const goToUserProfile = (userId) => {
+    if (userId) {
+        router.push(`/profile/${userId}`);
+    }
 };
 
 const openAddChatModal = () => {
@@ -105,3 +149,27 @@ watch(searchUsername, async (newVal) => {
     }
 });
 </script>
+
+<style scoped>
+.chat-header {
+    background-color: #f8f9fa;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    border-left: 3px solid #3498db;
+}
+
+.chat-header:hover {
+    background-color: #e9ecef;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.chat-header img {
+    border: 2px solid #3498db;
+    transition: transform 0.2s ease;
+}
+
+.chat-header:hover img {
+    transform: scale(1.05);
+}
+</style>
