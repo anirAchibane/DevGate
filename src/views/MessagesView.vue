@@ -45,7 +45,7 @@
                             alt="Profile Picture">
                         <div class="user-info">
                             <h5 class="username">{{ otherUserDetails.username }}</h5>
-                            <small class="user-status">Click to view profile</small>
+                            <!-- <small class="user-status">Click to view profile</small> -->
                         </div>
                     </div>
                 </div>
@@ -245,9 +245,32 @@ const addChat = async (userId) => {
 };
 
 const searchUsersByUsername = async (username) => {
+    // Get users that match the search query
     const usersRef = db.collection("users");
     const snapshot = await usersRef.orderBy("username").startAt(username).endAt(username + "\uf8ff").get();
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const matchingUsers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+    // Get the list of users that the current user already has chats with
+    const currentUserId = auth.currentUser?.uid;
+    const existingChatPartners = new Set();
+
+    // Add the current user's ID to exclude self from search results
+    existingChatPartners.add(currentUserId);
+
+    // Add all users the current user already has chats with
+    if (conversations.value && conversations.value.length > 0) {
+        conversations.value.forEach(chat => {
+            if (chat.users) {
+                const otherUserId = chat.users.find(id => id !== currentUserId);
+                if (otherUserId) {
+                    existingChatPartners.add(otherUserId);
+                }
+            }
+        });
+    }
+
+    // Filter out users that the current user already has chats with
+    return matchingUsers.filter(user => !existingChatPartners.has(user.id));
 };
 
 const createChat = async (userId) => {
@@ -636,7 +659,7 @@ watch(searchUsername, async (newVal) => {
     padding: var(--spacing-sm);
     border-bottom: 1px solid var(--border-light);
     background-color: rgba(1, 5, 8, 0.3);
-    display: flex  ;
+    display: flex;
     flex-direction: row;
 }
 
