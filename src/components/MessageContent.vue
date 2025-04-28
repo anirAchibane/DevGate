@@ -1,6 +1,6 @@
 <template>
     <div class="message-content">
-        <div class="messages-container">
+        <div class="messages-container" ref="messagesContainer">
             <div v-for="(message, index) in messages" :key="index" class="message-wrapper"
                 :class="{ 'sent': message.sender_id === currentUserId, 'received': message.sender_id !== currentUserId }">
                 <!-- Delete button in front of messages (only for messages sent by the current user) -->
@@ -58,6 +58,7 @@ const newMessage = ref("");
 const currentUserId = auth.currentUser.uid;
 const unsubscribe = ref(null);
 const messagesEnd = ref(null);
+const messagesContainer = ref(null);
 const showDeleteConfirm = ref(false);
 const messageToDelete = ref(null);
 
@@ -71,11 +72,23 @@ const currentChatId = computed(() => props.chat.id);
 const sendMessage = async () => {
     if (!newMessage.value.trim()) return;
 
+    // Store message content before clearing the input
+    const messageContent = newMessage.value;
+
+    // Clear input immediately for better UX
+    newMessage.value = "";
+
+    // Immediate scroll to bottom (no animation) before sending
+    scrollToBottomInstant();
+
     // Create a new instance of the sendMessage composable with the current chat ID
     const { sendMessage: sendMessageComposable } = useSendMessage(currentChatId.value);
 
-    await sendMessageComposable(newMessage.value);
-    newMessage.value = "";
+    try {
+        await sendMessageComposable(messageContent);
+    } catch (error) {
+        console.error("Error sending message:", error);
+    }
 };
 
 // Message deletion functions
@@ -94,10 +107,8 @@ const deleteSelectedMessage = async () => {
 
     try {
         await deleteMessage(currentChatId.value, messageToDelete.value);
-        // No need to manually update messages array as the listener will handle it
     } catch (error) {
         console.error("Failed to delete message:", error);
-        // You could add a toast notification here if desired
     } finally {
         showDeleteConfirm.value = false;
         messageToDelete.value = null;
@@ -113,21 +124,45 @@ const setupListener = () => {
     unsubscribe.value = chatRef.value.collection("messages")
         .orderBy("created_at")
         .onSnapshot(snapshot => {
+            const prevCount = messages.value.length;
             messages.value = snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
             }));
-            scrollToBottom();
+
+            // If new messages arrived or initial load, scroll to bottom
+            if (messages.value.length > prevCount || prevCount === 0) {
+                scrollToBottomInstant();
+            }
         });
+};
+
+// Immediate scroll without animation
+const scrollToBottomInstant = () => {
+    nextTick(() => {
+        if (messagesContainer.value) {
+            messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
+        }
+    });
 };
 
 onMounted(() => {
     setupListener();
+
+    // Force scroll on initial load
+    nextTick(() => {
+        scrollToBottomInstant();
+
+        // Add a backup scroll with slight delay just to be sure
+        setTimeout(scrollToBottomInstant, 100);
+    });
 });
 
 watch(() => props.chat.id, (newVal) => {
     if (newVal) {
         setupListener();
+        // Force scroll when changing chats
+        setTimeout(scrollToBottomInstant, 50);
     }
 });
 
@@ -137,15 +172,6 @@ onUnmounted(() => {
         unsubscribe.value();
     }
 });
-
-const scrollToBottom = () => {
-    // Use Vue's nextTick to ensure DOM is updated before scrolling
-    nextTick(() => {
-        if (messagesEnd.value) {
-            messagesEnd.value.scrollIntoView({ behavior: 'smooth' });
-        }
-    });
-};
 </script>
 
 <style scoped>
@@ -153,6 +179,10 @@ const scrollToBottom = () => {
     display: flex;
     flex-direction: column;
     height: 100%;
+    position: relative;
+    /* Added to create proper positioning context */
+    overflow: hidden;
+    /* Prevent any potential overflow issues */
 }
 
 .messages-container {
@@ -163,6 +193,8 @@ const scrollToBottom = () => {
     flex-direction: column;
     gap: var(--spacing-sm);
     background-color: var(--background-secondary);
+    /* Added fixed bottom padding to ensure content isn't hidden behind input */
+    padding-bottom: calc(var(--spacing-md) * 3 + 58px);
 }
 
 .message-wrapper {
@@ -225,9 +257,18 @@ const scrollToBottom = () => {
 }
 
 .message-form {
+    position: absolute;
+    /* Fixed position at bottom */
+    bottom: 0;
+    left: 0;
+    right: 0;
     padding: var(--spacing-md);
     border-top: 1px solid var(--border-light);
     background-color: var(--background-secondary);
+    z-index: 5;
+    /* Ensure it sits above messages */
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+    /* Subtle shadow to separate from content */
 }
 
 .input-container {
