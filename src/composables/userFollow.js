@@ -125,26 +125,26 @@ async function unfollowUser(targetUserId) {
 }
 
 // Function to get user followers (users who follow the target user)
-function getFollowers(targetUserId) {
+async function getFollowers(targetUserId) {
     const followers = ref([]);
     const loading = ref(true);
     const error = ref(null);
 
-    db.collection("users")
-        .where("following", "array-contains", targetUserId)
-        .get()
-        .then((snapshot) => {
-            followers.value = snapshot.docs.map((doc) => ({
-                id: doc.id,
-                ...doc.data(),
-            }));
-            loading.value = false;
-        })
-        .catch((err) => {
-            error.value = err.message;
-            loading.value = false;
-            console.error("Error getting followers:", err);
-        });
+    try {
+        const snapshot = await db.collection("users")
+            .where("following", "array-contains", targetUserId)
+            .get();
+        
+        followers.value = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+        }));
+    } catch (error){
+        console.error("Error getting followers:", error);
+    } finally{
+        loading.value = false;
+
+    }
 
     return { followers, loading, error };
 }

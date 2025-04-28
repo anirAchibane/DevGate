@@ -70,11 +70,11 @@
 import MiniNavbar from "@/components/MiniNavbar.vue";
 import {ref } from "vue";
 import { db, auth  } from "@/firebase/config.js";
-import { useRoute, /*useRouter*/  } from "vue-router";
+import { useRoute, useRouter  } from "vue-router";
 import { onMounted } from "vue";
 
 const route = useRoute();
-//const router = useRouter();
+const router = useRouter();
 
 const userId = route.params.id;                         // Get the userId from the route params 
 const isCurrent = userId === auth.currentUser.uid;      // Check if the userId is the same as the current user's id
@@ -86,7 +86,7 @@ const userSkills = ref([]);     // stores user's skills
 
 const selectedType = ref("project"); // stores the selected type of item to add (project, objective, skill)
 
-onMounted(() => {
+onMounted(async () => {
     // fetching data:
     try{
         const userRef = db.collection("users").doc(userId);
@@ -141,7 +141,13 @@ onMounted(() => {
     } catch (error) {
         console.error("Error fetching user data:", error);
     }
+
 });
+
+const settings = () => {
+    // Redirect to the settings page
+    router.push("/settings");
+}
 
 </script>
 
