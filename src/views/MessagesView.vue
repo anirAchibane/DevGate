@@ -41,7 +41,7 @@
                 <div v-if="selectedChat && otherUserDetails" class="chat-header"
                     @click="goToUserProfile(otherUserDetails.id)">
                     <div class="chat-header-content">
-                        <img :src="otherUserDetails.profilePicture || '/default_pfp.jpg'" class="user-avatar"
+                        <img :src="otherUserDetails.avatar || require('@/assets/default_pfp.jpg')" class="user-avatar"
                             alt="Profile Picture">
                         <div class="user-info">
                             <h5 class="username">{{ otherUserDetails.username }}</h5>
@@ -81,7 +81,7 @@
                         <ul v-else class="user-list">
                             <li v-for="user in searchResults" :key="user.id" class="user-list-item">
                                 <div class="user-list-info">
-                                    <img :src="user.profilePicture || '/default_pfp.jpg'" class="user-list-avatar"
+                                    <img :src="user.avatar || require('@/assets/default_pfp.jpg')" class="user-list-avatar"
                                         alt="User avatar">
                                     <span class="user-list-name">{{ user.username }}</span>
                                 </div>
@@ -669,7 +669,7 @@ watch(searchUsername, async (newVal) => {
     border-radius: var(--radius-full);
     border: 1px solid var(--border-light);
     background-color: rgba(13, 17, 23, 0.7);
-    color: var(--text-primary);
+    color: var (--text-primary);
     font-size: 0.9rem;
     transition: all var(--transition-fast);
 }
@@ -710,7 +710,7 @@ watch(searchUsername, async (newVal) => {
 
 .clear-search-btn:hover {
     background-color: rgba(255, 255, 255, 0.1);
-    color: var(--text-primary);
+    color: var (--text-primary);
 }
 
 /* Add chat button styling */

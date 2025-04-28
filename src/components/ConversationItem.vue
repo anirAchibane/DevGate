@@ -50,7 +50,7 @@ const fetchOtherUserDetails = async () => {
         const checkData = setInterval(() => {
             if (userData.value) {
                 otherUsername.value = userData.value.username || "User";
-                otherUserPfp.value = userData.value.profilePicture || "/default_pfp.jpg";
+                otherUserPfp.value = userData.value.avatar || require('@/assets/default_pfp.jpg');
                 loading.value = false;
                 clearInterval(checkData);
             } else if (error.value) {
@@ -125,18 +125,16 @@ const formatTime = (timestamp) => {
     position: relative;
     margin-right: var(--spacing-md);
     flex-shrink: 0;
-    width: 20%;
+    width: 50px;
+    height: 50px;
 }
 
 .avatar-img {
-    width: 2%;
-   
-    height: 2%;
-    
+    width: 100%;
+    height: 100%;
     border-radius: 50%;
     object-fit: cover;
     border: 2px solid var(--lighter-blue);
-    /* Changed to light blue border */
     transition: all var(--transition-fast);
     box-shadow: var(--shadow-sm);
 }
@@ -145,7 +143,7 @@ const formatTime = (timestamp) => {
     border-color: var(--primary-color);
 }
 
-/* .status-indicator {
+.status-indicator {
     position: absolute;
     bottom: 2px;
     right: 2px;
@@ -154,7 +152,7 @@ const formatTime = (timestamp) => {
     border-radius: 50%;
     background-color: var(--borders-grey);
     border: 1px solid var(--background-secondary);
-} */
+}
 
 .status-indicator.online {
     background-color: var(--success-color);
