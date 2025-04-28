@@ -16,8 +16,8 @@
                     <button v-if="chatSearchQuery" class="clear-search-btn" @click="chatSearchQuery = ''">
                         <i class="fas fa-times"></i>
                     </button>
-                    <button class="btn btn-primary" @click="openAddChatModal">
-                        <i class="fas fa-plus-circle me-2"></i>
+                    <button class="add-chat-btn" @click="openAddChatModal">
+                        <i class="fas fa-plus-circle"></i>
                     </button>
                 </div>
 
@@ -711,5 +711,32 @@ watch(searchUsername, async (newVal) => {
 .clear-search-btn:hover {
     background-color: rgba(255, 255, 255, 0.1);
     color: var(--text-primary);
+}
+
+/* Add chat button styling */
+.add-chat-btn {
+    background-color: #3498db;
+    /* Specific color as requested */
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    margin-left: var(--spacing-sm);
+    transition: all var(--transition-fast);
+    flex-shrink: 0;
+}
+
+.add-chat-btn:hover {
+    background-color: #2980b9;
+    transform: scale(1.05);
+}
+
+.add-chat-btn i {
+    font-size: 1rem;
 }
 </style>

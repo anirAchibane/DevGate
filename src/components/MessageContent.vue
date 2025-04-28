@@ -3,6 +3,11 @@
         <div class="messages-container">
             <div v-for="(message, index) in messages" :key="index" class="message-wrapper"
                 :class="{ 'sent': message.sender_id === currentUserId, 'received': message.sender_id !== currentUserId }">
+                <!-- Delete button in front of messages (only for messages sent by the current user) -->
+                <button v-if="message.sender_id === currentUserId" class="delete-button"
+                    @click.stop="confirmDeleteMessage(message.id)" :title="'Delete message'">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
                 <div class="message-bubble">
                     <p class="message-text">{{ message.content }}</p>
                     <div class="message-meta">
@@ -13,6 +18,18 @@
                 </div>
             </div>
             <div id="message-end" ref="messagesEnd"></div>
+        </div>
+
+        <!-- Confirmation Dialog -->
+        <div v-if="showDeleteConfirm" class="delete-confirmation-overlay" @click.self="cancelDelete">
+            <div class="delete-confirmation-dialog">
+                <h3 class="delete-dialog-title">Delete Message</h3>
+                <p class="delete-dialog-message">Are you sure you want to delete this message?</p>
+                <div class="delete-dialog-buttons">
+                    <button class="btn btn-secondary" @click="cancelDelete">Cancel</button>
+                    <button class="btn btn-danger" @click="deleteSelectedMessage">Delete</button>
+                </div>
+            </div>
         </div>
 
         <form @submit.prevent="sendMessage" class="message-form">
@@ -30,7 +47,7 @@
 <script setup>
 import { ref, onMounted, defineProps, watch, computed, onUnmounted, nextTick } from "vue";
 import { auth, db } from "@/firebase/config";
-import { useSendMessage } from "@/composables/getChatMessages";
+import { useSendMessage, deleteMessage } from "@/composables/getChatMessages";
 
 const props = defineProps({
     chat: { type: Object, required: true }
@@ -41,6 +58,8 @@ const newMessage = ref("");
 const currentUserId = auth.currentUser.uid;
 const unsubscribe = ref(null);
 const messagesEnd = ref(null);
+const showDeleteConfirm = ref(false);
+const messageToDelete = ref(null);
 
 // Reactive chat reference
 const chatRef = computed(() => db.collection("chat").doc(props.chat.id));
@@ -57,6 +76,32 @@ const sendMessage = async () => {
 
     await sendMessageComposable(newMessage.value);
     newMessage.value = "";
+};
+
+// Message deletion functions
+const confirmDeleteMessage = (messageId) => {
+    messageToDelete.value = messageId;
+    showDeleteConfirm.value = true;
+};
+
+const cancelDelete = () => {
+    showDeleteConfirm.value = false;
+    messageToDelete.value = null;
+};
+
+const deleteSelectedMessage = async () => {
+    if (!messageToDelete.value) return;
+
+    try {
+        await deleteMessage(currentChatId.value, messageToDelete.value);
+        // No need to manually update messages array as the listener will handle it
+    } catch (error) {
+        console.error("Failed to delete message:", error);
+        // You could add a toast notification here if desired
+    } finally {
+        showDeleteConfirm.value = false;
+        messageToDelete.value = null;
+    }
 };
 
 const setupListener = () => {
@@ -123,10 +168,13 @@ const scrollToBottom = () => {
 .message-wrapper {
     display: flex;
     max-width: 80%;
+    align-items: center;
 }
 
 .message-wrapper.sent {
     align-self: flex-end;
+    flex-direction: row-reverse;
+    /* Move delete button to the left of sent messages */
 }
 
 .message-wrapper.received {
@@ -237,6 +285,89 @@ const scrollToBottom = () => {
 .send-button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+}
+
+/* Delete button styling */
+.delete-button {
+    width: 28px;
+    height: 28px;
+    background-color: rgba(0, 0, 0, 0.2);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s ease, background-color 0.2s ease;
+    margin: auto 8px;
+    flex-shrink: 0;
+}
+
+.message-wrapper:hover .delete-button {
+    opacity: 1;
+}
+
+.delete-button:hover {
+    background-color: rgba(220, 53, 69, 0.8);
+}
+
+/* Confirmation dialog styling */
+.delete-confirmation-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(1, 5, 8, 0.8);
+    z-index: 1000;
+    backdrop-filter: blur(4px);
+}
+
+.delete-confirmation-dialog {
+    background-color: var(--background-secondary);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    width: 90%;
+    max-width: 400px;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--border-color);
+    animation: dialog-appear 0.3s ease-out;
+}
+
+.delete-dialog-title {
+    margin-top: 0;
+    color: var(--text-primary);
+    font-size: 1.2rem;
+    margin-bottom: var(--spacing-md);
+}
+
+.delete-dialog-message {
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-lg);
+}
+
+.delete-dialog-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--spacing-md);
+}
+
+@keyframes dialog-appear {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 @keyframes message-appear {
