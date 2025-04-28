@@ -43,6 +43,7 @@
               <div class="skills">
                 <div v-for="skill in userSkills" :key="skill.id" class="skill mb-2">
                   <p class="mb-1">{{ skill.name }} : {{ skill.level }}</p>
+                  <p class="mb-1"> Skill aquired at : {{ formatFirestoreTimestamp(skill.acquiredAt ) }}</p>
                 </div>
               </div>
             </div>
@@ -60,13 +61,18 @@
             <div class="card-body">
               <div class="projects">
                 <div v-for="project in userProjects" :key="project.id" class="project mb-3 p-3 border rounded bg-secondary">
-                  <p class="mb-1 fw-bold">{{ project.name }}</p>
-                  <p v-if="project.description !== ''" class="mb-1">Description: {{ project.description }}</p>
+                  <p class="mb-1 fw-bold">{{ project.title }}</p>
+                  <p v-if="project.description " class="mb-1">Description: {{ project.description }}</p>
                   <p v-else class="mb-1">Description: no description</p>
-                  <p class="mb-1">Type: {{ project.type }}</p>
-                  <p class="mb-1">Language: {{ project.language }}</p>
-                  <p class="mb-0" v-if="project.isPublic">Public</p>
+                  <p class="mb-1">
+                    Github URL :
+                    <a :href="project.githubURL" target="_blank" rel="noopener noreferrer">
+                      {{ project.githubURL }}
+                    </a>
+                  </p>
+                  <p class="mb-0" v-if="project.visibility">Public</p>
                   <p class="mb-0" v-else>Private</p>
+                  <p class="mb-0"> Created at : {{ formatFirestoreTimestamp(project.createdAt) }} </p>
                 </div>
               </div>
             </div>
@@ -172,6 +178,33 @@ onMounted(() => {
         console.error("Error fetching user data:", error);
     }
 });
+
+
+function formatFirestoreTimestamp(timestamp) {
+    if (!timestamp) return "N/A";
+
+    // Handle both Firestore Timestamp object or plain object
+    let date;
+    if (timestamp.toDate) {
+        // If it's an actual Firestore Timestamp object
+        date = timestamp.toDate();
+    } else if (timestamp.seconds !== undefined) {
+        // If it's a plain object { seconds: ..., nanoseconds: ... }
+        date = new Date(timestamp.seconds * 1000);
+    } else {
+        return "Invalid Timestamp";
+    }
+
+    // Format nicely
+    return date.toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+    });
+}
+
 
 </script>
 
