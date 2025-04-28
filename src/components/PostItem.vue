@@ -443,6 +443,16 @@
                     </div>
                 </div>
             </div>
+            <div class="comment">
+                <button class="comment-btn" @click="showComments = !showComments">
+                    <i class="fa-solid fa-comment-dots"></i> {{ showComments ? 'Hide Comments' : 'Comment' }}
+                </button>
+            </div>
+            <transition name="comments-fade">
+                <div v-if="showComments" class="comments-section">
+                    <comments-item :postId="post.id" />
+                </div>
+            </transition>
         </div>
     </div>
 </template>
@@ -1780,6 +1790,40 @@ const submitReply = async () => {
         padding: 5px 10px;
         font-size: 0.8rem;
     }
+
+/* Comments section styling */
+.comments-section {
+    max-height: 800px;
+    overflow: hidden;
+    margin-top: 1rem;
+    border-top: 1px solid #1e2a38;
+    padding-top: 1rem;
+}
+
+/* Enhanced transitions for comments */
+.comments-fade-enter-active {
+    transition: all 0.5s ease-out;
+    max-height: 800px;
+    transform-origin: top;
+}
+
+.comments-fade-leave-active {
+    transition: all 0.5s ease-in;
+    max-height: 800px;
+    transform-origin: top;
+}
+
+.comments-fade-enter-from,
+.comments-fade-leave-to {
+    opacity: 0;
+    max-height: 0;
+    transform: scaleY(0.8);
+}
+
+.comment {
+    display: flex;
+    justify-content: center;
+    margin: 1rem 0;
 }
 
 /* Responsive styles */
@@ -1799,6 +1843,10 @@ const submitReply = async () => {
     .avatar {
         width: 40px;
         height: 40px;
+    }
+
+    .comments-section {
+        max-height: 600px;
     }
 }
 </style>

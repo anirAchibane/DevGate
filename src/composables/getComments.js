@@ -7,6 +7,7 @@ import firebase from "firebase/app";
  * @param {string} postID - The ID of the post to fetch comments for
  * @returns {Object} Object containing comments, error, and loading state
  */
+
 async function getComments(postID) {
     const comments = ref([]);
     const error = ref(null);
@@ -35,6 +36,18 @@ async function getComments(postID) {
             .collection("comments")
             .where("parentId", "!=", null)
             .get();
+            
+        // Filter top-level comments (parentId == null) manually
+        const commentsData = snapshot.docs
+            .map(doc => ({ id: doc.id, ...doc.data(), replies: [] }))
+            .filter(comment => comment.parentId === null)
+            .sort((a, b) => {
+                // Sort by createdAt if available
+                if (a.createdAt && b.createdAt) {
+                    return a.createdAt.seconds - b.createdAt.seconds;
+                }
+                return 0;
+            });
 
         // Group replies by parent ID for efficient lookup
         const repliesMap = groupRepliesByParent(repliesSnapshot.docs);
@@ -182,6 +195,18 @@ async function deleteComment(postID, commentId) {
             .collection("comments")
             .where("parentId", "==", commentId)
             .get();
+            
+        // Filter replies manually
+        const replies = snapshot.docs
+            .map(doc => ({ id: doc.id, ...doc.data(), replies: [] }))
+            .filter(comment => comment.parentId === parentId)
+            .sort((a, b) => {
+                // Sort by createdAt if available
+                if (a.createdAt && b.createdAt) {
+                    return a.createdAt.seconds - b.createdAt.seconds;
+                }
+                return 0;
+            });
 
         const batch = db.batch();
 
