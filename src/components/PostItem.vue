@@ -443,11 +443,11 @@
                     </div>
                 </div>
             </div>
-            <div class="comment">
+            <!-- <div class="comment">
                 <button class="comment-btn" @click="showComments = !showComments">
                     <i class="fa-solid fa-comment-dots"></i> {{ showComments ? 'Hide Comments' : 'Comment' }}
                 </button>
-            </div>
+            </div> -->
             <transition name="comments-fade">
                 <div v-if="showComments" class="comments-section">
                     <comments-item :postId="post.id" />
@@ -1824,7 +1824,7 @@ const submitReply = async () => {
     display: flex;
     justify-content: center;
     margin: 1rem 0;
-}
+}}
 
 /* Responsive styles */
 @media (max-width: 768px) {

@@ -23,11 +23,11 @@ async function getComments(postID) {
             .orderBy("createdAt", "asc")
             .get();
 
-        const commentsData = snapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-            replies: [],
-        }));
+        // const commentsData = snapshot.docs.map((doc) => ({
+        //     id: doc.id,
+        //     ...doc.data(),
+        //     replies: [],
+        // }));
 
         // Fetch all replies in a single query
         const repliesSnapshot = await db
@@ -197,16 +197,15 @@ async function deleteComment(postID, commentId) {
             .get();
             
         // Filter replies manually
-        const replies = snapshot.docs
-            .map(doc => ({ id: doc.id, ...doc.data(), replies: [] }))
-            .filter(comment => comment.parentId === parentId)
-            .sort((a, b) => {
-                // Sort by createdAt if available
-                if (a.createdAt && b.createdAt) {
-                    return a.createdAt.seconds - b.createdAt.seconds;
-                }
-                return 0;
-            });
+        // const replies = snapshot.docs
+        //     .map(doc => ({ id: doc.id, ...doc.data(), replies: [] }))
+        //     .filter(comment => comment.parentId === parentId)
+        //     .sort((a, b) => {
+        //         // Sort by createdAt if available
+        //         if (a.createdAt && b.createdAt) {
+        //             return a.createdAt.seconds - b.createdAt.seconds;
+        //         }
+        //         return 0;
 
         const batch = db.batch();
 
