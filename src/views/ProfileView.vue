@@ -68,7 +68,7 @@
                     Github URL :
                     <a :href="project.githubURL" target="_blank" rel="noopener noreferrer">
                       {{ project.githubURL }}
-                    </a>
+                    </a> 
                   </p>
                   <p class="mb-0" v-if="project.visibility">Public</p>
                   <p class="mb-0" v-else>Private</p>
