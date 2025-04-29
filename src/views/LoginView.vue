@@ -86,6 +86,20 @@
                     </button>
                 </form>
 
+                <!-- GitHub Sign-in Button -->
+                <div class="social-login">
+                    <p class="social-divider"><span>Or sign in with</span></p>
+                    <button 
+                        type="button" 
+                        class="btn-github" 
+                        @click="signInWithGitHub"
+                        :disabled="isLoading"
+                    >
+                        <i class="fab fa-github"></i>
+                        <span>GitHub</span>
+                    </button>
+                </div>
+
                 <div class="auth-footer">
                     <p>
                         New to DevGate?
@@ -102,7 +116,7 @@
 <script setup>
 import { ref } from "vue";
 import { useRouter } from "vue-router";
-import { auth } from "../firebase/config";
+import { auth, firebase, db } from "../firebase/config";
 
 // Form data
 const email = ref("");
@@ -183,6 +197,50 @@ const login = async () => {
 
 const togglePasswordVisibility = () => {
     showPassword.value = !showPassword.value;
+};
+
+// GitHub sign-in function
+const signInWithGitHub = async () => {
+    isLoading.value = true;
+    try {
+        const provider = new firebase.auth.GithubAuthProvider();
+        // Request additional scopes if needed
+        // provider.addScope('user:email');
+        
+        const result = await auth.signInWithPopup(provider);
+        
+        // Check if this is a new user
+        const isNewUser = result.additionalUserInfo.isNewUser;
+        
+        if (isNewUser) {
+            // Create a user document in Firestore
+            const user = result.user;
+            await db.collection("users").doc(user.uid).set({
+                username: user.displayName || user.email.split('@')[0],
+                email: user.email,
+                avatar: user.photoURL || require("@/assets/default_pfp.jpg"),
+                bio: "",
+                createdAt: new Date(),
+                following: [],
+            });
+            
+            // Initialize subcollections
+            db.collection("users").doc(user.uid).collection("objectives");
+            db.collection("users").doc(user.uid).collection("projects");
+            db.collection("users").doc(user.uid).collection("skills");
+            
+            console.log("New GitHub user added to Firestore");
+        }
+        
+        console.log("GitHub login successful:", result.user);
+        showAlert("Welcome! Signed in with GitHub", "alert-success");
+        router.push("/home");
+    } catch (err) {
+        console.error("GitHub auth error:", err);
+        showAlert(err.message, "alert-danger");
+    } finally {
+        isLoading.value = false;
+    }
 };
 </script>
 
@@ -489,5 +547,82 @@ const togglePasswordVisibility = () => {
     .auth-header h1 {
         font-size: 1.75rem;
     }
+}
+
+/* GitHub Sign-in button styles */
+.social-login {
+    margin-top: 1.5rem;
+    text-align: center;
+}
+
+.social-divider {
+    position: relative;
+    margin: 1rem 0;
+    color: #7d8590;
+    font-size: 0.9rem;
+}
+
+.social-divider::before, 
+.social-divider::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    width: calc(50% - 50px);
+    height: 1px;
+    background-color: #555d69;
+}
+
+.social-divider::before {
+    left: 0;
+}
+
+.social-divider::after {
+    right: 0;
+}
+
+.social-divider span {
+    display: inline-block;
+    padding: 0 10px;
+}
+
+.btn-github {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 48px;
+    background-color: #24292e;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    padding: 0.875rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin: 0 auto;
+    gap: 10px;
+}
+
+.btn-github:hover {
+    background-color: #333;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+}
+
+.btn-github:active {
+    transform: translateY(0);
+}
+
+.btn-github:disabled {
+    background-color: #555d69;
+    color: #bec3c9;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.btn-github i {
+    font-size: 1.2rem;
 }
 </style>
