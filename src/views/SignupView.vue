@@ -923,13 +923,17 @@ const signInWithGitHub = async () => {
 .social-login {
     margin-top: 1.5rem;
     text-align: center;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .social-divider {
     position: relative;
-    margin: 1rem 0;
+    margin: 1.5rem 0;
     color: #7d8590;
     font-size: 0.9rem;
+    font-weight: 500;
 }
 
 .social-divider::before, 
@@ -937,12 +941,12 @@ const signInWithGitHub = async () => {
     content: "";
     position: absolute;
     top: 50%;
-    width: calc(50% - 50px);
+    width: calc(50% - 60px);
     height: 1px;
     background-color: #555d69;
 }
 
-social-divider::before {
+.social-divider::before {
     left: 0;
 }
 
@@ -952,7 +956,8 @@ social-divider::before {
 
 .social-divider span {
     display: inline-block;
-    padding: 0 10px;
+    padding: 0 15px;
+    background-color: #0d1117;
 }
 
 .btn-github {
@@ -960,28 +965,31 @@ social-divider::before {
     align-items: center;
     justify-content: center;
     width: 100%;
+    max-width: 300px;
     height: 48px;
     background-color: #24292e;
     color: #ffffff;
-    border: none;
+    border: 1px solid #444;
     border-radius: 6px;
     padding: 0.875rem 1.5rem;
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.3s;
     margin: 0 auto;
-    gap: 10px;
+    gap: 12px;
 }
 
 .btn-github:hover {
     background-color: #333;
     transform: translateY(-3px);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+    border-color: #666;
 }
 
 .btn-github:active {
-    transform: translateY(0);
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
 }
 
 .btn-github:disabled {
@@ -990,9 +998,10 @@ social-divider::before {
     cursor: not-allowed;
     transform: none;
     box-shadow: none;
+    border-color: transparent;
 }
 
 .btn-github i {
-    font-size: 1.2rem;
+    font-size: 1.3rem;
 }
 </style>
