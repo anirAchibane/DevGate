@@ -28,8 +28,13 @@
                 <button v-if="isCurrent" @click="settings()" class="btn btn-outline-light btn-sm" style="background-color: white; color: black;" >
                   Settings
                 </button>
-                <button v-else @click="follow()" class="btn btn-primary btn-sm">
+
+                <button v-else-if="!isFollowing" @click="follow()" class="btn btn-primary btn-sm">
                   Follow
+                </button>
+
+                <button v-else @click="unfollow()" class="btn btn-danger btn-sm">
+                  Unfollow
                 </button>
               </div>
             </div>
@@ -115,6 +120,7 @@ const router = useRouter();
 
 const userId = route.params.id;                         // Get the userId from the route params 
 const isCurrent = userId === auth.currentUser.uid;      // Check if the userId is the same as the current user's id
+const isFollowing = ref(false);                         // Check if the current user is following the userId
 
 const userData = ref({});    // stores current user's data
 const userProjects = ref([]);   // stores user's projects ( all projects if isCurrent(), else only public projects)
@@ -173,6 +179,20 @@ onMounted(async () => {
             }
         })
 
+        if (!isCurrent){
+            // If the user is not the current user, check if the current user is following them
+            const currentUserRef = await db.collection("users").doc(auth.currentUser.uid);
+            currentUserRef.get().then((doc) =>{
+                if(doc.exists){
+                    const following = doc.data().following; // Get the following array
+                    isFollowing.value = following.includes(userId); // Check if the userId is in the following array
+                } else {
+                    console.log("No such document!");
+                }
+            })
+
+        }
+
         
     } catch (error) {
         console.error("Error fetching user data:", error);
@@ -186,7 +206,52 @@ const settings = () => {
     router.push("/settings");
 }
 
+const follow = async () => {
+      try{
+        const followList = ref([]);
+        await db.collection("users").doc(auth.currentUser.uid).get().then((doc) =>{
+            if(doc.exists){
+                followList.value = doc.data().following; 
+            } else {
+                console.log("No such document!");
+            }
+        })
 
+        followList.value.push(userId); // Add the userId to the following list
+        await db.collection("users").doc(auth.currentUser.uid).update({
+            following: followList.value
+        })
+
+        isFollowing.value = true; // Update the isFollowing state
+
+      } catch(error){
+        console.error("Error following user:", error);
+      }
+}
+
+const unfollow = async () => {
+      try{
+            const followList = ref([]);
+            await db.collection("users").doc(auth.currentUser.uid).get().then((doc) =>{
+                if(doc.exists){
+                    followList.value = doc.data().following; 
+                } else {
+                    console.log("No such document!");
+                }
+            })
+
+            followList.value = followList.value.filter((id) => id !== userId);
+
+            await db.collection("users").doc(auth.currentUser.uid).update({
+                following: followList.value
+            })
+
+            isFollowing.value = false; // Update the isFollowing state
+
+          } catch(error){
+            console.error("Error following user:", error);
+          }
+}
 
 function formatFirestoreTimestamp(timestamp) {
     if (!timestamp) return "N/A";
@@ -212,7 +277,6 @@ function formatFirestoreTimestamp(timestamp) {
         minute: '2-digit',
     });
 }
-
 
 
 </script>
