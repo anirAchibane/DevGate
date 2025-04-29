@@ -165,10 +165,10 @@ onMounted(async () => {
 
     // Get followers and following
     const { followers: userFollowers } = await getFollowers(auth.currentUser.uid);
-    const { following: userFollowing } = await getFollowing(auth.currentUser.uid);
-
+    const { following: userFollowing } = await getFollowing(auth.currentUser.uid, true);
     followers.value = userFollowers.value;
     following.value = userFollowing.value;
+
   } catch (error) {
     console.error("Error fetching user data:", error);
   }
@@ -221,6 +221,8 @@ const deleteAccount = async () => {
             const userRef = db.collection("users").doc(auth.currentUser.uid);
             await userRef.delete();
             alert("Account deleted successfully!!");
+
+            await auth.signOut();
             router.push("/");
             console.log("Account deleted successfully");
         } catch (error) {
@@ -230,8 +232,30 @@ const deleteAccount = async () => {
     }
 };
 
-const deleteAll = async () => {
+const deleteAll = async () => { //delete all user content
+    if (confirm("Are you sure you want to delete all your data?")) {
+        try {
+            const userRef = db.collection("users").doc(auth.currentUser.uid);
 
+            const deleteCollection = async (coll) => {
+                const snapshot = await userRef.collection(coll).get();
+                const batch = db.batch();
+                snapshot.forEach(doc => {
+                    batch.delete(doc.ref);
+                });
+                await batch.commit();
+            };
+
+            await deleteCollection("projects");
+            await deleteCollection("objectives");
+            await deleteCollection("skills");
+
+            alert("All Data deleted successfully!!");
+        } catch (error) {
+            alert("Error deleting all data: " + error.message);
+            console.error("Error deleting all data:", error);
+        }
+    }
 };
 
 // Profile picture handling functions
@@ -311,7 +335,7 @@ const filteredFollowing = computed(() => {
 
 </script>
 
-<style>
+<style scoped>
 .main{
     width:100%;
     justify-self: center; align-self: center;
