@@ -182,6 +182,20 @@
                     </button>
                 </form>
 
+                <!-- GitHub Sign-in Button -->
+                <div class="social-login">
+                    <p class="social-divider"><span>Or sign up with</span></p>
+                    <button 
+                        type="button" 
+                        class="btn-github" 
+                        @click="signInWithGitHub"
+                        :disabled="isLoading"
+                    >
+                        <i class="fab fa-github"></i>
+                        <span>GitHub</span>
+                    </button>
+                </div>
+
                 <div class="auth-footer">
                     <p>
                         Already have an account?
@@ -196,7 +210,7 @@
 <script setup>
 import { ref } from "vue";
 import { useRouter } from "vue-router";
-import { db, auth } from "../firebase/config";
+import { db, auth, firebase } from "../firebase/config";
 import { uploadToGitHub } from "@/composables/uploadToGitHub";
 
 const email = ref("");
@@ -370,6 +384,56 @@ const addUser = async (pfpUrl) => {
     console.log(
         "User document created and subcollection structure initialized."
     );
+};
+
+// GitHub sign-in function
+const signInWithGitHub = async () => {
+    isLoading.value = true;
+    try {
+        const provider = new firebase.auth.GithubAuthProvider();
+        // Request additional scopes if needed
+        // provider.addScope('user:email');
+        
+        const result = await auth.signInWithPopup(provider);
+        
+        // Check if this is a new user
+        const isNewUser = result.additionalUserInfo.isNewUser;
+        
+        if (isNewUser) {
+            // Create a user document in Firestore
+            const user = result.user;
+            await db.collection("users").doc(user.uid).set({
+                username: user.displayName || user.email.split('@')[0],
+                email: user.email,
+                avatar: user.photoURL || require("@/assets/default_pfp.jpg"),
+                bio: "",
+                createdAt: new Date(),
+                following: [],
+            });
+            
+            // Initialize subcollections
+            db.collection("users").doc(user.uid).collection("objectives");
+            db.collection("users").doc(user.uid).collection("projects");
+            db.collection("users").doc(user.uid).collection("skills");
+            
+            console.log("New GitHub user added to Firestore");
+        }
+        
+        console.log("GitHub login successful:", result.user);
+        alerting.value = { 
+            message: "Welcome! Signed in with GitHub", 
+            type: "alert-success" 
+        };
+        router.push("/home");
+    } catch (err) {
+        console.error("GitHub auth error:", err);
+        alerting.value = { 
+            message: err.message, 
+            type: "alert-danger" 
+        };
+    } finally {
+        isLoading.value = false;
+    }
 };
 </script>
 
@@ -853,5 +917,91 @@ const addUser = async (pfpUrl) => {
     .profile-button {
         width: 100%;
     }
+}
+
+/* GitHub Sign-in button styles */
+.social-login {
+    margin-top: 1.5rem;
+    text-align: center;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.social-divider {
+    position: relative;
+    margin: 1.5rem 0;
+    color: #7d8590;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.social-divider::before, 
+.social-divider::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    width: calc(50% - 60px);
+    height: 1px;
+    background-color: #555d69;
+}
+
+.social-divider::before {
+    left: 0;
+}
+
+.social-divider::after {
+    right: 0;
+}
+
+.social-divider span {
+    display: inline-block;
+    padding: 0 15px;
+    background-color: #0d1117;
+}
+
+.btn-github {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 300px;
+    height: 48px;
+    background-color: #24292e;
+    color: #ffffff;
+    border: 1px solid #444;
+    border-radius: 6px;
+    padding: 0.875rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin: 0 auto;
+    gap: 12px;
+}
+
+.btn-github:hover {
+    background-color: #333;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+    border-color: #666;
+}
+
+.btn-github:active {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+}
+
+.btn-github:disabled {
+    background-color: #555d69;
+    color: #bec3c9;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+    border-color: transparent;
+}
+
+.btn-github i {
+    font-size: 1.3rem;
 }
 </style>
