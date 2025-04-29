@@ -5,7 +5,7 @@
             <h3 class="new-comment-title">Leave a comment</h3>
             <div class="new-comment-form">
                 <textarea v-model="newCommentContent" placeholder="Write your comment..."
-                    class="comment-textarea"></textarea>
+                    class="comment-textarea" @keydown.enter.prevent="submitComment"></textarea>
                 <div class="comment-form-actions">
                     <button class="btn btn-primary" @click="submitComment"
                         :disabled="!newCommentContent.trim() || commentSubmitting">
@@ -55,7 +55,7 @@
                     <div v-if="activeReplyId === comment.id" class="reply-form-container">
                         <div class="reply-form">
                             <textarea v-model="replyContent" placeholder="Write your reply..."
-                                class="reply-textarea"></textarea>
+                                class="reply-textarea" @keydown.enter.prevent="submitReply(comment.id)"></textarea>
                             <div class="reply-actions">
                                 <button class="btn btn-outline-danger btn-sm" @click="cancelReply">
                                     Cancel
