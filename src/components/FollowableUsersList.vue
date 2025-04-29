@@ -1,14 +1,14 @@
 <template>
     <div class="followable-users-container">
-        <h2 v-if="!compact" class="section-title">People You Might Want to Follow</h2>
+        <h2 v-if="!compact" class="section-title">{{ listTitle }}</h2>
 
         <div v-if="loading" class="loading-container">
             <LoadingOverlay message="Loading users..." transparent />
         </div>
 
-        <div v-else-if="users.length === 0" class="empty-state">
+        <div v-else-if="displayUsers.length === 0" class="empty-state">
             <i class="fas fa-users empty-icon"></i>
-            <p>No users found to follow at the moment.</p>
+            <p>{{ emptyStateMessage }}</p>
         </div>
 
         <div v-else class="user-list" :class="{ 'compact-list': compact }">
@@ -54,6 +54,7 @@
 
                 <div class="action-buttons" :class="{ 'compact-buttons': compact }">
                     <button
+                        v-if="mode !== 'followings' || !hideFollowButton"
                         class="btn btn-outline btn-sm follow-btn"
                         :class="{ 'btn-primary': isFollowing(user.id), 'compact-follow-btn': compact }"
                         @click="toggleFollow(user.id)"
@@ -85,7 +86,7 @@
             </div>
         </div>
 
-        <div v-if="!loading && hasMore && users.length > maxUsers && !compact" class="load-more">
+        <div v-if="!loading && hasMore && displayUsers.length > maxUsers && !compact" class="load-more">
             <button
                 class="btn btn-outline"
                 @click="loadMore"
@@ -96,18 +97,20 @@
             </button>
         </div>
         
-        <div v-if="!loading && users.length > 0 && compact && users.length > maxUsers" class="view-all-link">
-            <router-link to="/explore-users" class="view-all">
-                View all suggestions
+        <div v-if="!loading && displayUsers.length > 0 && compact && displayUsers.length > maxUsers" class="view-all-link">
+            <router-link :to="viewAllLink" class="view-all">
+                {{ viewAllText }}
             </router-link>
         </div>
     </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed, defineProps } from "vue";
+import { ref, onMounted, computed, defineProps, watch } from "vue";
 import { db, auth, firebase } from "@/firebase/config";
 import LoadingOverlay from "@/components/LoadingOverlay.vue";
+import { getFollowers } from "@/composables/getFollowers";
+import { getFollowings } from "@/composables/getFollowings";
 
 const props = defineProps({
     maxUsers: {
@@ -115,6 +118,19 @@ const props = defineProps({
         default: 6
     },
     compact: {
+        type: Boolean,
+        default: false
+    },
+    userId: {
+        type: String,
+        default: null
+    },
+    mode: {
+        type: String,
+        default: 'suggestions', // 'suggestions', 'followers', 'followings'
+        validator: (value) => ['suggestions', 'followers', 'followings'].includes(value)
+    },
+    hideFollowButton: {
         type: Boolean,
         default: false
     }
@@ -129,9 +145,62 @@ const followInProgress = ref(null);
 const hasMore = ref(true);
 const limit = computed(() => props.maxUsers * 2);
 
+// Computed property to determine which users to display based on mode
+const displayUsers = computed(() => {
+    return users.value;
+});
+
 // Computed property to limit the number of users shown
 const limitedUsers = computed(() => {
-    return users.value.slice(0, props.maxUsers);
+    return displayUsers.value.slice(0, props.maxUsers);
+});
+
+// Computed property for list title
+const listTitle = computed(() => {
+    switch (props.mode) {
+        case 'followers':
+            return 'Followers';
+        case 'followings':
+            return 'Following';
+        default:
+            return 'People You Might Want to Follow';
+    }
+});
+
+// Computed property for empty state message
+const emptyStateMessage = computed(() => {
+    switch (props.mode) {
+        case 'followers':
+            return 'No followers yet.';
+        case 'followings':
+            return 'Not following anyone yet.';
+        default:
+            return 'No users found to follow at the moment.';
+    }
+});
+
+// Computed property for view all link
+const viewAllLink = computed(() => {
+    switch (props.mode) {
+        case 'followers':
+            return { name: 'Profil', params: { id: props.userId }, query: { tab: 'followers' } };
+        case 'followings':
+            return { name: 'Profil', params: { id: props.userId }, query: { tab: 'following' } };
+        default:
+            return '/explore-users';
+    }
+});
+
+// Computed property for view all text
+const viewAllText = computed(() => {
+    switch (props.mode) {
+        case 'followers':
+            return 'View all followers';
+        case 'followings':
+            return 'View all following';
+        default:
+            return 'View all suggestions';
+    }
 });
 
 // Check if user is being followed
@@ -146,7 +215,7 @@ const getUserSkills = (user) => {
     }));
 };
 
-// Load initial set of users
+// Load users based on the mode (suggestions, followers, or followings)
 const loadUsers = async () => {
     try {
         loading.value = true;
@@ -161,45 +230,73 @@ const loadUsers = async () => {
         const userData = userDoc.data();
         currentUserFollowing.value = userData?.following || [];
 
-        // Query users that are not the current user
-        let query = db
-            .collection("users")
-            .where(
-                firebase.firestore.FieldPath.documentId(),
-                "!=",
-                currentUser.uid
-            )
-            .orderBy(firebase.firestore.FieldPath.documentId())
-            .limit(limit.value);
+        const targetUserId = props.userId || currentUser.uid;
 
-        const snapshot = await query.get();
-        if (snapshot.empty) {
+        // Load users based on the mode
+        if (props.mode === 'followers') {
+            // Use the getFollowers composable
+            // eslint-disable-next-line no-unused-vars
+            const { followers, loading: followerLoading, error } = getFollowers(targetUserId);
+            watch(followers, (newFollowers) => {
+                users.value = newFollowers;
+                loading.value = false;
+            });
+            watch(followerLoading, (isLoading) => {
+                loading.value = isLoading;
+            });
+        } else if (props.mode === 'followings') {
+            // Use the getFollowings composable
+            // eslint-disable-next-line no-unused-vars
+            const { followings, loading: followingLoading, error } = getFollowings(targetUserId);
+            watch(followings, (newFollowings) => {
+                users.value = newFollowings;
+                loading.value = false;
+            });
+            watch(followingLoading, (isLoading) => {
+                loading.value = isLoading;
+            });
+        } else {
+            // Load suggestions (users not followed)
+            // Query users that are not the current user
+            let query = db
+                .collection("users")
+                .where(
+                    firebase.firestore.FieldPath.documentId(),
+                    "!=",
+                    currentUser.uid
+                )
+                .orderBy(firebase.firestore.FieldPath.documentId())
+                .limit(limit.value);
+
+            const snapshot = await query.get();
+            if (snapshot.empty) {
+                loading.value = false;
+                return;
+            }
+
+            lastVisible.value = snapshot.docs[snapshot.docs.length - 1];
+
+            users.value = snapshot.docs.map((doc) => ({
+                id: doc.id,
+                username: doc.data().username || "Unknown User",
+                bio: doc.data().bio || "",
+                avatar: doc.data().avatar || null,
+                skills: doc.data().skills || {},
+                createdAt: doc.data().createdAt?.toDate() || new Date(),
+            }));
+
+            hasMore.value = snapshot.docs.length === limit.value;
             loading.value = false;
-            return;
         }
-
-        lastVisible.value = snapshot.docs[snapshot.docs.length - 1];
-
-        users.value = snapshot.docs.map((doc) => ({
-            id: doc.id,
-            username: doc.data().username || "Unknown User",
-            bio: doc.data().bio || "",
-            avatar: doc.data().avatar || null,
-            skills: doc.data().skills || {},
-            createdAt: doc.data().createdAt?.toDate() || new Date(),
-        }));
-
-        hasMore.value = snapshot.docs.length === limit.value;
     } catch (error) {
         console.error("Error loading users:", error);
-    } finally {
         loading.value = false;
     }
 };
 
 // Load more users for pagination
 const loadMore = async () => {
-    if (loadingMore.value || !lastVisible.value) return;
+    if (loadingMore.value || !lastVisible.value || props.mode !== 'suggestions') return;
 
     try {
         loadingMore.value = true;
@@ -272,12 +369,22 @@ const toggleFollow = async (userId) => {
         // Update database and local state
         await userRef.update({ following });
         currentUserFollowing.value = following;
+        
+        // If we're in followers/following mode, refresh the list
+        if ((props.mode === 'followers' || props.mode === 'followings') && props.userId) {
+            loadUsers();
+        }
     } catch (error) {
         console.error("Error toggling follow status:", error);
     } finally {
         followInProgress.value = null;
     }
 };
+
+// Watch for changes in userId or mode
+watch(() => [props.userId, props.mode], () => {
+    if (auth.currentUser) loadUsers();
+}, { immediate: false });
 
 // Initialize component
 onMounted(() => {
