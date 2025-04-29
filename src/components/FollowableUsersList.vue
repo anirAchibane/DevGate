@@ -435,7 +435,7 @@ onMounted(() => {
     display: flex;
     flex-shrink: 0;
     gap: 10px;
-}
+    }
 
 .compact-buttons {
     gap: 5px;
@@ -448,6 +448,21 @@ onMounted(() => {
     justify-content: center;
     gap: 5px;
     transition: all 0.2s ease;
+    background-color: #1a2233 !important; /* Slightly lighter than card background */
+    color: #3498db !important; /* Use accent blue for better visibility */
+    border: 2px solid #3498db !important; /* Thicker border with accent color */
+}
+
+.follow-btn:hover {
+    background-color: #3498db !important;
+    color: #ffffff !important;
+    border-color: #3498db !important;
+    box-shadow: 0 0 8px rgba(52, 152, 219, 0.5) !important;
+}
+
+.btn-primary.follow-btn {
+    background-color: #3498db !important;
+    color: #ffffff !important;
 }
 
 .compact-follow-btn {
