@@ -67,6 +67,17 @@
             <label class="form-label">Github Url</label>
             <input type="text" v-model="formDataProject.githubURL" class="form-control">
           </div>
+
+          <div class="mb-3">
+          <label class="form-label">Tags (separate with commas)</label>
+          <input 
+            type="text" 
+            v-model="tagsInput"
+            class="form-control"
+            placeholder="e.g., Vue, Firebase, WebDev"
+          >
+        </div>
+
   
           <div class="form-check mb-3">
             <input type="checkbox" v-model="formDataProject.visibility" class="form-check-input" id="isPublic">
@@ -137,13 +148,15 @@ import { ref } from "vue";
 import MiniNavbar from "@/components/MiniNavbar.vue";
 
 
-const selectedType = ref(null);
+const selectedType = ref('Project');
+const tagsInput = ref('');
 const formDataProject = ref({
   title: "",
   description: "",
   githubURL: "",
   visibility: false,
-  createdAt:new Date()
+  createdAt:new Date(),
+  tags : []
 });
 const formDataskill = ref({
     name: "",
@@ -163,6 +176,10 @@ const submitForm = async()=> {
     const userRef = db.collection("users").doc(auth.currentUser.uid) ;
     
     if (selectedType.value === "Project"){
+        formDataProject.value.tags = tagsInput.value
+        .split(',')
+        .map(tag => tag.trim())   // remove extra spaces
+        .filter(tag => tag !== '');
         const datatoAdd = { ... formDataProject.value};
         await userRef.collection("projects").add(datatoAdd);
         

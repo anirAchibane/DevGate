@@ -47,7 +47,8 @@
             <div class="card-body">
               <div class="skills">
                 <div v-for="skill in userSkills" :key="skill.id" class="skill mb-2">
-                  <p class="mb-1">{{ skill.name }} : {{ skill.level }}</p>
+                  <p class="mb-1 fw-bold">{{ skill.name }} </p>
+                  <p class="mb-1"> Level : {{ skill.level }}</p>
                   <p class="mb-1"> Skill aquired at : {{ formatFirestoreTimestamp(skill.acquiredAt ) }}</p>
                 </div>
               </div>
@@ -75,8 +76,9 @@
                       {{ project.githubURL }}
                     </a> 
                   </p>
-                  <p class="mb-0" v-if="project.visibility">Public</p>
-                  <p class="mb-0" v-else>Private</p>
+                  <p class="mb-1 ">Tags : {{ project.tags }}</p>
+                  <p class="mb-0" v-if="project.visibility"> Visibility : Public</p>
+                  <p class="mb-0" v-else> Visibiliy : Private</p>
                   <p class="mb-0"> Created at : {{ formatFirestoreTimestamp(project.createdAt) }} </p>
                 </div>
               </div>
