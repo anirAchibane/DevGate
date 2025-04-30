@@ -225,7 +225,7 @@ const selectChat = async (chat) => {
 // Navigate to user profile
 const goToUserProfile = (userId) => {
     if (userId) {
-        router.push(`/profile/${userId}`);
+        router.push(`/profil/${userId}`);
     }
 };
 
