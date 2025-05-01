@@ -33,7 +33,8 @@
                 </div>
                 <div v-else class="conversations-list">
                     <ConversationItem v-for="chat in filteredConversations" :key="chat.id" :chat="chat"
-                        :active="selectedChat?.id === chat.id" @select="selectChat" />
+                        :active="selectedChat?.id === chat.id" :isCurrentlyActive="selectedChat?.id === chat.id"
+                        @select="selectChat" />
                 </div>
             </div>
             <div class="chat-panel">

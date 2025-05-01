@@ -19,10 +19,6 @@
                 <span v-if="loading" class="loading-message">Loading...</span>
                 <span v-else>{{ chat.lastMessage?.content || "No messages yet" }}</span>
             </p>
-            <!-- Add seen indicator for outgoing messages -->
-            <div v-if="shouldShowSeenStatus" class="seen-status">
-                <i class="fas fa-check-double" :class="{ 'seen': isLastMessageSeen }"></i>
-            </div>
         </div>
     </div>
 </template>
@@ -34,18 +30,19 @@ import { getUser } from "@/composables/getUser";
 
 const props = defineProps({
     chat: { type: Object, required: true },
-    active: { type: Boolean, default: false }
+    active: { type: Boolean, default: false },
+    isCurrentlyActive: { type: Boolean, default: false } // New prop to track if user is viewing this chat
 });
 
 const otherUsername = ref("");
 const otherUserPfp = ref("");
 const loading = ref(true);
 
-
 // Computed property to check if there are unread messages
 const hasUnreadMessages = computed(() => {
     const currentUserId = auth.currentUser?.uid;
-    if (!currentUserId || !props.chat?.unreadMessages) {
+    // Don't show unread indicator if the chat is currently active/open
+    if (!currentUserId || !props.chat?.unreadMessages || props.isCurrentlyActive) {
         return false;
     }
     return props.chat.unreadMessages[currentUserId] > 0;
@@ -58,28 +55,6 @@ const unreadCount = computed(() => {
         return 0;
     }
     return props.chat.unreadMessages[currentUserId];
-});
-
-// Computed property to check if the last message was sent by the current user
-const isLastMessageFromCurrentUser = computed(() => {
-    const currentUserId = auth.currentUser?.uid;
-    if (!currentUserId || !props.chat?.lastMessage) {
-        return false;
-    }
-    return props.chat.lastMessage.sender_id === currentUserId;
-});
-
-// Computed property to check if the last message has been seen
-const isLastMessageSeen = computed(() => {
-    if (!props.chat?.lastMessageSeen) {
-        return false;
-    }
-    return props.chat.lastMessageSeen === true;
-});
-
-// Only show seen status for messages sent by the current user
-const shouldShowSeenStatus = computed(() => {
-    return isLastMessageFromCurrentUser.value && props.chat?.lastMessage?.content;
 });
 
 onMounted(() => {
@@ -186,7 +161,6 @@ const formatTime = (timestamp) => {
     flex-grow: 1;
     min-width: 0;
     /* Ensures content can shrink below flex-basis */
-    position: relative;
 }
 
 .conversation-header {
@@ -246,23 +220,5 @@ const formatTime = (timestamp) => {
     justify-content: center;
     padding: 0 5px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-/* Seen status styles */
-.seen-status {
-    position: absolute;
-    bottom: 0;
-    right: 0;
-    font-size: 0.7rem;
-    color: var(--text-muted);
-}
-
-.seen-status .fa-check-double {
-    margin-top: 4px;
-}
-
-.seen-status .fa-check-double.seen {
-    color: #3498db;
-    /* Blue color for seen messages */
 }
 </style>

@@ -311,10 +311,10 @@ const setupUnreadMessagesListener = () => {
                 if (chatData.unreadMessages && chatData.unreadMessages[currentUserId] > 0) {
                     unreadFound = true;
                 }
-            }) 
-            if (unreadFound) {
-                hasUnreadMessages.value = true;
-            }
+            });
+
+            // Update the hasUnreadMessages value based on whether any unread messages were found
+            hasUnreadMessages.value = unreadFound;
         }, error => {
             console.error("Error checking for unread messages:", error);
         });
