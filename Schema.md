@@ -23,6 +23,10 @@
         - name: str
         - updatedAt: datetime
 
+-> userVotes:
+    uid: userid_projectid
+    vote: string ("upvote" or "downvote")
+
 -> publicProjects:
     - createdAt: datetime
     - stack: array of str
