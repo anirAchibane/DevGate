@@ -109,6 +109,19 @@ export function useSendMessage(chatId) {
                 created_at: firebase.firestore.FieldValue.serverTimestamp(),
             };
 
+            // Get chat document to retrieve participants
+            const chatDoc = await db.collection("chat").doc(chatId).get();
+            if (!chatDoc.exists) {
+                throw new Error("Chat not found");
+            }
+            
+            const chatData = chatDoc.data();
+            const users = chatData.users || [];
+            const currentUserId = auth.currentUser.uid;
+            
+            // Identify the recipients (all users except the sender)
+            const recipients = users.filter(uid => uid !== currentUserId);
+
             // Add message to the chat
             await db
                 .collection("chat")
@@ -116,17 +129,33 @@ export function useSendMessage(chatId) {
                 .collection("messages")
                 .add(messageData);
 
-            // Update the last message and timestamp on the chat document
-            await db
-                .collection("chat")
-                .doc(chatId)
-                .update({
-                    lastMessage: {
-                        content: content.trim(),
-                        sender_id: auth.currentUser.uid,
-                    },
-                    lastUpdate: firebase.firestore.FieldValue.serverTimestamp(),
+            // Prepare update object
+            const updateData = {
+                lastMessage: {
+                    content: content.trim(),
+                    sender_id: auth.currentUser.uid,
+                },
+                lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            
+            // Add or increment unread messages for recipients
+            if (!chatData.unreadMessages) {
+                // Initialize unreadMessages if it doesn't exist
+                const unreadMessages = {};
+                users.forEach(uid => {
+                    // Set to 1 for recipients, 0 for sender
+                    unreadMessages[uid] = uid !== currentUserId ? 1 : 0;
                 });
+                updateData.unreadMessages = unreadMessages;
+            } else {
+                // Increment existing unread counters for each recipient
+                recipients.forEach(recipientId => {
+                    updateData[`unreadMessages.${recipientId}`] = firebase.firestore.FieldValue.increment(1);
+                });
+            }
+
+            // Update the chat document
+            await db.collection("chat").doc(chatId).update(updateData);
 
             loading.value = false;
             return true;
@@ -184,6 +213,10 @@ export async function createChat(otherUserId) {
             lastMessage: {
                 content: "",
                 sender_id: "",
+            },
+            unreadMessages: {
+                [currentUserId]: 0,
+                [otherUserId]: 0
             }
         });
         

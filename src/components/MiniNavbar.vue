@@ -4,11 +4,7 @@
             <!-- Logo section -->
             <div class="logo-section">
                 <router-link to="/home">
-                    <img
-                        src="@/assets/devgate_logo.png"
-                        alt="DevGate"
-                        class="devgate-logo"
-                    />
+                    <img src="@/assets/devgate_logo.png" alt="DevGate" class="devgate-logo" />
                 </router-link>
             </div>
 
@@ -22,9 +18,7 @@
                 <div class="nav-items d-flex">
                     <!-- Home -->
                     <router-link to="/home" class="navlink">
-                        <div
-                            class="nav-item d-flex flex-column align-items-center"
-                        >
+                        <div class="nav-item d-flex flex-column align-items-center">
                             <div class="nav-icon">
                                 <i class="fa-solid fa-house"></i>
                             </div>
@@ -46,35 +40,25 @@
 
                     <!-- Messaging -->
                     <router-link to="/messages" class="navlink">
-                        <div
-                            class="nav-item d-flex flex-column align-items-center"
-                        >
+                        <div class="nav-item d-flex flex-column align-items-center">
                             <div class="nav-icon">
                                 <i class="fa-solid fa-comment-dots"></i>
+                                <div v-if="hasUnreadMessages" class="notification-dot"></div>
                             </div>
                             <span>Messaging</span>
                         </div>
                     </router-link>
 
                     <!-- Profile -->
-                    <router-link
-                        :to="{
-                            name: 'Profil',
-                            params: { id: auth.currentUser?.uid },
-                        }"
-                        class="navlink"
-                    >
-                        <div
-                            class="nav-item d-flex flex-column align-items-center"
-                        >
+                    <router-link :to="{
+                        name: 'Profil',
+                        params: { id: auth.currentUser?.uid },
+                    }" class="navlink">
+                        <div class="nav-item d-flex flex-column align-items-center">
                             <div class="nav-icon profile-icon">
-                                <img
-                                    :src="
-                                        userProfilePic ||
-                                        require('@/assets/default_pfp.jpg')
-                                    "
-                                    alt="Profile"
-                                />
+                                <img :src="userProfilePic ||
+                                    require('@/assets/default_pfp.jpg')
+                                    " alt="Profile" />
                             </div>
                             <span>Me</span>
                         </div>
@@ -82,10 +66,7 @@
 
                     <!-- Logout button -->
                     <div class="navlink">
-                        <div
-                            class="nav-item d-flex flex-column align-items-center"
-                            @click="logout()"
-                        >
+                        <div class="nav-item d-flex flex-column align-items-center" @click="logout()">
                             <div class="nav-icon">
                                 <i class="fa-solid fa-right-from-bracket"></i>
                             </div>
@@ -226,6 +207,18 @@
     justify-content: center;
 }
 
+/* Notification dot for unread messages */
+.notification-dot {
+    position: absolute;
+    top: -3px;
+    right: -3px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: #e74c3c;
+    box-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+}
+
 /* Active navigation item */
 .router-link-active .nav-item {
     color: white;
@@ -264,13 +257,15 @@
 </style>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, onUnmounted } from "vue";
 import { auth, db } from "@/firebase/config.js";
 import { useRouter } from "vue-router";
 import SearchBar from "@/components/SearchBar.vue";
 
 const router = useRouter();
 const userProfilePic = ref(null);
+const hasUnreadMessages = ref(false);
+let unsubscribe = null;
 
 onMounted(async () => {
     if (auth.currentUser) {
@@ -283,11 +278,48 @@ onMounted(async () => {
             if (userDoc.exists) {
                 userProfilePic.value = userDoc.data().avatar || null;
             }
+
+            // Setup listener for unread messages
+            setupUnreadMessagesListener();
         } catch (error) {
             console.error("Error fetching user data:", error);
         }
     }
 });
+
+onUnmounted(() => {
+    // Clean up listener when component is unmounted
+    if (unsubscribe) {
+        unsubscribe();
+    }
+});
+
+// Set up a listener to check for unread messages
+const setupUnreadMessagesListener = () => {
+    const currentUserId = auth.currentUser.uid;
+
+    // Listen to chats
+    unsubscribe = db
+        .collection("chat")
+        .where("users", "array-contains", currentUserId)
+        .onSnapshot(snapshot => {
+            let unreadFound = false;
+
+            snapshot.docs.forEach(doc => {
+                const chatData = doc.data();
+                // Check if unreadMessages field exists and if current user has any unread messages
+                if (chatData.unreadMessages && chatData.unreadMessages[currentUserId] > 0) {
+                    unreadFound = true;
+                }
+            }) 
+            if (unreadFound) {
+                hasUnreadMessages.value = true;
+            }
+        }, error => {
+            console.error("Error checking for unread messages:", error);
+        });
+};
+
 
 const logout = async () => {
     if (auth.currentUser) {

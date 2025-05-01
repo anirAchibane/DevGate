@@ -55,6 +55,8 @@
         - content: str
         - sender_id: str
     -users : array of str
+    -unreadMessages: map
+        - <userId>: int (number of unread messages for each user)
     ->messages
         -content : str
         -created_at : timestamp
