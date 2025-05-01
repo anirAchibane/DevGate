@@ -1,5 +1,21 @@
 <template>
-    <div class="post-item">
+    <div class="post-item" 
+         :class="{
+             'gallery-mode': galleryMode, 
+             'has-image': post && post.picture,
+             'type-project': post && post.type === 'project',
+             'type-objective': post && post.type === 'objective',
+             'type-skill': post && post.type === 'skill',
+             'type-text': post && post.type === 'text' || !post
+         }" 
+         :data-post-type="post ? post.type : 'text'">
+        <!-- Clone the image at the top for gallery mode -->
+        <div v-if="galleryMode && post && post.picture" class="gallery-image-top">
+            <img :src="post.picture" alt="Post Image" class="gallery-image" />
+        </div>
+        
+        <!-- Remove the standalone type badge -->
+        
         <div
             class="post-content-wrapper"
             :class="{ 'loading-active': postloading || userloading }"
@@ -55,9 +71,9 @@
                 </div>
 
                 <div class="user-info">
-                    <img :src="user.avatar" alt="User Avatar" class="avatar" />
+                    <img :src="user.avatar || require('@/assets/default_pfp.jpg')" alt="User Avatar" class="avatar" @click="navigateToProfile" />
                     <div class="text-inf">
-                        <h3 class="username">{{ user.username }}</h3>
+                        <h3 class="username" @click="navigateToProfile">{{ user.username }}</h3>
                         <p class="date">{{ formatDate(post.addedAt) }}</p>
                     </div>
                     <!-- Add delete button for user's own posts -->
@@ -73,31 +89,10 @@
 
                 <div class="post-info">
                     <div class="post-header">
-                        <!-- <span class="post-type-badge" :class="'type-' + post.type">{{ post.type }}</span> -->
-                        <h4 class="post-title">{{ post.summary }}</h4>
-                    </div>
-
-                    <!-- Voting System -->
-                    <div class="vote-container">
-                        <button 
-                            class="vote-btn upvote-btn" 
-                            :class="{ 'active': userVote === 'upvote' }"
-                            @click="handleUpvote"
-                            :disabled="isVoting || !isLoggedIn"
-                            title="Upvote"
-                        >
-                            <i class="fas fa-arrow-up"></i>
-                        </button>
-                        <span class="vote-count" :class="getVoteCountClass">{{ post.votes || 0 }}</span>
-                        <button 
-                            class="vote-btn downvote-btn" 
-                            :class="{ 'active': userVote === 'downvote' }"
-                            @click="handleDownvote"
-                            :disabled="isVoting || !isLoggedIn"
-                            title="Downvote"
-                        >
-                            <i class="fas fa-arrow-down"></i>
-                        </button>
+                        <h4 class="post-title">
+                            {{ post.summary }}
+                            <span class="title-type-badge">{{ post.type }}</span>
+                        </h4>
                     </div>
 
                     <!-- Common content for all post types -->
@@ -204,14 +199,37 @@
                     </div>
                 </div>
                 <div class="post-footer">
-                    <button class="comment-btn" @click="toggleComments">
-                        <i class="fa-solid fa-comment-dots"></i>
-                        {{ showComments ? "Hide Comments" : "Comment" }}
-                        <span v-if="commentsCount > 0" class="comments-count"
-                            >({{ commentsCount }})</span
-                        >
-                    </button>
-
+                    <div class="post-actions-row">
+                        <!-- Voting System -->
+                        <div class="vote-container">
+                            <button 
+                                class="vote-btn upvote-btn" 
+                                :class="{ 'active': userVote === 'upvote' }"
+                                @click="handleUpvote"
+                                :disabled="isVoting || !isLoggedIn"
+                                title="Upvote"
+                            >
+                                <i class="fas fa-arrow-up"></i>
+                            </button>
+                            <span class="vote-count" :class="getVoteCountClass">{{ post.votes || 0 }}</span>
+                            <button 
+                                class="vote-btn downvote-btn" 
+                                :class="{ 'active': userVote === 'downvote' }"
+                                @click="handleDownvote"
+                                :disabled="isVoting || !isLoggedIn"
+                                title="Downvote"
+                            >
+                                <i class="fas fa-arrow-down"></i>
+                            </button>
+                        </div>
+                        <button class="comment-btn" @click="toggleComments">
+                            <i class="fa-solid fa-comment-dots"></i>
+                            {{ showComments ? "Hide Comments" : "Comment" }}
+                            <span v-if="commentsCount > 0" class="comments-count"
+                                >({{ commentsCount }})</span
+                            >
+                        </button>
+                    </div>
                     <div v-if="showComments" class="comments-section">
                         <div class="new-comment">
                             <img
@@ -466,16 +484,7 @@
                     </div>
                 </div>
             </div>
-            <!-- <div class="comment">
-                <button class="comment-btn" @click="showComments = !showComments">
-                    <i class="fa-solid fa-comment-dots"></i> {{ showComments ? 'Hide Comments' : 'Comment' }}
-                </button>
-            </div> -->
-            <transition name="comments-fade">
-                <div v-if="showComments" class="comments-section">
-                    <comments-item :postId="post.id" />
-                </div>
-            </transition>
+            <!-- Remove commented out code and duplicate comments section -->
         </div>
     </div>
 </template>
@@ -509,6 +518,10 @@ const props = defineProps({
         type: String,
         required: true,
     },
+    galleryMode: {
+        type: Boolean,
+        default: false
+    }
 });
 
 // State variables
@@ -1041,22 +1054,37 @@ const submitReply = async () => {
         addingReply.value = false;
     }
 };
+
+// Navigate to the post owner's profile
+const navigateToProfile = () => {
+    if (user.value && user.value.uid) {
+        router.push({ path: `/profil/${user.value.uid}` });
+    }
+};
 </script>
 
 <style scoped>
 .post-item {
     background-color: #0d1117;
     border: 1px solid #555d69;
-    border-radius: 8px;
+    border-radius: 10px;
     margin-bottom: 1.5rem;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    padding: 1rem;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+    padding: 0;
+    height: 100%; /* Make sure all items have the same height in gallery mode */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
 }
 
 .post-content-wrapper {
     position: relative;
     min-height: 200px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
 }
 
 .loading-active {
@@ -1064,15 +1092,9 @@ const submitReply = async () => {
 }
 
 .post-item:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 12px rgba(0, 0, 0, 0.25);
-    border-color: #6e7683;
-}
-
-.post-content-wrapper {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
+    transform: translateY(-4px);
+    box-shadow: 0 10px 18px rgba(0, 0, 0, 0.35);
+    border-color: #3498db;
 }
 
 .error-message {
@@ -1082,7 +1104,7 @@ const submitReply = async () => {
     color: #e74c3c;
     border-radius: 6px;
     text-align: center;
-    margin: 1rem 0;
+    margin: 1rem;
 }
 
 .error-message i {
@@ -1093,8 +1115,10 @@ const submitReply = async () => {
     display: flex;
     align-items: center;
     gap: 1rem;
-    margin-bottom: 0.5rem;
-    padding: 1.5rem;
+    padding: 1.25rem 1.5rem 0.75rem;
+    position: relative;
+    background: linear-gradient(to bottom, rgba(26, 34, 51, 0.7), transparent);
+    border-bottom: 1px solid rgba(85, 93, 105, 0.2);
 }
 
 .avatar {
@@ -1103,6 +1127,14 @@ const submitReply = async () => {
     border-radius: 50%;
     object-fit: cover;
     border: 2px solid #3498db;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease, border-color 0.3s ease;
+    cursor: pointer; /* Add cursor pointer for clickable avatar */
+}
+
+.post-item:hover .avatar {
+    transform: scale(1.05);
+    border-color: #5dade2;
 }
 
 .text-inf {
@@ -1116,6 +1148,9 @@ const submitReply = async () => {
     color: #ffffff;
     font-size: 1.1rem;
     font-weight: 600;
+    letter-spacing: 0.01em;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    cursor: pointer; /* Add cursor pointer for clickable username */
 }
 
 .date {
@@ -1143,32 +1178,76 @@ const submitReply = async () => {
 .post-info {
     color: #ffffff;
     position: relative;
-    padding-left: 30px;
+    padding: 1.5rem;
+    padding-top: 1rem;
+    padding-bottom: 2.5rem; /* Add padding to accommodate the vote container */
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Gallery image top section */
+.gallery-image-top {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 180px;
+  width: 100%;
+  overflow: hidden;
+  z-index: 3; /* Above the gradient background */
+  border-radius: 10px 10px 0 0;
+}
+
+.gallery-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  transition: transform 0.5s ease;
+}
+
+.post-item.gallery-mode:hover .gallery-image {
+  transform: scale(1.08);
 }
 
 .post-title {
-    margin: 0 0 0.5rem 0;
+    margin: 0 0 0.75rem 0;
     font-size: 1.25rem;
     font-weight: 600;
     color: #ffffff;
+    line-height: 1.4;
+    letter-spacing: 0.01em;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .post-content {
-    margin-bottom: 1rem;
+    margin-bottom: 1.25rem;
     color: #cfd8dc;
-    line-height: 1.5;
+    line-height: 1.6;
     text-align: left;
+    font-size: 1rem;
+    letter-spacing: 0.01em;
 }
 
 /* Project specific styles */
 .project-details {
-    background-color: #010508;
+    background-color: rgba(1, 5, 8, 0.5);
     border: 1px solid rgba(52, 152, 219, 0.2);
-    border-radius: 6px;
-    padding: 1rem;
-    margin: 0.5rem 0;
+    border-radius: 8px;
+    padding: 1.25rem;
+    margin: 0.75rem 0;
     position: relative;
     min-height: 80px;
+    backdrop-filter: blur(4px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    transition: transform 0.3s ease, border-color 0.3s ease;
+}
+
+.project-details:hover {
+    transform: translateY(-2px);
+    border-color: rgba(52, 152, 219, 0.5);
 }
 
 .stack-tags {
@@ -1183,9 +1262,15 @@ const submitReply = async () => {
     color: #5dade2;
     border: 1px solid rgba(52, 152, 219, 0.3);
     border-radius: 4px;
-    padding: 0.25rem 0.5rem;
+    padding: 0.25rem 0.75rem;
     font-size: 0.8rem;
     font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.stack-tag:hover {
+    background-color: rgba(52, 152, 219, 0.25);
+    transform: translateY(-1px);
 }
 
 .github-link a {
@@ -1195,31 +1280,49 @@ const submitReply = async () => {
     color: #3498db;
     text-decoration: none;
     font-weight: 500;
+    padding: 0.35rem 0.75rem;
+    border-radius: 4px;
     transition: all 0.2s ease;
+    background-color: rgba(52, 152, 219, 0.08);
 }
 
 .github-link a:hover {
     color: #5dade2;
-    text-decoration: underline;
+    background-color: rgba(52, 152, 219, 0.15);
+    transform: translateY(-1px);
+}
+
+.github-link a i {
+    font-size: 1.1rem;
 }
 
 /* Objective specific styles */
 .objective-details {
-    background-color: #010508;
+    background-color: rgba(1, 5, 8, 0.5);
     border: 1px solid rgba(241, 196, 15, 0.2);
-    border-radius: 6px;
-    padding: 1rem;
-    margin: 0.5rem 0;
+    border-radius: 8px;
+    padding: 1.25rem;
+    margin: 0.75rem 0;
     position: relative;
     min-height: 80px;
+    backdrop-filter: blur(4px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    transition: transform 0.3s ease, border-color 0.3s ease;
+}
+
+.objective-details:hover {
+    transform: translateY(-2px);
+    border-color: rgba(241, 196, 15, 0.5);
 }
 
 .objective-status {
     display: inline-block;
-    padding: 0.25rem 0.75rem;
-    border-radius: 4px;
-    font-weight: 500;
+    padding: 0.35rem 0.85rem;
+    border-radius: 6px;
+    font-weight: 600;
     margin-bottom: 0.75rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+    letter-spacing: 0.03em;
 }
 
 .objective-status.completed {
@@ -1243,30 +1346,40 @@ const submitReply = async () => {
 .objective-timeline {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: 0.35rem;
     color: #8d99a6;
     font-size: 0.9rem;
 }
 
 /* Skill specific styles */
 .skill-details {
-    background-color: #010508;
+    background-color: rgba(1, 5, 8, 0.5);
     border: 1px solid rgba(46, 204, 113, 0.2);
-    border-radius: 6px;
-    padding: 1rem;
-    margin: 0.5rem 0;
+    border-radius: 8px;
+    padding: 1.25rem;
+    margin: 0.75rem 0;
     position: relative;
     min-height: 80px;
+    backdrop-filter: blur(4px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    transition: transform 0.3s ease, border-color 0.3s ease;
+}
+
+.skill-details:hover {
+    transform: translateY(-2px);
+    border-color: rgba(46, 204, 113, 0.5);
 }
 
 .skill-level {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.25rem 0.75rem;
-    border-radius: 4px;
-    font-weight: 500;
+    padding: 0.35rem 0.85rem;
+    border-radius: 6px;
+    font-weight: 600;
     margin-bottom: 0.75rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+    letter-spacing: 0.03em;
 }
 
 .level-beginner {
@@ -1300,39 +1413,41 @@ const submitReply = async () => {
 
 /* Post images */
 .post-images {
-    margin-top: 1rem;
+    margin: 1rem 0;
     width: 100%;
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
 }
 
 .post-image {
-    max-width: 100%;
+    width: 100%;
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-    border: 1px solid #555d69;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(85, 93, 105, 0.5);
+    transition: transform 0.3s ease;
+    object-fit: cover;
+    max-height: 400px;
 }
 
-.comment-btn {
-    background-color: #0d1117;
-    width: 50%;
-    color: white;
-    border: 1px solid #3498db;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 1rem;
-    /* transition: background-color 0.3s ease, transform 0.3s ease; */
-    text-align: center;
-    align-self: center;
-    /* margin-bottom: 1rem; */
+.post-images:hover .post-image {
+    transform: scale(1.02);
 }
 
-.comment-btn:hover {
-    background-color: #2980b9;
-    transform: translateY(-2px);
+.post-footer {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    padding: 0.5rem 1.5rem 1.5rem;
+    background: linear-gradient(to top, rgba(26, 34, 51, 0.4), transparent);
 }
 
 .post-actions {
     margin-left: auto;
+    z-index: 21; /* Ensure it's above the type badge */
+    position: relative; /* Ensure z-index works */
 }
 
 .delete-post-btn {
@@ -1346,11 +1461,13 @@ const submitReply = async () => {
     display: flex;
     align-items: center;
     justify-content: center;
+    opacity: 0.7;
 }
 
 .delete-post-btn:hover {
     background-color: rgba(231, 76, 60, 0.1);
     transform: scale(1.1);
+    opacity: 1;
 }
 
 /* Delete confirmation modal styles */
@@ -1365,81 +1482,101 @@ const submitReply = async () => {
     justify-content: center;
     align-items: center;
     z-index: 1000;
+    backdrop-filter: blur(3px);
+    animation: fadeIn 0.3s ease;
 }
 
 .delete-confirmation-modal {
     background-color: #1a2233;
-    border-radius: 8px;
-    padding: 20px;
+    border-radius: 12px;
+    padding: 24px;
     width: 90%;
     max-width: 400px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    border: 1px solid #e74c3c;
+    animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+    from { 
+        transform: translateY(20px) scale(0.95); 
+        opacity: 0; 
+    }
+    to { 
+        transform: translateY(0) scale(1); 
+        opacity: 1; 
+    }
 }
 
 .delete-confirmation-modal h3 {
     color: #e74c3c;
     margin-top: 0;
     margin-bottom: 15px;
+    font-size: 1.3rem;
+    font-weight: 600;
 }
 
 .delete-confirmation-modal p {
     color: #cfd8dc;
-    margin-bottom: 20px;
+    margin-bottom: 24px;
+    line-height: 1.5;
+    font-size: 1rem;
 }
 
 .delete-confirmation-actions {
     display: flex;
     justify-content: flex-end;
-    gap: 10px;
+    gap: 12px;
 }
 
 .cancel-delete-btn {
-    padding: 8px 16px;
+    padding: 10px 18px;
     background-color: transparent;
     border: 1px solid #555d69;
     color: #cfd8dc;
-    border-radius: 4px;
+    border-radius: 6px;
     cursor: pointer;
-    transition: background-color 0.3s;
+    transition: all 0.3s ease;
+    font-weight: 500;
 }
 
 .cancel-delete-btn:hover {
     background-color: rgba(255, 255, 255, 0.05);
+    transform: translateY(-2px);
 }
 
 .confirm-delete-btn {
-    padding: 8px 16px;
+    padding: 10px 18px;
     background-color: #e74c3c;
     color: white;
     border: none;
-    border-radius: 4px;
+    border-radius: 6px;
     cursor: pointer;
-    transition: background-color 0.3s;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    box-shadow: 0 3px 6px rgba(231, 76, 60, 0.3);
 }
 
 .confirm-delete-btn:hover {
     background-color: #c0392b;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 10px rgba(231, 76, 60, 0.4);
 }
 
 .confirm-delete-btn:disabled,
 .cancel-delete-btn:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
 }
 
-/* Comments section styles */
-.post-footer {
-    margin-top: 15px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
+/* Comment button */
 .comment-btn {
-    background-color: #10151f;
+    background-color: rgba(16, 21, 31, 0.8);
     color: white;
     border: 1px solid #3498db;
-    padding: 10px 16px;
+    padding: 10px 18px;
     border-radius: 8px;
     cursor: pointer;
     font-size: 0.95rem;
@@ -1448,12 +1585,17 @@ const submitReply = async () => {
     align-items: center;
     gap: 8px;
     margin-bottom: 15px;
+    width: auto;
+    text-align: center;
+    align-self: center;
+    font-weight: 500;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
 }
 
 .comment-btn:hover {
-    background-color: #3498db;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
+    background-color: #2980b9;
+    transform: translateY(-3px);
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.25);
 }
 
 .comment-btn i {
@@ -1468,19 +1610,29 @@ const submitReply = async () => {
 .comments-count {
     font-size: 0.85rem;
     opacity: 0.9;
+    background-color: rgba(52, 152, 219, 0.2);
+    padding: 2px 8px;
+    border-radius: 10px;
+    display: inline-block;
 }
 
+/* Comments section styles */
 .comments-section {
     width: 100%;
-    border-top: 1px solid #555d69;
-    padding-top: 15px;
-    animation: fadeIn 0.3s ease;
+    border-top: 1px solid rgba(85, 93, 105, 0.4);
+    padding-top: 18px;
+    animation: fadeIn 0.4s ease;
+    background-color: rgba(10, 15, 25, 0.5);
+    border-radius: 0 0 8px 8px;
+    max-height: 800px;
+    overflow: hidden;
 }
 
 .new-comment {
     display: flex;
     gap: 12px;
     margin-bottom: 20px;
+    padding: 0 10px;
 }
 
 .comment-avatar {
@@ -1489,6 +1641,11 @@ const submitReply = async () => {
     border-radius: 50%;
     object-fit: cover;
     border: 2px solid #3498db;
+    transition: transform 0.3s ease;
+}
+
+.new-comment:hover .comment-avatar {
+    transform: scale(1.05);
 }
 
 .comment-input-wrapper {
@@ -1498,30 +1655,32 @@ const submitReply = async () => {
 
 .comment-input {
     width: 100%;
-    padding: 12px 15px;
-    padding-right: 80px;
-    border-radius: 18px;
-    border: 1px solid #555d69;
-    background-color: #10151f;
+    padding: 14px 18px;
+    padding-right: 90px;
+    border-radius: 20px;
+    border: 1px solid rgba(85, 93, 105, 0.7);
+    background-color: rgba(16, 21, 31, 0.7);
     color: #ffffff;
     resize: none;
     font-family: inherit;
     font-size: 0.95rem;
     min-height: 60px;
     transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .comment-input:focus {
     border-color: #3498db;
     outline: none;
-    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2), 0 4px 12px rgba(0, 0, 0, 0.15);
+    background-color: rgba(16, 21, 31, 0.9);
 }
 
 .post-comment-btn {
     position: absolute;
     bottom: 10px;
     right: 10px;
-    padding: 6px 12px;
+    padding: 7px 14px;
     background-color: #3498db;
     color: white;
     border: none;
@@ -1530,17 +1689,20 @@ const submitReply = async () => {
     transition: all 0.3s ease;
     font-weight: 500;
     font-size: 0.9rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .post-comment-btn:hover {
     background-color: #2980b9;
     transform: translateY(-2px);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
 }
 
 .post-comment-btn:disabled {
     background-color: #555d69;
     cursor: not-allowed;
     transform: none;
+    box-shadow: none;
 }
 
 .comments-loading {
@@ -1548,7 +1710,7 @@ const submitReply = async () => {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 20px;
+    padding: 24px;
     color: #cfd8dc;
 }
 
@@ -1558,7 +1720,7 @@ const submitReply = async () => {
     border: 3px solid rgba(52, 152, 219, 0.1);
     border-radius: 50%;
     border-top-color: #3498db;
-    animation: spin 1s ease-in-out infinite;
+    animation: spin 1s cubic-bezier(0.76, 0.21, 0.24, 0.93) infinite;
     margin-bottom: 10px;
 }
 
@@ -1567,28 +1729,30 @@ const submitReply = async () => {
     padding: 15px;
     color: #e74c3c;
     background-color: rgba(231, 76, 60, 0.1);
-    border-radius: 6px;
-    margin-bottom: 15px;
+    border-radius: 8px;
+    margin: 0 15px 15px;
 }
 
 .retry-btn {
     margin-top: 10px;
-    padding: 6px 12px;
+    padding: 7px 14px;
     background-color: #e74c3c;
     color: white;
     border: none;
-    border-radius: 4px;
+    border-radius: 6px;
     cursor: pointer;
-    transition: background-color 0.3s;
+    transition: all 0.3s ease;
+    font-weight: 500;
 }
 
 .retry-btn:hover {
     background-color: #c0392b;
+    transform: translateY(-2px);
 }
 
 .no-comments {
     text-align: center;
-    padding: 20px;
+    padding: 24px;
     color: #b0bec5;
     font-style: italic;
 }
@@ -1597,27 +1761,30 @@ const submitReply = async () => {
     display: flex;
     flex-direction: column;
     gap: 15px;
+    padding: 0 15px 15px;
 }
 
 .comment-item {
-    background-color: #10151f;
+    background-color: rgba(16, 21, 31, 0.7);
     border-radius: 12px;
     padding: 15px;
-    border: 1px solid #555d69;
+    border: 1px solid rgba(85, 93, 105, 0.5);
     transition: all 0.3s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
 .comment-item:hover {
     border-color: #3498db;
     transform: translateY(-3px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 5px 12px rgba(0, 0, 0, 0.25);
+    background-color: rgba(16, 21, 31, 0.9);
 }
 
 .comment-user-info {
     display: flex;
     align-items: center;
     gap: 10px;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
 }
 
 .comment-user-text {
@@ -1628,6 +1795,7 @@ const submitReply = async () => {
     margin: 0 0 3px 0;
     font-size: 1rem;
     color: #ffffff;
+    font-weight: 600;
 }
 
 .comment-date {
@@ -1639,8 +1807,9 @@ const submitReply = async () => {
 .comment-content {
     margin: 0;
     color: #cfd8dc;
-    line-height: 1.4;
+    line-height: 1.5;
     margin-left: 50px;
+    font-size: 0.95rem;
 }
 
 .delete-comment-btn {
@@ -1669,6 +1838,7 @@ const submitReply = async () => {
 .show-more-comments {
     text-align: center;
     margin-top: 15px;
+    padding-bottom: 10px;
 }
 
 .show-more-btn {
@@ -1676,39 +1846,28 @@ const submitReply = async () => {
     border: none;
     color: #3498db;
     cursor: pointer;
-    padding: 8px 16px;
-    font-size: 0.9rem;
+    padding: 8px 18px;
+    font-size: 0.95rem;
     transition: all 0.3s ease;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     margin: 0 auto;
+    border-radius: 20px;
+    background-color: rgba(52, 152, 219, 0.1);
+    border: 1px solid rgba(52, 152, 219, 0.2);
 }
 
 .show-more-btn:hover {
     color: #5dade2;
     transform: translateY(-2px);
-}
-
-/* Comment animations */
-.comment-list-enter-active,
-.comment-list-leave-active {
-    transition: all 0.3s ease;
-}
-
-.comment-list-enter-from {
-    opacity: 0;
-    transform: translateY(20px);
-}
-
-.comment-list-leave-to {
-    opacity: 0;
-    transform: translateY(-20px);
+    background-color: rgba(52, 152, 219, 0.15);
+    border-color: rgba(52, 152, 219, 0.4);
 }
 
 /* Replies and reply form styles */
 .comment-actions {
-    margin-top: 10px;
+    margin-top: 12px;
     margin-left: 50px;
     display: flex;
     gap: 15px;
@@ -1718,23 +1877,25 @@ const submitReply = async () => {
     background: none;
     border: none;
     color: #3498db;
-    font-size: 0.85rem;
-    padding: 0;
+    font-size: 0.9rem;
+    padding: 5px 10px;
     cursor: pointer;
     transition: all 0.2s ease;
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 6px;
+    border-radius: 12px;
 }
 
 .reply-btn:hover {
     color: #5dade2;
     transform: translateY(-2px);
+    background-color: rgba(52, 152, 219, 0.1);
 }
 
 .comment-replies {
     margin-top: 15px;
-    margin-left: 40px;
+    margin-left: 45px;
     border-left: 2px solid rgba(52, 152, 219, 0.3);
     padding-left: 15px;
 }
@@ -1743,15 +1904,17 @@ const submitReply = async () => {
     background-color: rgba(16, 21, 31, 0.5);
     border-radius: 10px;
     padding: 12px;
-    margin-bottom: 10px;
-    border: 1px solid rgba(85, 93, 105, 0.5);
+    margin-bottom: 12px;
+    border: 1px solid rgba(85, 93, 105, 0.4);
     transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .reply-item:hover {
     border-color: #3498db;
     transform: translateY(-2px);
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    background-color: rgba(16, 21, 31, 0.7);
 }
 
 .reply-avatar {
@@ -1761,12 +1924,13 @@ const submitReply = async () => {
 }
 
 .reply-form {
-    margin-top: 12px;
-    margin-left: 40px;
-    padding: 12px;
+    margin-top: 15px;
+    margin-left: 45px;
+    padding: 15px;
     background-color: rgba(16, 21, 31, 0.3);
-    border-radius: 10px;
+    border-radius: 12px;
     animation: fadeIn 0.3s ease;
+    border: 1px solid rgba(52, 152, 219, 0.2);
 }
 
 .reply-input-container {
@@ -1778,15 +1942,15 @@ const submitReply = async () => {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
 }
 
 .reply-input {
     width: 100%;
-    padding: 10px 12px;
+    padding: 12px 15px;
     border-radius: 15px;
-    border: 1px solid #555d69;
-    background-color: #10151f;
+    border: 1px solid rgba(85, 93, 105, 0.7);
+    background-color: rgba(16, 21, 31, 0.7);
     color: #ffffff;
     resize: none;
     font-family: inherit;
@@ -1799,6 +1963,7 @@ const submitReply = async () => {
     border-color: #3498db;
     outline: none;
     box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.15);
+    background-color: rgba(16, 21, 31, 0.9);
 }
 
 .reply-actions {
@@ -1808,7 +1973,7 @@ const submitReply = async () => {
 }
 
 .cancel-reply-btn {
-    padding: 6px 12px;
+    padding: 7px 14px;
     background-color: transparent;
     border: 1px solid #555d69;
     color: #cfd8dc;
@@ -1820,10 +1985,11 @@ const submitReply = async () => {
 
 .cancel-reply-btn:hover {
     background-color: rgba(255, 255, 255, 0.05);
+    transform: translateY(-2px);
 }
 
 .post-reply-btn {
-    padding: 6px 12px;
+    padding: 7px 14px;
     background-color: #3498db;
     color: white;
     border: none;
@@ -1831,17 +1997,20 @@ const submitReply = async () => {
     cursor: pointer;
     font-size: 0.85rem;
     transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }
 
 .post-reply-btn:hover {
     background-color: #2980b9;
     transform: translateY(-2px);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.25);
 }
 
 .post-reply-btn:disabled {
     background-color: #555d69;
     cursor: not-allowed;
     transform: none;
+    box-shadow: none;
 }
 
 @keyframes fadeIn {
@@ -1859,123 +2028,27 @@ const submitReply = async () => {
     }
 }
 
-@media (max-width: 768px) {
-    .comment-actions {
-        margin-left: 0;
-    }
-
-    .comment-replies {
-        margin-left: 20px;
-        padding-left: 10px;
-    }
-
-    .reply-form {
-        margin-left: 20px;
-    }
-
-    .reply-input-container {
-        flex-direction: column;
-    }
-}
-
-@media (max-width: 768px) {
-    .new-comment {
-        flex-direction: column;
-        align-items: center;
-    }
-
-    .comment-avatar {
-        margin-bottom: 10px;
-    }
-
-    .comment-content {
-        margin-left: 0;
-    }
-
-    .comment-input {
-        font-size: 0.9rem;
-        padding-bottom: 40px;
-    }
-
-    .post-comment-btn {
-        bottom: 5px;
-        right: 5px;
-        padding: 5px 10px;
-        font-size: 0.8rem;
-    }
-
-/* Comments section styling */
-.comments-section {
-    max-height: 800px;
-    overflow: hidden;
-    margin-top: 1rem;
-    border-top: 1px solid #1e2a38;
-    padding-top: 1rem;
-}
-
-/* Enhanced transitions for comments */
-.comments-fade-enter-active {
-    transition: all 0.5s ease-out;
-    max-height: 800px;
-    transform-origin: top;
-}
-
-.comments-fade-leave-active {
-    transition: all 0.5s ease-in;
-    max-height: 800px;
-    transform-origin: top;
-}
-
-.comments-fade-enter-from,
-.comments-fade-leave-to {
-    opacity: 0;
-    max-height: 0;
-    transform: scaleY(0.8);
-}
-
-.comment {
-    display: flex;
-    justify-content: center;
-    margin: 1rem 0;
-}}
-
-/* Responsive styles */
-@media (max-width: 768px) {
-    .post-item {
-        padding: 1rem;
-    }
-
-    .post-title {
-        font-size: 1.1rem;
-    }
-
-    .username {
-        font-size: 1rem;
-    }
-
-    .avatar {
-        width: 40px;
-        height: 40px;
-    }
-
-    .comments-section {
-        max-height: 600px;
-    }
-}
-
 /* Voting system styles */
 .vote-container {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
     position: absolute;
-    left: -15px;
-    top: 80px;
-    background-color: #10151f;
+    left: 1.5rem;
+    bottom: 1rem;
+    background-color: rgba(16, 21, 31, 0.9);
     border-radius: 8px;
-    padding: 6px 4px;
-    border: 1px solid #555d69;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    padding: 4px 8px;
+    border: 1px solid rgba(85, 93, 105, 0.7);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+    z-index: 5;
+    transition: all 0.3s ease;
+}
+
+.vote-container:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 12px rgba(0, 0, 0, 0.3);
+    border-color: #3498db;
 }
 
 .vote-btn {
@@ -1987,10 +2060,13 @@ const submitReply = async () => {
     cursor: pointer;
     transition: all 0.2s ease;
     border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .vote-btn:hover:not(:disabled) {
-    background-color: rgba(52, 152, 219, 0.1);
+    background-color: rgba(52, 152, 219, 0.15);
     transform: scale(1.1);
 }
 
@@ -2010,7 +2086,9 @@ const submitReply = async () => {
 .vote-count {
     font-weight: 600;
     font-size: 1rem;
-    margin: 4px 0;
+    margin: 0 10px;
+    min-width: 24px;
+    text-align: center;
 }
 
 .vote-count.positive {
@@ -2025,21 +2103,686 @@ const submitReply = async () => {
     color: #cfd8dc;
 }
 
+.post-actions-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    gap: 20px;
+    margin-bottom: 15px;
+}
+
+.post-actions-row .vote-container {
+    position: static;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+    background-color: rgba(16, 21, 31, 0.9);
+    border-radius: 8px;
+    padding: 5px 10px;
+    margin: 0;
+}
+
+.post-actions-row .comment-btn {
+    margin-bottom: 0;
+}
+
+/* Gallery mode styles */
+.post-item.gallery-mode {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(85, 93, 105, 0.5);
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+  background-color: #0d1117;
+  position: relative;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.post-item.gallery-mode:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+  border-color: #3498db;
+}
+
+.post-item.gallery-mode .post-content-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* Create placeholder for images */
+.post-item.gallery-mode::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 180px;
+  background: linear-gradient(120deg, #1e3a8a 0%, #1a2233 100%);
+  z-index: 1;
+}
+
+/* Image area at the top - moved to start of post structure */
+.post-item.gallery-mode .post-images {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 180px;
+  margin: 0;
+  padding: 0;
+  border-radius: 10px 10px 0 0;
+  overflow: hidden;
+  z-index: 2;
+  display: block; /* Changed from flex to block */
+}
+
+/* Fixed image styling */
+.post-item.gallery-mode .post-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 0;
+  box-shadow: none;
+  border: none;
+  transition: transform 0.5s ease;
+  margin: 0; /* Reset margin */
+  object-position: center;
+  display: block; /* Ensure image displays properly */
+}
+
+.post-item.gallery-mode:hover .post-image {
+  transform: scale(1.08);
+}
+
+/* User info overlay on image */
+.post-item.gallery-mode .user-info {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 5;
+  padding: 12px;
+  background: linear-gradient(to bottom, rgba(13, 17, 23, 0.9), rgba(13, 17, 23, 0.5) 60%, transparent);
+  border-bottom: none;
+  margin: 0;
+}
+
+.post-item.gallery-mode .avatar {
+  width: 38px;
+  height: 38px;
+  border: 2px solid rgba(52, 152, 219, 0.8);
+}
+
+.post-item.gallery-mode .username {
+  font-size: 0.95rem;
+  color: white;
+  font-weight: 600;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+.post-item.gallery-mode .date {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.8);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+/* Type badge */
+.post-item.gallery-mode::after {
+  display: none; /* Hide gradient background when we have an image */
+}
+
+/* Post type badges */
+.post-item.gallery-mode[data-post-type="project"]::after {
+  background-color: #3498db;
+  color: white;
+}
+
+.post-item.gallery-mode[data-post-type="objective"]::after {
+  background-color: #f1c40f;
+  color: #1a2233;
+}
+
+.post-item.gallery-mode[data-post-type="skill"]::after {
+  background-color: #2ecc71;
+  color: white;
+}
+
+.post-item.gallery-mode[data-post-type="text"]::after {
+  background-color: #9b59b6;
+  color: white;
+}
+
+/* Content area - always starts after image space */
+.post-item.gallery-mode .post-info {
+  padding: 16px;
+  margin-top: 180px; /* Fixed space for image area */
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  z-index: 3;
+}
+
+/* Don't display images in their normal location in gallery mode */
+.post-item.gallery-mode .post-info .post-images {
+  display: none;
+}
+
+/* Add a duplicate of images at the top for gallery mode */
+.post-item.gallery-mode.has-image::before {
+  display: none; /* Hide gradient background when we have an image */
+}
+
+.post-item.gallery-mode .post-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  line-height: 1.3;
+  display: -webkit-box;
+  line-clamp: 2;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-height: 2.6em;
+}
+
+.post-item.gallery-mode .post-content {
+  font-size: 0.85rem;
+  color: #a0aec0;
+  margin-bottom: 12px;
+  display: -webkit-box;
+  line-clamp: 3;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.5;
+}
+
+/* Footer and actions area */
+.post-item.gallery-mode .post-footer {
+  padding: 12px;
+  margin-top: auto;
+  background: rgba(16, 21, 31, 0.4);
+  border-top: 1px solid rgba(52, 152, 219, 0.1);
+}
+
+/* Media queries for gallery mode */
 @media (max-width: 768px) {
-    .vote-container {
-        position: static;
-        flex-direction: row;
-        justify-content: center;
-        margin-bottom: 12px;
-        padding: 5px 8px;
-    }
+  .post-item.gallery-mode .post-info {
+    padding: 12px;
+  }
+  
+  .post-item.gallery-mode .post-footer {
+    padding: 10px;
+  }
+  
+  .post-item.gallery-mode .post-title {
+    font-size: 0.95rem;
+  }
+  
+  .post-item.gallery-mode .post-content {
+    font-size: 0.8rem;
+  }
+}
 
+/* Responsive design */
+@media (max-width: 768px) {
+    .post-item {
+        padding: 0;
+    }
+    
     .post-info {
-        padding-left: 0;
+        padding: 1rem 1.25rem 2.5rem;
+    }
+    
+    .user-info {
+        padding: 1rem 1.25rem 0.5rem;
     }
 
-    .vote-count {
-        margin: 0 10px;
+    .post-title {
+        font-size: 1.1rem;
     }
+
+    .username {
+        font-size: 1rem;
+    }
+
+    .avatar {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .vote-container {
+        left: 1.25rem;
+    }
+
+    .post-actions-row {
+        flex-direction: row;
+        gap: 12px;
+    }
+    
+    .comment-actions {
+        margin-left: 0;
+    }
+
+    .comment-replies {
+        margin-left: 20px;
+        padding-left: 10px;
+    }
+
+    .reply-form {
+        margin-left: 20px;
+    }
+
+    .reply-input-container {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .comment-content {
+        margin-left: 0;
+    }
+
+    .comment-input {
+        font-size: 0.9rem;
+        padding-bottom: 40px;
+    }
+
+    .post-comment-btn {
+        bottom: 5px;
+        right: 5px;
+        padding: 5px 10px;
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .user-info {
+        padding: 0.75rem 1rem 0.5rem;
+    }
+    
+    .post-info {
+        padding: 0.75rem 1rem 2.5rem;
+    }
+    
+    .avatar {
+        width: 36px;
+        height: 36px;
+    }
+    
+    .username {
+        font-size: 0.95rem;
+    }
+    
+    .date {
+        font-size: 0.8rem;
+    }
+    
+    .post-title {
+        font-size: 1rem;
+    }
+    
+    .post-content {
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+    
+    .comment-btn, 
+    .post-comment-btn,
+    .post-reply-btn,
+    .cancel-reply-btn {
+        font-size: 0.8rem;
+    }
+    
+    .vote-container {
+        left: 1rem;
+    }
+    
+    .post-actions-row {
+        gap: 8px;
+    }
+    
+    .comment-item {
+        padding: 12px 10px;
+    }
+}
+
+/* Animation improvements */
+.post-item {
+    animation: fadeInUp 0.5s ease backwards;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.comments-section {
+    animation: fadeInDown 0.4s ease;
+}
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* List mode styles - modernized and inspired by gallery mode */
+.post-item:not(.gallery-mode) {
+  background-color: #0d1117;
+  border: 1px solid rgba(85, 93, 105, 0.5);
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.post-item:not(.gallery-mode):hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.35);
+  border-color: #3498db;
+}
+
+/* Improved user section for list mode */
+.post-item:not(.gallery-mode) .user-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem 0.75rem;
+  background: linear-gradient(to right, rgba(26, 34, 51, 0.8), rgba(26, 34, 51, 0.4));
+  border-bottom: 1px solid rgba(85, 93, 105, 0.2);
+  border-radius: 12px 12px 0 0;
+}
+
+.post-item:not(.gallery-mode) .avatar {
+  width: 48px;
+  height: 48px;
+  border: 2px solid #3498db;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+}
+
+.post-item:not(.gallery-mode) .username {
+  font-size: 1.1rem;
+  color: #ffffff;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.post-item:not(.gallery-mode) .date {
+  color: #7d8796;
+  font-size: 0.85rem;
+}
+
+/* Improved content section for list mode */
+.post-item:not(.gallery-mode) .post-info {
+  padding: 1.25rem 1.5rem;
+  background: linear-gradient(135deg, rgba(16, 22, 36, 0.6), rgba(13, 17, 23, 0.9));
+  flex: 1;
+}
+
+.post-item:not(.gallery-mode) .post-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin-bottom: 0.8rem;
+  color: #ffffff;
+  line-height: 1.4;
+  letter-spacing: 0.01em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Add post type badge inline with title */
+.post-item:not(.gallery-mode) .post-title::before {
+  content: attr(data-post-type);
+  background-color: rgba(52, 152, 219, 0.2);
+  color: #5dade2;
+  padding: 0.2rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: 1px solid rgba(52, 152, 219, 0.3);
+  text-shadow: none;
+}
+
+.post-item:not(.gallery-mode)[data-post-type="project"] .post-title::before {
+  background-color: rgba(52, 152, 219, 0.2);
+  color: #5dade2;
+  border-color: rgba(52, 152, 219, 0.3);
+}
+
+.post-item:not(.gallery-mode)[data-post-type="objective"] .post-title::before {
+  background-color: rgba(241, 196, 15, 0.2);
+  color: #f4d03f;
+  border-color: rgba(241, 196, 15, 0.3);
+}
+
+.post-item:not(.gallery-mode)[data-post-type="skill"] .post-title::before {
+  background-color: rgba(46, 204, 113, 0.2);
+  color: #58d68d;
+  border-color: rgba(46, 204, 113, 0.3);
+}
+
+.post-item:not(.gallery-mode)[data-post-type="text"] .post-title::before {
+  background-color: rgba(155, 89, 182, 0.2);
+  color: #bb8fce;
+  border-color: rgba(155, 89, 182, 0.3);
+}
+
+.post-item:not(.gallery-mode) .post-content {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #cfd8dc;
+  margin-bottom: 1.25rem;
+}
+
+/* Improved image display for list mode */
+.post-item:not(.gallery-mode) .post-images {
+  margin: 1rem 0;
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(120deg, #1e3a8a 0%, #1a2233 100%);
+  max-height: 350px;
+}
+
+.post-item:not(.gallery-mode) .post-image {
+  width: 100%;
+  border-radius: 8px;
+  object-fit: cover;
+  max-height: 350px;
+  transition: transform 0.5s ease;
+  display: block;
+}
+
+.post-item:not(.gallery-mode) .post-images:hover .post-image {
+  transform: scale(1.03);
+}
+
+/* Improved type-specific sections for list mode */
+.post-item:not(.gallery-mode) .project-details,
+.post-item:not(.gallery-mode) .objective-details,
+.post-item:not(.gallery-mode) .skill-details {
+  border-radius: 8px;
+  padding: 1.25rem;
+  margin: 1rem 0;
+  background-color: rgba(16, 21, 31, 0.5);
+  backdrop-filter: blur(4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  border-left: 4px solid #3498db;
+}
+
+.post-item:not(.gallery-mode) .project-details {
+  border-left-color: #3498db;
+}
+
+.post-item:not(.gallery-mode) .objective-details {
+  border-left-color: #f1c40f;
+}
+
+.post-item:not(.gallery-mode) .skill-details {
+  border-left-color: #2ecc71;
+}
+
+/* Improved footer section for list mode */
+.post-item:not(.gallery-mode) .post-footer {
+  padding: 0.75rem 1.5rem 1.25rem;
+  background: linear-gradient(to bottom, rgba(16, 21, 31, 0.2), rgba(16, 21, 31, 0.6));
+  border-top: 1px solid rgba(52, 152, 219, 0.1);
+  border-radius: 0 0 12px 12px;
+}
+
+.post-item:not(.gallery-mode) .post-actions-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 15px;
+}
+
+.post-item:not(.gallery-mode) .vote-container {
+  position: static;
+  display: flex;
+  align-items: center;
+  background-color: rgba(16, 21, 31, 0.7);
+  border-radius: 8px;
+  padding: 5px 10px;
+  border: 1px solid rgba(85, 93, 105, 0.5);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+}
+
+.post-item:not(.gallery-mode) .comment-btn {
+  margin-bottom: 0;
+  background-color: rgba(16, 21, 31, 0.7);
+  border: 1px solid rgba(52, 152, 219, 0.3);
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.post-item:not(.gallery-mode) .comment-btn:hover {
+  background-color: rgba(52, 152, 219, 0.2);
+  transform: translateY(-2px);
+}
+
+/* Type badge common styles */
+.type-badge {
+  position: absolute;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  z-index: 20;
+}
+
+/* Type badge for gallery mode */
+.post-item.gallery-mode .type-badge {
+  top: 150px;
+  right: 12px;
+}
+
+/* Type badge for list mode */
+.post-item:not(.gallery-mode) .type-badge {
+  top: 15px;
+  right: 60px; /* Adjust to avoid overlapping with the delete button */
+}
+
+/* Type colors */
+.post-item.type-project .type-badge {
+  background-color: #3498db;
+  color: white;
+}
+
+.post-item.type-objective .type-badge {
+  background-color: #f1c40f;
+  color: #1a2233;
+}
+
+.post-item.type-skill .type-badge {
+  background-color: #2ecc71;
+  color: white;
+}
+
+.post-item.type-text .type-badge {
+  background-color: #9b59b6;
+  color: white;
+}
+
+/* Hide the pseudo-element type badges we created earlier */
+.post-item.gallery-mode::after {
+  display: none;
+}
+
+.title-type-badge {
+  display: inline-block;
+  margin-left: 12px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background-color: rgba(52, 152, 219, 0.15);
+  color: #5dade2;
+  border: 1px solid rgba(52, 152, 219, 0.3);
+  vertical-align: middle;
+}
+
+.post-item.type-project .title-type-badge {
+  background-color: rgba(52, 152, 219, 0.15);
+  color: #5dade2;
+  border-color: rgba(52, 152, 219, 0.3);
+}
+
+.post-item.type-objective .title-type-badge {
+  background-color: rgba(241, 196, 15, 0.15);
+  color: #f4d03f;
+  border-color: rgba(241, 196, 15, 0.3);
+}
+
+.post-item.type-skill .title-type-badge {
+  background-color: rgba(46, 204, 113, 0.15);
+  color: #58d68d;
+  border-color: rgba(46, 204, 113, 0.3);
+}
+
+.post-item.type-text .title-type-badge {
+  background-color: rgba(155, 89, 182, 0.15);
+  color: #bb8fce;
+  border-color: rgba(155, 89, 182, 0.3);
+}
+
+/* Hide the standalone type badge when we show it inline with title */
+.post-item:not(.gallery-mode) .type-badge {
+  display: none;
 }
 </style>
