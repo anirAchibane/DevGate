@@ -88,6 +88,10 @@
                     >
                         <i class="fas fa-user-circle"></i> View
                     </router-link>
+                    <button @click="remove(follower.id)" class="btn btn-sm btn-outline view-profile">
+                        <i class="fas fa-user-large-slash"></i>
+                        Remove
+                    </button>
             </div>
         </div>
 
@@ -111,6 +115,10 @@
                     >
                         <i class="fas fa-user-circle"></i> View
                     </router-link>
+                    <button @click="unfollow(followedUser.id)" class="btn btn-sm btn-outline view-profile">
+                        <i class="fas fa-user-large-slash"></i>
+                        Unfollow
+                    </button>
             </div>
         </div>
     </div>
@@ -222,8 +230,9 @@ const deleteAccount = async () => {
             await userRef.delete();
             alert("Account deleted successfully!!");
 
-            await auth.signOut();
-            router.push("/");
+            await auth.currentUser.delete();
+            alert("Account deleted successfully!!");
+            router.push('/');
             console.log("Account deleted successfully");
         } catch (error) {
             alert("Error deleting account: " + error.message);
@@ -257,6 +266,50 @@ const deleteAll = async () => { //delete all user content
         }
     }
 };
+
+const unfollow = async (userId) => {
+      try{
+            const followList = ref([]);
+            const doc = await db.collection("users").doc(auth.currentUser.uid).get();
+            if(doc.exists){
+                    followList.value = doc.data().following; 
+            } 
+            else {
+                    console.log("No such document!");
+            }
+
+            followList.value = followList.value.filter((id) => id !== userId);
+
+            await db.collection("users").doc(auth.currentUser.uid).update({
+                following: followList.value
+            })
+
+            following.value = following.value.filter(user => user.id !== userId);
+
+          } catch(error){
+            console.error("Error unfollowing user:", error);
+          }
+}
+
+const remove = async (userId) => {
+    try{
+        const userDoc = await db.collection("users").doc(userId).get();
+        if (userDoc.exists){
+            const followList = ref([]);
+            followList.value = userDoc.data().following;
+
+            followList.value = followList.value.filter((id) => id !== auth.currentUser.uid)
+            await db.collection("users").doc(userId).update({
+                following: followList.value
+            })
+
+            followers.value = followers.value.filter((user) => user.id !== userId);
+
+        }
+    } catch(error){
+        console.log("Error removing follower: ", error);
+    }
+}
 
 // Profile picture handling functions
 const triggerFileInput = () => {
