@@ -3,7 +3,7 @@
         @click="$emit('select', chat)">
         <div class="conversation-avatar">
             <img :src="otherUserPfp || '/default_pfp.jpg'" alt="Profile Picture" class="avatar-img">
-            <span class="status-indicator" :class="{ 'online': isOnline }"></span>
+            
             <div v-if="hasUnreadMessages" class="unread-badge">
                 {{ unreadCount > 9 ? '9+' : unreadCount }}
             </div>
@@ -36,7 +36,7 @@ const props = defineProps({
 const otherUsername = ref("");
 const otherUserPfp = ref("");
 const loading = ref(true);
-const isOnline = ref(false); // You can implement online status later if needed
+
 
 // Computed property to check if there are unread messages
 const hasUnreadMessages = computed(() => {
@@ -153,20 +153,8 @@ const formatTime = (timestamp) => {
     border-color: var(--primary-color);
 }
 
-.status-indicator {
-    position: absolute;
-    bottom: 3px;
-    right: 3px;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background-color: var(--text-muted);
-    border: 2px solid var(--background-secondary);
-}
 
-.status-indicator.online {
-    background-color: #4CAF50;
-}
+
 
 .conversation-content {
     flex-grow: 1;
