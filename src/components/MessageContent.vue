@@ -91,6 +91,31 @@ const sendMessage = async () => {
     }
 };
 
+// Mark messages as read when the component mounts or when the chat changes
+const markMessagesAsRead = async () => {
+    if (!props.chat?.id || !auth.currentUser) return;
+
+    try {
+        const currentUserId = auth.currentUser.uid;
+        const chatRef = db.collection("chat").doc(props.chat.id);
+
+        // Only update if the unreadMessages field exists and the current user has unread messages
+        const chatDoc = await chatRef.get();
+        if (chatDoc.exists) {
+            const chatData = chatDoc.data();
+            if (chatData.unreadMessages && chatData.unreadMessages[currentUserId] > 0) {
+                // Reset unread counter for the current user
+                await chatRef.update({
+                    [`unreadMessages.${currentUserId}`]: 0
+                });
+                console.log("Marked messages as read for chat:", props.chat.id);
+            }
+        }
+    } catch (error) {
+        console.error("Error marking messages as read:", error);
+    }
+};
+
 // Message deletion functions
 const confirmDeleteMessage = (messageId) => {
     messageToDelete.value = messageId;
@@ -148,6 +173,7 @@ const scrollToBottomInstant = () => {
 
 onMounted(() => {
     setupListener();
+    markMessagesAsRead();
 
     // Force scroll on initial load
     nextTick(() => {
@@ -161,6 +187,7 @@ onMounted(() => {
 watch(() => props.chat.id, (newVal) => {
     if (newVal) {
         setupListener();
+        markMessagesAsRead();
         // Force scroll when changing chats
         setTimeout(scrollToBottomInstant, 50);
     }

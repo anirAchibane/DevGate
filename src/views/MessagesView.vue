@@ -33,7 +33,8 @@
                 </div>
                 <div v-else class="conversations-list">
                     <ConversationItem v-for="chat in filteredConversations" :key="chat.id" :chat="chat"
-                        :active="selectedChat?.id === chat.id" @select="selectChat" />
+                        :active="selectedChat?.id === chat.id" :isCurrentlyActive="selectedChat?.id === chat.id"
+                        @select="selectChat" />
                 </div>
             </div>
             <div class="chat-panel">
@@ -81,8 +82,8 @@
                         <ul v-else class="user-list">
                             <li v-for="user in searchResults" :key="user.id" class="user-list-item">
                                 <div class="user-list-info">
-                                    <img :src="user.avatar || require('@/assets/default_pfp.jpg')" class="user-list-avatar"
-                                        alt="User avatar">
+                                    <img :src="user.avatar || require('@/assets/default_pfp.jpg')"
+                                        class="user-list-avatar" alt="User avatar">
                                     <span class="user-list-name">{{ user.username }}</span>
                                 </div>
                                 <button class="btn btn-sm btn-primary" @click="addChat(user.id)">
@@ -219,6 +220,18 @@ const selectChat = async (chat) => {
         if (otherUserId) {
             otherUserDetails.value = await fetchOtherUserDetails(otherUserId);
         }
+
+        // Mark messages as read when selecting a chat
+        try {
+            if (chat.unreadMessages && chat.unreadMessages[currentUserId] > 0) {
+                // Reset unread counter for this user
+                await db.collection("chat").doc(chat.id).update({
+                    [`unreadMessages.${currentUserId}`]: 0
+                });
+            }
+        } catch (error) {
+            console.error("Error marking messages as read:", error);
+        }
     }
 };
 
@@ -280,7 +293,12 @@ const createChat = async (userId) => {
         createdAt: new Date(),
         lastUpdate: new Date(),
         lastMessage: null,
-        users: [currentUserId, userId]
+        users: [currentUserId, userId],
+        // Add unreadMessages object to track unread status for each user
+        unreadMessages: {
+            [currentUserId]: 0,  // Number of unread messages for current user
+            [userId]: 0           // Number of unread messages for the other user
+        }
     });
 };
 
