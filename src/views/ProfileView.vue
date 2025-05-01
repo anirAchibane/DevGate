@@ -1,5 +1,6 @@
 <template>
   <mini-navbar></mini-navbar>
+
   <div class="container-fluid mt-3">
     <div class="d-flex justify-content-center align-items-center">
       <router-link 
@@ -61,11 +62,19 @@
       <div class="sidebar">
         <div class="card text-white bg-dark mb-4">
           <div class="card-body text-center">
-            <p class="pfp mb-3">Profile pic</p>
-            <h4 class="username card-title">{{ userData.username }}</h4>
-            <p v-if="userData.bio !== ''" class="card-text">Bio: {{ userData.bio }}</p>
-            <p v-else class="card-text">Bio: no bio</p>
-            <p class="card-text">Email: {{ userData.email }}</p>
+            <div class="profile-image">
+                <img
+                    :src="
+                      userData.avatar ||
+                      require('@/assets/default_pfp.jpg')
+                    "
+                    alt="Profile"
+                />
+            </div>
+            <h3 class="username card-title">{{ userData.username }}</h3>
+            <p v-if="userData.bio !== ''" class="card-text bio"> {{ userData.bio }}</p>
+            <p v-else class="card-text bio"> no bio</p>
+            <p class="card-text">{{ userData.email }}</p>
             <p class="card-text clickable" @click="showFollowersPopup = true">Followers: {{ followers.length }}</p>
             <p class="card-text clickable" @click="showFollowingPopup = true">Following: {{ following.length }}</p>
 
@@ -387,18 +396,18 @@ const settings = () => {
 
 const follow = async () => {
       try{
-        const followList = ref([]);
+        let followList = [];
         await db.collection("users").doc(auth.currentUser.uid).get().then((doc) =>{
             if(doc.exists){
-                followList.value = doc.data().following; 
+                followList = doc.data().following; 
             } else {
                 console.log("No such document!");
             }
         })
 
-        followList.value.push(userId); // Add the userId to the following list
+        followList.push(userId.value); // Add the userId to the following list
         await db.collection("users").doc(auth.currentUser.uid).update({
-            following: followList.value
+            following: followList
         })
 
         isFollowing.value = true; // Update the isFollowing state
@@ -485,6 +494,13 @@ body,
     padding: 20px;
     border-radius: 10px;
     border: 1px solid #3D434C;
+}
+.bio {
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: #a0aec0;
+    font-size: 14px;
+    font-style: italic;
 }
 
 .mainbar {
