@@ -99,28 +99,15 @@ const markMessagesAsRead = async () => {
         const currentUserId = auth.currentUser.uid;
         const chatRef = db.collection("chat").doc(props.chat.id);
 
-        // Get chat document to check if we need to update
+        // Only update if the unreadMessages field exists and the current user has unread messages
         const chatDoc = await chatRef.get();
         if (chatDoc.exists) {
             const chatData = chatDoc.data();
-            const updateData = {};
-
-            // Reset unread counter for the current user if needed
             if (chatData.unreadMessages && chatData.unreadMessages[currentUserId] > 0) {
-                updateData[`unreadMessages.${currentUserId}`] = 0;
-            }
-
-            // Set lastMessageSeen to true if the current user is not the sender
-            if (chatData.lastMessage &&
-                chatData.lastMessage.sender_id &&
-                chatData.lastMessage.sender_id !== currentUserId) {
-                // The other user viewed the message
-                updateData.lastMessageSeen = true;
-            }
-
-            // Only update if there are changes to make
-            if (Object.keys(updateData).length > 0) {
-                await chatRef.update(updateData);
+                // Reset unread counter for the current user
+                await chatRef.update({
+                    [`unreadMessages.${currentUserId}`]: 0
+                });
             }
         }
     } catch (error) {

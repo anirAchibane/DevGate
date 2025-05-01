@@ -3,7 +3,7 @@
         @click="$emit('select', chat)">
         <div class="conversation-avatar">
             <img :src="otherUserPfp || '/default_pfp.jpg'" alt="Profile Picture" class="avatar-img">
-
+            
             <div v-if="hasUnreadMessages" class="unread-badge">
                 {{ unreadCount > 9 ? '9+' : unreadCount }}
             </div>
@@ -19,10 +19,6 @@
                 <span v-if="loading" class="loading-message">Loading...</span>
                 <span v-else>{{ chat.lastMessage?.content || "No messages yet" }}</span>
             </p>
-            <!-- Add seen indicator for outgoing messages -->
-            <div v-if="shouldShowSeenStatus" class="seen-status">
-                <i class="fas fa-check-double" :class="{ 'seen': isLastMessageSeen }"></i>
-            </div>
         </div>
     </div>
 </template>
@@ -58,28 +54,6 @@ const unreadCount = computed(() => {
         return 0;
     }
     return props.chat.unreadMessages[currentUserId];
-});
-
-// Computed property to check if the last message was sent by the current user
-const isLastMessageFromCurrentUser = computed(() => {
-    const currentUserId = auth.currentUser?.uid;
-    if (!currentUserId || !props.chat?.lastMessage) {
-        return false;
-    }
-    return props.chat.lastMessage.sender_id === currentUserId;
-});
-
-// Computed property to check if the last message has been seen
-const isLastMessageSeen = computed(() => {
-    if (!props.chat?.lastMessageSeen) {
-        return false;
-    }
-    return props.chat.lastMessageSeen === true;
-});
-
-// Only show seen status for messages sent by the current user
-const shouldShowSeenStatus = computed(() => {
-    return isLastMessageFromCurrentUser.value && props.chat?.lastMessage?.content;
 });
 
 onMounted(() => {
@@ -186,7 +160,6 @@ const formatTime = (timestamp) => {
     flex-grow: 1;
     min-width: 0;
     /* Ensures content can shrink below flex-basis */
-    position: relative;
 }
 
 .conversation-header {
@@ -246,23 +219,5 @@ const formatTime = (timestamp) => {
     justify-content: center;
     padding: 0 5px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-/* Seen status styles */
-.seen-status {
-    position: absolute;
-    bottom: 0;
-    right: 0;
-    font-size: 0.7rem;
-    color: var(--text-muted);
-}
-
-.seen-status .fa-check-double {
-    margin-top: 4px;
-}
-
-.seen-status .fa-check-double.seen {
-    color: #3498db;
-    /* Blue color for seen messages */
 }
 </style>

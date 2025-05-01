@@ -16,9 +16,7 @@ const sendMessageToChat = async (chatId, messageData) => {
       content: messageData.content,
       sender_id: messageData.sender_id
     },
-    lastUpdate: firebase.firestore.FieldValue.serverTimestamp(),
-    // Reset seen status when sending new message
-    lastMessageSeen: false
+    lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
   });
 };
 
