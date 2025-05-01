@@ -604,6 +604,7 @@ const saveCustomizedPost = async () => {
             pid: currentItem.value.id,
             uid: props.userId,
             picture: postImage.value || "",
+            votes: 0,
         };
 
         // Add custom tags for projects
