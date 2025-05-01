@@ -3,7 +3,7 @@
         @click="$emit('select', chat)">
         <div class="conversation-avatar">
             <img :src="otherUserPfp || '/default_pfp.jpg'" alt="Profile Picture" class="avatar-img">
-            
+
             <div v-if="hasUnreadMessages" class="unread-badge">
                 {{ unreadCount > 9 ? '9+' : unreadCount }}
             </div>
@@ -30,18 +30,19 @@ import { getUser } from "@/composables/getUser";
 
 const props = defineProps({
     chat: { type: Object, required: true },
-    active: { type: Boolean, default: false }
+    active: { type: Boolean, default: false },
+    isCurrentlyActive: { type: Boolean, default: false } // New prop to track if user is viewing this chat
 });
 
 const otherUsername = ref("");
 const otherUserPfp = ref("");
 const loading = ref(true);
 
-
 // Computed property to check if there are unread messages
 const hasUnreadMessages = computed(() => {
     const currentUserId = auth.currentUser?.uid;
-    if (!currentUserId || !props.chat?.unreadMessages) {
+    // Don't show unread indicator if the chat is currently active/open
+    if (!currentUserId || !props.chat?.unreadMessages || props.isCurrentlyActive) {
         return false;
     }
     return props.chat.unreadMessages[currentUserId] > 0;

@@ -108,6 +108,7 @@ const markMessagesAsRead = async () => {
                 await chatRef.update({
                     [`unreadMessages.${currentUserId}`]: 0
                 });
+                console.log("Marked messages as read for chat:", props.chat.id);
             }
         }
     } catch (error) {
