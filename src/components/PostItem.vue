@@ -77,6 +77,29 @@
                         <h4 class="post-title">{{ post.summary }}</h4>
                     </div>
 
+                    <!-- Voting System -->
+                    <div class="vote-container">
+                        <button 
+                            class="vote-btn upvote-btn" 
+                            :class="{ 'active': userVote === 'upvote' }"
+                            @click="handleUpvote"
+                            :disabled="isVoting || !isLoggedIn"
+                            title="Upvote"
+                        >
+                            <i class="fas fa-arrow-up"></i>
+                        </button>
+                        <span class="vote-count" :class="getVoteCountClass">{{ post.votes || 0 }}</span>
+                        <button 
+                            class="vote-btn downvote-btn" 
+                            :class="{ 'active': userVote === 'downvote' }"
+                            @click="handleDownvote"
+                            :disabled="isVoting || !isLoggedIn"
+                            title="Downvote"
+                        >
+                            <i class="fas fa-arrow-down"></i>
+                        </button>
+                    </div>
+
                     <!-- Common content for all post types -->
                     <p class="post-content">{{ post.content }}</p>
 
@@ -468,6 +491,7 @@ import {
 } from "vue";
 import { getUser } from "@/composables/getUser";
 import { getPost } from "@/composables/getPost";
+import { usePostVoting } from "@/composables/votePost";
 import {
     addComment,
     addReply,
@@ -502,6 +526,20 @@ const skillData = ref(null);
 const projectLoading = ref(false);
 const objectiveLoading = ref(false);
 const skillLoading = ref(false);
+
+// Voting system state and logic
+const userVote = ref(null);
+const isVoting = ref(false);
+const voteError = ref(null);
+const isLoggedIn = computed(() => !!firebase.auth().currentUser);
+
+// Format vote count with colors
+const getVoteCountClass = computed(() => {
+    if (!post.value || !post.value.votes) return 'neutral';
+    if (post.value.votes > 0) return 'positive';
+    if (post.value.votes < 0) return 'negative';
+    return 'neutral';
+});
 
 const router = useRouter();
 const isDeleting = ref(false);
@@ -576,6 +614,13 @@ onMounted(() => {
         loading: postLoad,
     } = getPost(props.postId);
 
+    // Check if user is logged in and fetch their current vote
+    const currentUser = firebase.auth().currentUser;
+    if (currentUser) {
+        // Initialize voting system
+        initializeVotingSystem(currentUser.uid);
+    }
+
     // Watch for post data changes
     watch(postData, (newPost) => {
         if (newPost) {
@@ -611,7 +656,73 @@ onMounted(() => {
     watch(postLoad, (loading) => {
         postloading.value = loading;
     });
+    
+    // Listen for auth state changes to update voting UI
+    firebase.auth().onAuthStateChanged((user) => {
+        if (user) {
+            initializeVotingSystem(user.uid);
+        } else {
+            userVote.value = null;
+        }
+    });
 });
+
+// Initialize the voting system
+const initializeVotingSystem = (userId) => {
+    // Create a single voting instance to avoid duplication
+    const votingSystem = usePostVoting(props.postId);
+    
+    // Get current vote
+    votingSystem.getCurrentUserVote(userId);
+    
+    // Use the watch function to update local userVote state
+    watch(votingSystem.userVote, (newVote) => {
+        userVote.value = newVote;
+    });
+    
+    // Store references to the voting functions
+    upvotePost = () => votingSystem.upvote(userId);
+    downvotePost = () => votingSystem.downvote(userId);
+};
+
+// Define references to voting functions
+let upvotePost;
+let downvotePost;
+
+// Updated vote handler functions
+const handleUpvote = async () => {
+    if (!isLoggedIn.value) {
+        alert("You must be logged in to vote");
+        return;
+    }
+    
+    try {
+        isVoting.value = true;
+        await upvotePost();
+    } catch (error) {
+        console.error("Error upvoting:", error);
+        voteError.value = error.message;
+    } finally {
+        isVoting.value = false;
+    }
+};
+
+const handleDownvote = async () => {
+    if (!isLoggedIn.value) {
+        alert("You must be logged in to vote");
+        return;
+    }
+    
+    try {
+        isVoting.value = true;
+        await downvotePost();
+    } catch (error) {
+        console.error("Error downvoting:", error);
+        voteError.value = error.message;
+    } finally {
+        isVoting.value = false;
+    }
+};
 
 // Function to fetch user data once we have the post
 function fetchUserData(userId) {
@@ -1031,6 +1142,8 @@ const submitReply = async () => {
 
 .post-info {
     color: #ffffff;
+    position: relative;
+    padding-left: 30px;
 }
 
 .post-title {
@@ -1847,6 +1960,86 @@ const submitReply = async () => {
 
     .comments-section {
         max-height: 600px;
+    }
+}
+
+/* Voting system styles */
+.vote-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: absolute;
+    left: -15px;
+    top: 80px;
+    background-color: #10151f;
+    border-radius: 8px;
+    padding: 6px 4px;
+    border: 1px solid #555d69;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.vote-btn {
+    background: none;
+    border: none;
+    color: #cfd8dc;
+    font-size: 1.2rem;
+    padding: 5px 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-radius: 4px;
+}
+
+.vote-btn:hover:not(:disabled) {
+    background-color: rgba(52, 152, 219, 0.1);
+    transform: scale(1.1);
+}
+
+.vote-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.upvote-btn.active {
+    color: #2ecc71;
+}
+
+.downvote-btn.active {
+    color: #e74c3c;
+}
+
+.vote-count {
+    font-weight: 600;
+    font-size: 1rem;
+    margin: 4px 0;
+}
+
+.vote-count.positive {
+    color: #2ecc71;
+}
+
+.vote-count.negative {
+    color: #e74c3c;
+}
+
+.vote-count.neutral {
+    color: #cfd8dc;
+}
+
+@media (max-width: 768px) {
+    .vote-container {
+        position: static;
+        flex-direction: row;
+        justify-content: center;
+        margin-bottom: 12px;
+        padding: 5px 8px;
+    }
+
+    .post-info {
+        padding-left: 0;
+    }
+
+    .vote-count {
+        margin: 0 10px;
     }
 }
 </style>

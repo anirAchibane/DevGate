@@ -36,6 +36,7 @@
     - summary: str
     - type: str ("project" or "objective" or "skill" or "text")
     - uid: str
+    - votes: int
     - picture: str
     -> comments:
         - content: str
