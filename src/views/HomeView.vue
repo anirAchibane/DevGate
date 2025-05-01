@@ -57,11 +57,31 @@
                             <option value="oldest">Oldest</option>
                         </select>
                     </div>
+                    
+                    <!-- View mode toggle buttons -->
+                    <div class="view-toggle">
+                        <button 
+                            class="view-btn" 
+                            :class="{ 'active-view': displayMode === 'list' }" 
+                            @click="displayMode = 'list'"
+                            title="List view"
+                        >
+                            <i class="fas fa-list"></i>
+                        </button>
+                        <button 
+                            class="view-btn" 
+                            :class="{ 'active-view': displayMode === 'gallery' }" 
+                            @click="displayMode = 'gallery'"
+                            title="Gallery view"
+                        >
+                            <i class="fas fa-th"></i>
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Posts feed -->
                 <div class="posts-feed">
-                    <posts-list :sort-option="sortOption" />
+                    <posts-list :sort-option="sortOption" :display-mode="displayMode" />
                 </div>
             </div>
 
@@ -155,6 +175,7 @@ import { uploadToGitHub } from "@/composables/uploadToGitHub";
 const user = ref(null);
 const userData = ref(null);
 const sortOption = ref("newest");
+const displayMode = ref("list"); // Add display mode state: "list" or "gallery"
 const userLoading = ref(true);
 const initialLoading = ref(true);
 
@@ -469,6 +490,39 @@ body,
 .sort-select:focus {
     outline: none;
     box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.3);
+}
+
+/* View mode toggle styles */
+.view-toggle {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-left: 15px;
+}
+
+.view-btn {
+    background-color: rgba(52, 152, 219, 0.1);
+    border: 1px solid rgba(52, 152, 219, 0.3);
+    color: #a0aec0;
+    border-radius: 4px;
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.view-btn:hover {
+    background-color: rgba(52, 152, 219, 0.2);
+    color: #3498db;
+}
+
+.view-btn.active-view {
+    background-color: rgba(52, 152, 219, 0.25);
+    color: #3498db;
+    border-color: #3498db;
 }
 
 .sort-select option {

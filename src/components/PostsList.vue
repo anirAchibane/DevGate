@@ -10,7 +10,7 @@
                     Error: {{ error }}
                 </div>
             </div>
-            <div v-else class="posts-column">
+            <div v-else class="posts-column" :class="{ 'gallery-view': displayMode === 'gallery' }">
                 <div v-if="posts.length === 0" class="empty-state">
                     <i class="fas fa-newspaper empty-icon"></i>
                     <p>No posts to display yet</p>
@@ -20,8 +20,9 @@
                     v-for="post in posts"
                     :key="post"
                     class="post-wrapper"
+                    :class="{ 'gallery-item': displayMode === 'gallery' }"
                 >
-                    <post-item :postId="post" />
+                    <post-item :postId="post" :gallery-mode="displayMode === 'gallery'" />
                 </div>
             </div>
         </div>
@@ -45,6 +46,10 @@ const props = defineProps({
     sortOption: {
         type: String,
         default: "newest",
+    },
+    displayMode: {
+        type: String,
+        default: "list", // list or gallery
     },
 });
 
@@ -169,5 +174,38 @@ onUnmounted(() => {
     font-size: 3rem;
     margin-bottom: 1rem;
     color: #555d69;
+}
+
+/* Gallery view styles */
+.gallery-view {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.gallery-item {
+    height: 100%;
+    min-height: 400px;
+    margin-bottom: 0;
+}
+
+/* Remove hover transform from container as it's handled in the card */
+.gallery-item:hover {
+    transform: none;
+}
+
+/* Responsive gallery adjustments */
+@media (max-width: 768px) {
+    .gallery-view {
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .gallery-view {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
 }
 </style>
