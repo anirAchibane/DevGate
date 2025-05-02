@@ -258,11 +258,11 @@
                   </div>
                   </template>
                   <template v-else>
-                  <p class="mb-1 fw-bold">{{ objective.name }}</p>
-                  <p class="mb-1">Description: {{ objective.description || 'no description' }}</p>
-                  <p class="mb-1">Type: {{ objective.type }}</p>
-                  <p class="mb-1">Language: {{ objective.language }}</p>
+                  <p class="mb-1 fw-bold">{{ objective.title }}</p>
+                  <p class="mb-1">Status : {{ objective.status}}</p>
+                  <p class="mb-1">Progress : {{ objective.progress }}</p>
                   <p class="mb-1">Visibility : {{ objective.visibility ? 'Public' : 'Private' }}</p>
+                  <p class="mb-1">Created at : {{ formatFirestoreTimestamp(objective.startDate) }} </p>
                   <button v-if="isCurrent" @click="editingObjectiveIndex = index" class="btn btn-outline-light btn-sm mt-1">Edit</button>
                 </template>
               </div>
@@ -389,6 +389,7 @@ const loadProfileData = async () => {
       });
 
       userObjectives.value = [];
+
       objectivesSnap.forEach((doc) => {
         const objective = doc.data();
         objective.id = doc.id;
