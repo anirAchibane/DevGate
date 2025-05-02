@@ -222,18 +222,18 @@
                   <div class="edit-objective-form p-3 bg-dark text-white rounded shadow-sm mb-3">
                     <div class="mb-2">
                       <label class="form-label small text-white fw-bold">Objective Name</label>
-                      <input v-model="objective.name" class="form-control input-dark" placeholder="Objective name" />
+                      <input v-model="objective.title" class="form-control input-dark" placeholder="Objective name" />
                     </div>
                     
                     <div class="mb-2">
-                      <label class="form-label small text-white fw-bold">Description</label>
-                      <textarea v-model="objective.description" class="form-control input-dark" 
-                                placeholder="Description" rows="3"></textarea>
+                      <label class="form-label small text-white fw-bold">Progress</label>
+                      <textarea v-model="objective.progress" class="form-control input-dark" 
+                                placeholder="Progress" rows="3"></textarea>
                     </div>
                     
                     <div class="mb-2">
-                      <label class="form-label small text-white fw-bold">Type</label>
-                      <input v-model="objective.type" class="form-control input-dark" placeholder="Type" />
+                      <label class="form-label small text-white fw-bold">Status</label>
+                      <input v-model="objective.status" class="form-control input-dark" placeholder="Status" />
                     </div>
                     
                     <div class="mb-3">
@@ -263,6 +263,7 @@
                   <p class="mb-1">Progress : {{ objective.progress }}</p>
                   <p class="mb-1">Visibility : {{ objective.visibility ? 'Public' : 'Private' }}</p>
                   <p class="mb-1">Created at : {{ formatFirestoreTimestamp(objective.startDate) }} </p>
+                  <p class="mb-1">Last updated at : {{ formatFirestoreTimestamp(objective.lastUpdate) }}</p>
                   <button v-if="isCurrent" @click="editingObjectiveIndex = index" class="btn btn-outline-light btn-sm mt-1">Edit</button>
                 </template>
               </div>
@@ -513,11 +514,12 @@ const saveSingleObjective = async (index) => {
 
   if (objective.id) {
     await objectivesCollection.doc(objective.id).update({
-      name: objective.name,
-      description: objective.description,
-      type: objective.type,
-      visibility: objective.visibility
+      title: objective.title,
+      progress: objective.progress,
+      status: objective.status,
+      lastUpdate: new Date()
     });
+    //window.location.reload();
   }
 
   editingObjectiveIndex.value = null;
