@@ -357,9 +357,9 @@ body,
 
 /* Three-column layout container */
 .home-container {
-    max-width: 1600px;
+    width: 100%;
     margin: 0 auto;
-    padding: 20px 16px;
+    padding: 20px;
     display: grid;
     grid-template-columns: 1fr 2fr 1fr;
     gap: 20px;
@@ -569,6 +569,28 @@ body,
 
 .posts-feed :deep(.post-card) {
     width: 100%;
+}
+
+.posts-feed :deep(.gallery-view) {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Exactly two columns */
+    gap: 20px;
+}
+
+/* Maintain the two-column layout for medium screens */
+@media (max-width: 980px) {
+    .posts-feed :deep(.gallery-view) {
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+    }
+}
+
+/* Switch to single column for mobile screens */
+@media (max-width: 768px) {
+    .posts-feed :deep(.gallery-view) {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
 }
 
 /* Right sidebar */
