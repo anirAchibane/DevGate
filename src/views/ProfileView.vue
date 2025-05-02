@@ -12,7 +12,10 @@
       </router-link>
     </div>
   </div>
-
+  <div class="choice d-flex justify-content-center align-items-center mt-3">
+    <button class="btn btn-sm btn-outline" @click="switchTab('Profile')">Profile</button>
+    <button class="btn btn-sm btn-outline" @click="switchTab('Timeline')">Timeline</button>
+  </div>
   <!-- Popup Modal for Followers/Following -->
   <div v-if="showFollowersPopup || showFollowingPopup" class="popup-overlay" @click.self="closePopup">
     <div class="popup-content">
@@ -123,7 +126,7 @@
       </div>
 
       <!-- Mainbar -->
-      <div class="mainbar">
+      <div class="mainbar" v-if="activeTab === 'Profile'">
 
         <!-- Projects -->
         <div class="card text-white bg-dark mb-4">
@@ -194,6 +197,42 @@
 
       </div>
 
+      <!-- TimeLine -->
+      <div class="timeline-bar" v-if="activeTab === 'Timeline'">
+          <h2>Timeline:</h2>
+              <div v-for="item in timeLine" :key="item.data.id" class="timeline-item">
+                  <div v-if="item.type === 'project'">
+                    <div class="timeline-title">
+                      <i class="fas fa-diagram-project"></i>
+                      <h3>{{ formatDate(item.createdAt) }}</h3>
+                    </div>
+                      <p>Started project: {{ item.data.title }}</p>
+                  </div>
+                  <div v-else-if="item.type === 'objective'">
+                    <div class="timeline-title">
+                      <i class="fas fa-bullseye"></i>
+                      <h4>{{ formatDate(item.createdAt) }}</h4>
+                    </div>
+                      <p>Set objective: {{ item.data.title }}</p>
+                      <p>Status: {{ item.data.status }}</p>
+                  </div>
+                  <div v-else-if="item.type === 'skill'">
+                    <div class="timeline-title">
+                      <i class="fas fa-rocket"></i>
+                      <h3>{{ formatDate(item.createdAt) }}</h3>
+                    </div>
+                      <p>Acquired skill: {{ item.data.name }}</p>
+                      <p>Level: {{ item.data.level }}</p>
+                  </div>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-title">
+                  <i class="fas fa-user"></i>
+                  <h3>Joined DevGate: {{formatDate(userData.createdAt)}}</h3>
+                </div>
+              </div>
+      </div>
+
     </div>
   </div>
 </template>
@@ -206,14 +245,17 @@ import { useRoute, useRouter  } from "vue-router";
 import { onMounted , computed , watch } from "vue";
 import { getFollowers , getFollowing } from "@/composables/userFollow";
  
-
+// Routing:
 const route = useRoute();
 const router = useRouter();
 
+// Variables:
 const userId = ref(route.params.id);                         // Get the userId from the route params 
 const isCurrent = computed(() => userId.value === auth.currentUser.uid);    // Check if the userId is the same as the current user's id
 const isFollowing = ref(false);                         // Check if the current user is following the userId
+const activeTab = ref("Profile");   // variable to switch between Profile and Timeline tabs
 
+// Data:
 const userData = ref({});    // stores current user's data
 const userProjects = ref([]);   // stores user's projects ( all projects if isCurrent(), else only public projects)
 const userObjectives = ref([]); // stores user's objectives
@@ -225,6 +267,7 @@ const followersError = ref(null);
 const following = ref([]);
 const followingLoading = ref(true);
 const followingError = ref(null);
+const timeLine = ref([]);
 
 
 
@@ -239,7 +282,7 @@ watch(() => route.params.id, (newId) => {
   userId.value = newId;
   showFollowersPopup.value = false;
   showFollowingPopup.value = false;
-  loadProfileData(); // your logic to refetch all user data
+  loadProfileData(); 
 });
 
 const loadProfileData = async () => {
@@ -262,6 +305,11 @@ const loadProfileData = async () => {
         project.id = doc.id;
         if (isCurrent.value || project.isPublic) {
           userProjects.value.push(project);
+          timeLine.value.push({
+            type: "project",
+            data: project,
+            createdAt: project.createdAt ? project.createdAt.toDate() : new Date(),
+          });
         }
       });
 
@@ -270,6 +318,11 @@ const loadProfileData = async () => {
         const objective = doc.data();
         objective.id = doc.id;
         userObjectives.value.push(objective);
+        timeLine.value.push({
+          type: "objective",
+          data: objective,
+          createdAt: objective.createdAt ? objective.createdAt.toDate() : new Date(),
+        });
       });
 
       userSkills.value = [];
@@ -277,6 +330,11 @@ const loadProfileData = async () => {
         const skill = doc.data();
         skill.id = doc.id;
         userSkills.value.push(skill);
+        timeLine.value.push({
+          type: "skill",
+          data: skill,
+          createdAt: skill.createdAt ? skill.createdAt.toDate() : new Date(),
+        });
       });
 
     } else {
@@ -302,6 +360,8 @@ const loadProfileData = async () => {
     followingLoading.value = result2.loading.value;
     followingError.value = result2.error.value;
 
+
+    timeLine.value.sort((a, b) => b.createdAt - a.createdAt);
   } catch (error) {
     console.error("Error fetching user data:", error);
   }
@@ -466,10 +526,32 @@ function formatFirestoreTimestamp(timestamp) {
     });
 }
 
+const formatDate = (timestamp) => {
+    if (!timestamp) return "Unknown date";
+
+    let date;
+    if (timestamp.seconds) {
+        // Firebase timestamp format
+        date = new Date(timestamp.seconds * 1000);
+    } else {
+        // Regular date format
+        date = new Date(timestamp);
+    }
+
+    return date.toLocaleDateString(undefined, {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+    });
+}
+
+const switchTab = (tab) =>{
+    activeTab.value = tab;
+}
 
 </script>
 
-<style>
+<style >
 html,
 body,
 #app {
@@ -508,6 +590,27 @@ body,
     padding: 20px;
     border-radius: 10px;
     border: 1px solid #3D434C;
+}
+
+.timeline-bar {
+    flex: 1; /* take the rest */
+    padding: 20px;
+    border-radius: 10px;
+    border: 1px solid #3D434C;
+}
+.timeline-item {
+  display: flex; flex-direction: row; align-items: center; gap: 10px;
+  background-color: transparent;
+  border-left: 2px solid #30363d;
+  margin-left: 12px;
+  padding-left: 12px;
+  margin-bottom: 15px;
+  position: relative;
+}
+.timeline-title{
+  display: flex; flex-direction: row; align-items: center; gap: 10px;
+  font-size: 1.2rem;
+  color: #58a6ff;
 }
 
 .popup-overlay {
