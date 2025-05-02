@@ -179,7 +179,7 @@ onUnmounted(() => {
 /* Gallery view styles */
 .gallery-view {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    grid-template-columns: 1fr 1fr; /* Exactly two columns */
     gap: 20px;
 }
 
@@ -197,7 +197,7 @@ onUnmounted(() => {
 /* Responsive gallery adjustments */
 @media (max-width: 768px) {
     .gallery-view {
-        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        grid-template-columns: 1fr;
         gap: 16px;
     }
 }
