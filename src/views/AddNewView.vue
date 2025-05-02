@@ -161,7 +161,7 @@ const formDataProject = ref({
 const formDataskill = ref({
     name: "",
     level: "",
-    acquiredAt: new Date,
+    acquiredAt: new Date(),
     updatedAt: new Date()
 });
 const formDataObjective = ref({

@@ -99,7 +99,7 @@
         </div>
 
         <!-- Skills -->
-        <div class="card text-white bg-dark">
+        <div class="card text-white bg-dark mb-4 edit-card">
           <div class="card-header">
             <h5>Skills</h5>
           </div>
@@ -107,10 +107,29 @@
             <div class="skills">
               <div v-for="(skill, index) in userSkills" :key="skill.id" class="skill mb-2">
                 <template v-if="editingSkillIndex === index">
-                  <input v-model="skill.name" class="form-control mb-1" placeholder="Skill name" />
-                  <input v-model="skill.level" class="form-control mb-1" placeholder="Skill level" />
-                  <button @click="saveSingleSkill(index)" class="btn btn-success btn-sm mt-1">Save</button>
-                  <button @click="editingSkillIndex = null" class="btn btn-secondary btn-sm mt-1 ms-2">Cancel</button>
+                  <div class="edit-skill-form p-3 bg-dark text-white rounded shadow-sm mb-3">
+                    <div class="mb-2">
+                      <label class="form-label small text-white fw-bold">Skill Name</label>
+                      <input v-model="skill.name" class="form-control mb-1 input-dark" placeholder="Skill name" />
+                    </div>
+                    
+                    <div class="mb-3">
+                      <label class="form-label small text-white fw-bold">Skill Level</label>
+                      <input v-model="skill.level" class="form-control mb-1 input-dark" placeholder="Skill level" />
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                      <button @click="saveSingleSkill(index)" class="btn btn-success">
+                        <i class="bi bi-check-lg me-1"></i> Save
+                      </button>
+                      <button @click="deleteSkill(skill.id)" class="btn btn-danger">
+                        <i class="bi bi-trash me-1"></i> Delete
+                      </button>
+                      <button @click="editingSkillIndex = null" class="btn btn-secondary">
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
                 </template>
                 <template v-else>
                   <p class="mb-1 fw-bold">{{ skill.name }}</p>
@@ -129,7 +148,7 @@
       <div class="mainbar" v-if="activeTab === 'Profile'">
 
         <!-- Projects -->
-        <div class="card text-white bg-dark mb-4">
+        <div class="card text-white bg-dark mb-4 edit-card">
           <div class="card-header">
             <h5>Projects</h5>
           </div>
@@ -137,15 +156,43 @@
             <div class="projects">
               <div v-for="(project, index) in userProjects" :key="project.id" class="project mb-3 p-3 border rounded bg-secondary">
                 <template v-if="editingProjectIndex === index">
-                  <input v-model="project.title" class="form-control mb-1" placeholder="Title" />
-                  <textarea v-model="project.description" class="form-control mb-1" placeholder="Description"></textarea>
-                  <input v-model="project.githubURL" class="form-control mb-1" placeholder="GitHub URL" />
-                  <select v-model="project.visibility" class="form-select mb-1">
-                    <option :value="true">Public</option>
-                    <option :value="false">Private</option>
-                  </select>
-                  <button @click="saveSingleProject(index)" class="btn btn-success btn-sm mt-1">Save</button>
-                  <button @click="editingProjectIndex = null" class="btn btn-secondary btn-sm mt-1 ms-2">Cancel</button>
+                  <div class="edit-project-form p-3 bg-dark text-white rounded shadow-sm mb-3">
+                    <div class="mb-2">
+                      <label class=" form-label small text-white fw-bold ">Project Title</label>
+                      <input v-model="project.title" class="form-control mb-1 input-dark" placeholder="Title" />
+                    </div>
+                    
+                    <div class="mb-2">
+                      <label class="form-label small text-white fw-bold">Description</label>
+                      <textarea v-model="project.description" class="form-control mb-1 input-dark" 
+                                placeholder="Description" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="mb-2">
+                      <label class="form-label small text-white fw-bold">GitHub URL</label>
+                      <input v-model="project.githubURL" class="form-control mb-1 input-dark" placeholder="GitHub URL" />
+                    </div>
+                    
+                    <div class="mb-3">
+                      <label class="form-label small text-white fw-bold">Visibility</label>
+                      <select v-model="project.visibility" class="form-select mb-1 input-dark">
+                        <option :value="true">Public</option>
+                        <option :value="false">Private</option>
+                      </select>
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                      <button @click="saveSingleProject(index)" class="btn btn-success">
+                        <i class="bi bi-check-lg me-1"></i> Save
+                      </button>
+                      <button @click="deleteProject(project.id)" class="btn btn-danger">
+                        <i class="bi bi-trash me-1"></i> Delete
+                      </button>
+                      <button @click="editingProjectIndex = null" class="btn btn-secondary">
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
                 </template>
                 <template v-else>
                   <p class="mb-1 fw-bold">{{ project.title }}</p>
@@ -164,7 +211,7 @@
         </div>
 
         <!-- Objectives -->
-        <div class="card text-white bg-dark">
+        <div class="card text-white bg-dark mb-4 edit-card">
           <div class="card-header">
             <h5>Objectives</h5>
           </div>
@@ -172,17 +219,45 @@
             <div class="objectives">
               <div v-for="(objective, index) in userObjectives" :key="objective.id" class="objective mb-3 p-3 border rounded bg-secondary">
                 <template v-if="editingObjectiveIndex === index">
-                  <input v-model="objective.name" class="form-control mb-1" placeholder="Objective name" />
-                  <textarea v-model="objective.description" class="form-control mb-1" placeholder="Description"></textarea>
-                  <input v-model="objective.type" class="form-control mb-1" placeholder="Type" />
-                  <select v-model="objective.visibility" class="form-select mb-1">
-                    <option :value="true">Public</option>
-                    <option :value="false">Private</option>
-                  </select>
-                  <button @click="saveSingleObjective(index)" class="btn btn-success btn-sm mt-1">Save</button>
-                  <button @click="editingObjectiveIndex = null" class="btn btn-secondary btn-sm mt-1 ms-2">Cancel</button>
-                </template>
-                <template v-else>
+                  <div class="edit-objective-form p-3 bg-dark text-white rounded shadow-sm mb-3">
+                    <div class="mb-2">
+                      <label class="form-label small text-white fw-bold">Objective Name</label>
+                      <input v-model="objective.name" class="form-control input-dark" placeholder="Objective name" />
+                    </div>
+                    
+                    <div class="mb-2">
+                      <label class="form-label small text-white fw-bold">Description</label>
+                      <textarea v-model="objective.description" class="form-control input-dark" 
+                                placeholder="Description" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="mb-2">
+                      <label class="form-label small text-white fw-bold">Type</label>
+                      <input v-model="objective.type" class="form-control input-dark" placeholder="Type" />
+                    </div>
+                    
+                    <div class="mb-3">
+                      <label class="form-label small text-white fw-bold">Visibility</label>
+                      <select v-model="objective.visibility" class="form-select input-dark">
+                        <option :value="true">Public</option>
+                        <option :value="false">Private</option>
+                      </select>
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                      <button @click="saveSingleObjective(index)" class="btn btn-success">
+                        <i class="bi bi-check-lg me-1"></i> Save
+                      </button>
+                      <button @click="deleteObjective(objective.id)" class="btn btn-danger">
+                        <i class="bi bi-trash me-1"></i> Delete
+                      </button>
+                      <button @click="editingObjectiveIndex = null" class="btn btn-secondary">
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                  </template>
+                  <template v-else>
                   <p class="mb-1 fw-bold">{{ objective.name }}</p>
                   <p class="mb-1">Description: {{ objective.description || 'no description' }}</p>
                   <p class="mb-1">Type: {{ objective.type }}</p>
@@ -549,70 +624,453 @@ const switchTab = (tab) =>{
     activeTab.value = tab;
 }
 
+const deleteSkill = async (skillId) => {
+  try {
+    if (confirm("Are you sure you want to delete this skill?")) {
+      const userRef = db.collection("users").doc(auth.currentUser.uid);
+      await userRef.collection("skills").doc(skillId).delete();
+      
+      // Remove from local array
+      userSkills.value = userSkills.value.filter(skill => skill.id !== skillId);
+      
+      // Update timeline
+      timeLine.value = timeLine.value.filter(item => 
+        !(item.type === 'skill' && item.data.id === skillId)
+      );
+      editingSkillIndex.value = null;
+    }
+  } catch (error) {
+    console.error("Error deleting skill:", error);
+  }
+};
+
+const deleteProject = async (projectId) => {
+  try {
+    if (confirm("Are you sure you want to delete this project?")) {
+      const userRef = db.collection("users").doc(auth.currentUser.uid);
+      await userRef.collection("projects").doc(projectId).delete();
+      
+      // Remove from local array
+      userProjects.value = userProjects.value.filter(project => project.id !== projectId);
+      
+      // Update timeline
+      timeLine.value = timeLine.value.filter(item => 
+        !(item.type === 'project' && item.data.id === projectId)
+      );
+      editingProjectIndex.value = null;
+    }
+  } catch (error) {
+    console.error("Error deleting skill:", error);
+  }
+};
+
+
+const deleteObjective = async (objectiveId) => {
+  try {
+    if (confirm("Are you sure you want to delete this objective?")) {
+      const userRef = db.collection("users").doc(auth.currentUser.uid);
+      await userRef.collection("objectives").doc(objectiveId).delete();
+      
+      // Remove from local array
+      userObjectives.value = userObjectives.value.filter(objective => objective.id !== objectiveId);
+      
+      // Update timeline
+      timeLine.value = timeLine.value.filter(item => 
+        !(item.type === 'objective' && item.data.id === objectiveId)
+      );
+      editingObjectiveIndex.value = null;
+    }
+  } catch (error) {
+    console.error("Error deleting skill:", error);
+  
+  }
+};
 </script>
 
 <style >
+
+/* GitHub-like Theme Enhancements */
+:root {
+  --github-bg: #0d1117;
+  --github-sidebar-bg: #161b22;
+  --github-border: #30363d;
+  --github-text: #c9d1d9;
+  --github-secondary-text: #8b949e;
+  --github-link: #58a6ff;
+  --github-success: #238636;
+  --github-danger: #da3633;
+  --github-card-bg: #21262d;
+  --github-accent: #1f6feb;
+}
+
 html,
 body,
 #app {
-    color: white;
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    background-color: #0d1117;
+  color: var(--github-text);
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background-color: var(--github-bg);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
 }
 
+/* Main Layout */
 .main {
-    display: flex;
-    flex-direction: row;
-    gap: 20px; /* you can adjust */
-    padding: 20px;
+  display: flex;
+  flex-direction: row;
+  gap: 24px;
+  padding: 20px;
 }
 
-/* REMOVE display: flex and flex-direction from .main */
-
+/* Sidebar Styling */
 .sidebar {
-    flex: 0 0 25%;
-    padding: 20px;
-    border-radius: 10px;
-    border: 1px solid #3D434C;
+  flex: 0 0 25%;
+  padding: 0;
+  border-radius: 6px;
 }
+
+.sidebar .card {
+  background-color: var(--github-sidebar-bg) !important;
+  border: 1px solid var(--github-border);
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.sidebar .card-header {
+  border-bottom: 1px solid var(--github-border);
+  background-color: rgba(240, 246, 252, 0.03);
+  padding: 12px 16px;
+}
+
+.sidebar .card-header h5 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.sidebar .card-body {
+  padding: 16px;
+}
+
+.profile-image {
+  margin-bottom: 16px;
+}
+
+.profile-image img {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  border: 1px solid var(--github-border);
+}
+
+.username {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
 .bio {
-    margin-top: 0;
-    margin-bottom: 20px;
-    color: #a0aec0;
-    font-size: 14px;
-    font-style: italic;
+  margin-top: 0;
+  margin-bottom: 16px;
+  color: var(--github-secondary-text);
+  font-size: 14px;
+  font-style: italic;
 }
 
-.mainbar {
-    flex: 1; /* take the rest */
-    padding: 20px;
-    border-radius: 10px;
-    border: 1px solid #3D434C;
+.card-text {
+  margin-bottom: 8px;
+  font-size: 14px;
 }
 
-.timeline-bar {
-    flex: 1; /* take the rest */
-    padding: 20px;
-    border-radius: 10px;
-    border: 1px solid #3D434C;
+.clickable {
+  cursor: pointer;
+  color: var(--github-link);
+  text-decoration: none;
 }
-.timeline-item {
-  display: flex; flex-direction: row; align-items: center; gap: 10px;
-  background-color: transparent;
-  border-left: 2px solid #30363d;
-  margin-left: 12px;
-  padding-left: 12px;
-  margin-bottom: 15px;
+
+.clickable:hover {
+  text-decoration: underline;
+}
+
+/* Skills Styling */
+.skill {
+  background-color: var(--github-card-bg);
+  border: 1px solid var(--github-border);
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 12px;
   position: relative;
 }
-.timeline-title{
-  display: flex; flex-direction: row; align-items: center; gap: 10px;
-  font-size: 1.2rem;
-  color: #58a6ff;
+
+.skill .fw-bold {
+  color: var(--github-link);
+  font-size: 16px;
+  margin-bottom: 4px;
 }
 
+.skill p {
+  margin-bottom: 4px;
+  font-size: 14px;
+  color: var(--github-secondary-text);
+}
+
+.skill .btn-outline-light {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  font-size: 12px;
+  padding: 2px 8px;
+  border-color: var(--github-border);
+  background-color: transparent;
+}
+
+.skill .btn-outline-light:hover {
+  background-color: rgba(56, 139, 253, 0.15);
+  border-color: var(--github-link);
+  color: var(--github-link);
+}
+
+/* Mainbar Styling */
+.mainbar, .timeline-bar {
+  flex: 1;
+  padding: 0;
+  border-radius: 6px;
+}
+
+.mainbar .card, .timeline-bar {
+  background-color: var(--github-sidebar-bg) !important;
+  border: 1px solid var(--github-border);
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  margin-bottom: 24px;
+}
+
+.mainbar .card-header, .timeline-bar h2 {
+  border-bottom: 1px solid var(--github-border);
+  background-color: rgba(240, 246, 252, 0.03);
+  padding: 12px 16px;
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.timeline-bar h2 {
+  font-size: 18px;
+  padding: 16px;
+  margin: 0;
+}
+
+.mainbar .card-body {
+  padding: 16px;
+}
+
+/* Projects Styling */
+.project {
+  background-color: var(--github-card-bg) !important;
+  border: 1px solid var(--github-border) !important;
+  border-radius: 6px !important;
+  padding: 16px !important;
+  margin-bottom: 16px !important;
+  position: relative;
+}
+
+.project .fw-bold {
+  color: var(--github-link);
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.project p {
+  margin-bottom: 6px;
+  font-size: 14px;
+  color: var(--github-text);
+}
+
+.project p a {
+  color: var(--github-link);
+  text-decoration: none;
+}
+
+.project p a:hover {
+  text-decoration: underline;
+}
+
+.project .btn-outline-light {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  font-size: 12px;
+  padding: 2px 8px;
+  border-color: var(--github-border);
+}
+
+.project .btn-outline-light:hover {
+  background-color: rgba(56, 139, 253, 0.15);
+  border-color: var(--github-link);
+  color: var(--github-link);
+}
+
+/* Objectives Styling */
+.objective {
+  background-color: var(--github-card-bg) !important;
+  border: 1px solid var(--github-border) !important;
+  border-radius: 6px !important;
+  padding: 16px !important;
+  margin-bottom: 16px !important;
+  position: relative;
+}
+
+.objective .fw-bold {
+  color: var(--github-link);
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.objective p {
+  margin-bottom: 6px;
+  font-size: 14px;
+  color: var(--github-text);
+}
+
+.objective .btn-outline-light {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  font-size: 12px;
+  padding: 2px 8px;
+  border-color: var(--github-border);
+}
+
+.objective .btn-outline-light:hover {
+  background-color: rgba(56, 139, 253, 0.15);
+  border-color: var(--github-link);
+  color: var(--github-link);
+}
+
+/* Timeline Styling */
+.timeline-item {
+  display: flex;
+  flex-direction: column;
+  background-color: transparent;
+  border-left: 2px solid var(--github-border);
+  margin-left: 20px;
+  padding-left: 20px;
+  margin-bottom: 24px;
+  position: relative;
+  padding-bottom: 8px;
+}
+
+.timeline-item::before {
+  content: "";
+  position: absolute;
+  left: -8px;
+  top: 0;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background-color: var(--github-accent);
+  border: 2px solid var(--github-bg);
+}
+
+.timeline-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.timeline-title i {
+  font-size: 16px;
+  color: var(--github-link);
+}
+
+.timeline-title h3, .timeline-title h4 {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+  color: var(--github-text);
+}
+
+.timeline-item p {
+  margin: 4px 0;
+  font-size: 14px;
+  color: var(--github-secondary-text);
+}
+
+/* Tab Navigation */
+.choice {
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--github-border);
+  padding-bottom: 8px;
+}
+
+.choice .btn-outline {
+  background-color: transparent;
+  border: none;
+  color: var(--github-secondary-text);
+  font-size: 14px;
+  padding: 8px 16px;
+  margin-right: 8px;
+  border-radius: 6px;
+}
+
+.choice .btn-outline:hover {
+  background-color: rgba(56, 139, 253, 0.15);
+  color: var(--github-link);
+}
+
+.choice .btn-outline.active {
+  background-color: rgba(56, 139, 253, 0.15);
+  color: var(--github-link);
+  border-bottom: 2px solid var(--github-link);
+}
+
+/* Button Styling */
+.btn-success {
+  background-color: var(--github-success);
+  border-color: rgba(240, 246, 252, 0.1);
+}
+
+.btn-success:hover {
+  background-color: #2ea043;
+  border-color: rgba(240, 246, 252, 0.1);
+}
+
+.btn-danger {
+  background-color: var(--github-danger);
+  border-color: rgba(240, 246, 252, 0.1);
+}
+
+.btn-danger:hover {
+  background-color: #f85149;
+  border-color: rgba(240, 246, 252, 0.1);
+}
+
+.btn-primary {
+  background-color: var(--github-accent);
+  border-color: rgba(240, 246, 252, 0.1);
+}
+
+.btn-primary:hover {
+  background-color: #388bfd;
+  border-color: rgba(240, 246, 252, 0.1);
+}
+
+.btn-secondary {
+  background-color: var(--github-card-bg);
+  border-color: var(--github-border);
+  color: var(--github-text);
+}
+
+.btn-secondary:hover {
+  background-color: #30363d;
+  border-color: var(--github-border);
+  color: var(--github-text);
+}
+
+/* Popup Styling */
 .popup-overlay {
   position: fixed;
   top: 0;
@@ -627,17 +1085,111 @@ body,
 }
 
 .popup-content {
-  background: #161b22;
-  padding: 20px;
-  border-radius: 10px;
+  background: var(--github-sidebar-bg);
+  padding: 24px;
+  border-radius: 6px;
   width: 90%;
   max-width: 500px;
   max-height: 80vh;
   overflow-y: auto;
+  border: 1px solid var(--github-border);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
 }
 
-.clickable {
-  cursor: pointer;
-  text-decoration: underline;
+.popup-content h2 {
+  margin-top: 0;
+  margin-bottom: 16px;
+  font-weight: 600;
+  color: var(--github-text);
+  border-bottom: 1px solid var(--github-border);
+  padding-bottom: 12px;
 }
+
+.user-card {
+  padding: 12px;
+  border-radius: 6px;
+  background-color: var(--github-card-bg);
+  border: 1px solid var(--github-border);
+  margin-bottom: 8px;
+}
+
+.user-card:hover {
+  background-color: #30363d;
+}
+
+.view-profile {
+  margin-left: auto;
+  background-color: transparent;
+  border: 1px solid var(--github-border);
+  color: var(--github-text);
+}
+
+.view-profile:hover {
+  background-color: rgba(56, 139, 253, 0.15);
+  border-color: var(--github-link);
+  color: var(--github-link);
+}
+
+/* Form Controls */
+.form-control, .form-select {
+  background-color: var(--github-card-bg);
+  border: 1px solid var(--github-border);
+  color: var(--github-text);
+  padding: 6px 12px;
+}
+
+.form-control:focus, .form-select:focus {
+  background-color: var(--github-card-bg);
+  border-color: var(--github-link);
+  color: var(--github-text);
+  box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.3);
+}
+
+
+/* Consistent icon styling */
+.bi {
+  font-size: 14px;
+  vertical-align: -0.125em;
+}
+
+/* make the page container dark */
+.container-fluid.py-4 {
+  background-color: #0d1117;
+}
+
+/* edit‐form card */
+.edit-card {
+  background-color: #161b22 !important;
+  border-color:    #30363d !important;
+}
+
+/* inputs & selects inside edit form */
+.input-dark {
+  background-color: #0d1117 !important;
+  color:            #c9d1d9 !important;
+  border:           1px solid #30363d !important;
+}
+
+/* keep placeholders legible */
+.input-dark::placeholder {
+  color: #8b949e !important;
+}
+
+/* button overrides (if you like) */
+.btn-save {
+  background-color: #238636;
+  border-color:     #238636;
+  color:            #ffffff;
+}
+.btn-delete {
+  background-color: #b62324;
+  border-color:     #b62324;
+  color:            #ffffff;
+}
+.btn-cancel {
+  background-color: #57606a;
+  border-color:     #57606a;
+  color:            #ffffff;
+}
+
 </style>
