@@ -1,6 +1,6 @@
 <template>
   <mini-navbar></mini-navbar>
-
+  <div v-if="!isBanned">
   <div class="container-fluid mt-3">
     <div class="d-flex justify-content-center align-items-center">
       <router-link 
@@ -82,7 +82,7 @@
             <p class="card-text clickable" @click="showFollowingPopup = true">Following: {{ following.length }}</p>
 
 
-            <div class="mt-3">
+            <div class="mt-3 d-flex gap-2 justify-content-center">
               <button v-if="isCurrent" @click="settings()" class="btn btn-outline-light btn-sm">
                 Settings
               </button>
@@ -94,6 +94,20 @@
               <button v-else @click="unfollow()" class="btn btn-danger btn-sm">
                 Unfollow
               </button>
+
+              <router-link :to="{
+                                path: '/newreport',
+                                query: { targetID: userId,
+                                         targetType: 'user',
+                                         targetTitle: userData.username,
+                                         targetOwner: userId
+                                },
+                            }">
+                  <button v-if="!isCurrent" class="btn btn-outline-light">
+                    Report
+                  </button>
+              </router-link>
+
             </div>
           </div>
         </div>
@@ -204,6 +218,20 @@
                   <p class="mb-0">Visibility : {{ project.visibility ? 'Public' : 'Private' }}</p>
                   <p class="mb-0">Created at : {{ formatFirestoreTimestamp(project.createdAt) }}</p>
                   <button v-if="isCurrent" @click="editingProjectIndex = index" class="btn btn-outline-light btn-sm mt-1">Edit</button>
+
+                  <router-link v-if="userId !== auth.currentUser.uid" :to="{
+                                path: '/newreport',
+                                query: { targetID: project.id,
+                                         targetType: 'project',
+                                         targetTitle: project.title,
+                                         targetOwner: userId
+                                },
+                            }">
+                            <button v-if="!isCurrent" class="btn btn-outline-light">
+                                Report
+                            </button>
+                    </router-link>
+                  
                 </template>
               </div>
             </div>
@@ -311,6 +339,14 @@
 
     </div>
   </div>
+  </div>
+  <div v-else>
+    <div class="container-fluid mt-3">
+      <div class="d-flex justify-content-center align-items-center">
+        <h1 >This user is unavailable</h1>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -328,6 +364,7 @@ const router = useRouter();
 // Variables:
 const userId = ref(route.params.id);                         // Get the userId from the route params 
 const isCurrent = computed(() => userId.value === auth.currentUser.uid);    // Check if the userId is the same as the current user's id
+const isBanned = ref(false);                         // Check if the user is banned
 const isFollowing = ref(false);                         // Check if the current user is following the userId
 const activeTab = ref("Profile");   // variable to switch between Profile and Timeline tabs
 
@@ -368,6 +405,7 @@ const loadProfileData = async () => {
     const doc = await userRef.get();
     if (doc.exists) {
       userData.value = doc.data();
+      isBanned.value = userData.value.role === 'banned';
 
       const [projectsSnap, objectivesSnap, skillsSnap] = await Promise.all([
         userRef.collection("projects").get(),
@@ -379,7 +417,7 @@ const loadProfileData = async () => {
       projectsSnap.forEach((doc) => {
         const project = doc.data();
         project.id = doc.id;
-        if (isCurrent.value || project.isPublic) {
+        if (isCurrent.value || project.visibility) {
           userProjects.value.push(project);
           timeLine.value.push({
             type: "project",
@@ -388,6 +426,7 @@ const loadProfileData = async () => {
           });
         }
       });
+      console.log(userProjects.value)
 
       userObjectives.value = [];
 

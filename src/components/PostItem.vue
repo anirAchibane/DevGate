@@ -85,6 +85,18 @@
                             <i class="fas fa-trash-alt"></i>
                         </button>
                     </div>
+                    <router-link :to="{
+                                path: '/newreport',
+                                query: { targetID: postId,
+                                         targetType: 'post',
+                                         targetTitle: post.summary,
+                                         targetOwner: post.uid
+                                },
+                            }">
+                            <button v-if="!isCurrent" class="btn btn-outline-light">
+                                Report
+                            </button>
+                    </router-link>
                 </div>
 
                 <div class="post-info">
@@ -93,6 +105,7 @@
                             {{ post.summary }}
                             <span class="title-type-badge">{{ post.type }}</span>
                         </h4>
+                        
                     </div>
 
                     <!-- Common content for all post types -->
