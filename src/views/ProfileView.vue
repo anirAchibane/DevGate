@@ -351,6 +351,29 @@
         <div class="dashboard-description">
           <p>Track your development progress and growth metrics over time.</p>
         </div>
+        
+        <!-- GitHub-style Contribution Heatmap -->
+        <div class="chart-card contribution-card">
+          <div class="chart-container">
+            <div class="chart-info-section">
+              <h3>Activity Contributions</h3>
+              <span class="chart-info">Your development activity over time</span>
+              <div class="chart-action-container">
+                <p class="contribution-count">Total: {{ contributionCount || 0 }} contributions</p>
+                <button v-if="isCurrent" @click="switchTab('Profile')" class="btn btn-action view-activity">
+                  <i class="fas fa-plus-circle"></i> Add Activity
+                </button>
+              </div>
+            </div>
+            <div class="chart-display-section">
+              <LoadingOverlay v-if="contributionsLoading" />
+              <ContributionHeatmap 
+                :userId="userId" 
+                @contributions-loaded="handleContributionsLoaded" 
+              />
+            </div>
+          </div>
+        </div>
 
         <div class="charts-grid">
           <div class="chart-card">
@@ -508,6 +531,7 @@ import SkillsChart from "@/components/charts/SkillsChart.vue";
 import CodingTimeChart from "@/components/charts/CodingTimeChart.vue";
 import LevelProgressionChart from "@/components/charts/LevelProgressionChart.vue";
 import ProjectCompletionChart from "@/components/charts/ProjectCompletionChart.vue";
+import ContributionHeatmap from "@/components/charts/ContributionHeatmap.vue";
 import LoadingOverlay from "@/components/LoadingOverlay.vue";
 
 // Import analytics composables
@@ -569,6 +593,10 @@ const {
     isLoading: projectsLoading,
     fetchProjectData,
 } = useProjectCompletionStats();
+
+// Contribution heatmap data
+const contributionCount = ref(0);
+const contributionsLoading = ref(true);
 
 const editingSkillIndex = ref(null);
 const editingProjectIndex = ref(null);
@@ -1020,6 +1048,19 @@ const handleCodingTimeSubmit = async () => {
     alert("Coding time logged successfully!");
   }
 };
+
+// Handle the contribution data emitted from the ContributionHeatmap component
+const handleContributionsLoaded = (data) => {
+  contributionCount.value = data.count || 0;
+  contributionsLoading.value = data.loading;
+  
+  // Debug to console
+  console.log("Contribution data received:", {
+    count: data.count,
+    loading: data.loading
+  });
+};
+
 </script>
 
 <style >
@@ -1541,8 +1582,6 @@ body,
   font-size: 20px;
   font-weight: 600;
   color: var(--github-text);
-  border-bottom: 1px solid var(--github-border);
-  padding-bottom: 10px;
 }
 
 .charts-grid {
@@ -1624,6 +1663,35 @@ body,
   font-size: 12px;
   color: var(--github-secondary-text);
   margin-top: 4px;
+}
+
+/* Contribution heatmap specific styles */
+.contribution-card {
+  width: 100%;
+  height: auto;
+  min-height: 180px;
+}
+
+.contribution-count {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--github-text);
+  margin-bottom: 8px;
+}
+
+.chart-action-container {
+  margin-top: auto;
+  padding-top: 10px;
+}
+
+.btn-action.view-activity {
+  background-color: #ff7b72; /* Reddish */
+  border-color: rgba(255, 123, 114, 0.4);
+}
+
+.btn-action.view-activity:hover {
+  background-color: #ff8f87;
+  border-color: rgba(255, 143, 135, 0.6);
 }
 
 .no-data-message {
