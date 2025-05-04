@@ -1,7 +1,7 @@
 <template>
     <mini-navbar></mini-navbar>
 
-    <div>
+    <div v-if="!isBanned">
       <!-- Report Form -->
       <div class="card bg-dark text-white mb-4 p-4">
             <h4 class="card-title mb-4 text-center">New Report</h4>
@@ -27,6 +27,9 @@
             </form>
       </div>
     </div>
+    <div v-else>
+        <h1 class="text-center">Error accessing app: access denied</h1>
+    </div>
   </template>
   
 
@@ -43,11 +46,13 @@ const targetType = ref("");
 const targetOwner = ref("");
 const reason = ref("");
 const reporter = ref("");
+const isBanned = ref(false);
 
 const router = useRouter();
 const route = useRoute();
 
 onMounted(async () => {
+
 
     targetID.value = route.query.targetID;
     targetTitle.value = route.query.targetTitle;
@@ -57,6 +62,7 @@ onMounted(async () => {
     await db.collection("users").doc(auth.currentUser.uid).get().then((doc) => {
         if (doc.exists) {
             reporter.value = doc.data().username;
+            isBanned.value = doc.data().role === "banned";
         } else {
             console.log("No such document!");
         }

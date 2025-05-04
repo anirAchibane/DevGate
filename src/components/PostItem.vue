@@ -85,7 +85,7 @@
                             <i class="fas fa-trash-alt"></i>
                         </button>
                     </div>
-                    <router-link :to="{
+                    <router-link v-if="auth.currentUser.uid !== post.uid" :to="{
                                 path: '/newreport',
                                 query: { targetID: postId,
                                          targetType: 'post',
@@ -93,7 +93,7 @@
                                          targetOwner: post.uid
                                 },
                             }">
-                            <button v-if="!isCurrent" class="btn btn-outline-light">
+                            <button  class="btn btn-outline-light">
                                 Report
                             </button>
                     </router-link>
@@ -520,7 +520,7 @@ import {
     deleteComment,
     subscribeToComments,
 } from "@/composables/getComments";
-import { db } from "@/firebase/config";
+import { auth, db } from "@/firebase/config";
 import LoadingOverlay from "@/components/LoadingOverlay.vue";
 import firebase from "firebase/app";
 import { useRouter } from "vue-router";

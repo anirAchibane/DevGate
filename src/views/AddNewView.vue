@@ -1,6 +1,6 @@
 <template>
     <mini-navbar></mini-navbar>
-  
+
     <div class="container py-5">
   
       <!-- Selection Radios -->
@@ -137,7 +137,7 @@
   
     </div>
   
-  </template>
+</template>
   
 
 <script setup>
@@ -147,6 +147,8 @@ import {db,auth} from "@/firebase/config.js"
 import { ref, onMounted } from "vue";
 import MiniNavbar from "@/components/MiniNavbar.vue";
 import { useRoute } from "vue-router";
+
+const isBanned = ref(false);
 
 const route = useRoute();
 const selectedType = ref('Project');
@@ -174,7 +176,12 @@ const formDataObjective = ref({
 });
 
 // Check if there's a type parameter in the URL and set the selectedType accordingly
-onMounted(() => {
+onMounted(async () => {
+  db.collection("users").doc(auth.currentUser.uid).get().then((doc) => {
+    if (doc.exists) {
+      isBanned.value = doc.data().role === "banned";
+    }
+  });
   if (route.query.type) {
     // Make sure the type is one of the valid options
     const validTypes = ['Project', 'Objective', 'Skill'];
@@ -195,15 +202,36 @@ const submitForm = async()=> {
         .filter(tag => tag !== '');
         const datatoAdd = { ... formDataProject.value};
         await userRef.collection("projects").add(datatoAdd);
+        await db.collection("timelineObjects").add({
+          title: formDataProject.value.title,
+          description: formDataProject.value.description,
+          user: auth.currentUser.uid,
+          type: "project",
+          createdAt: new Date(),
+        })
         
     }
     else if (selectedType.value === "Skill") {
       const dataToAdd = { ...formDataskill.value };
       await userRef.collection("skills").add(dataToAdd);
+      await db.collection("timelineObjects").add({
+        title: formDataskill.value.name,
+        description: formDataskill.value.level,
+        user: auth.currentUser.uid,
+        type: "skill",
+        createdAt: new Date(),
+      })
     }
     else if(selectedType.value === "Objective"){
         const dataToAdd = { ... formDataObjective.value};
         await userRef.collection("objectives").add(dataToAdd);
+        await db.collection("timelineObjects").add({
+          title: formDataObjective.value.title,
+          description: formDataObjective.value.status,
+          user: auth.currentUser.uid,
+          type: "objective",
+          createdAt: new Date(),
+        })
     }
     alert(`${selectedType.value} added successfully!`);
     router.push(`/profil/${auth.currentUser.uid}`);
@@ -216,12 +244,6 @@ const submitForm = async()=> {
 
 
 }
-
-
-
-
-
-
 
 </script>
 

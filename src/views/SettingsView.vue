@@ -1,6 +1,6 @@
 <template>
     <mini-navbar></mini-navbar>
-    <div class="main">
+    <div class="main" v-if="!isBanned">
         <div class="profile">
             <h2>Profile Settings</h2>
             <div class="user-form d-flex flex-column">
@@ -45,6 +45,7 @@
                             <span>Uploading image...</span>
                         </div>
                     </div>
+                    
                 </div>
 
                 <div class="user-form-row">
@@ -66,6 +67,22 @@
                 </div>
 
             </div>
+            <div class="exports">
+            <h2>Data Export</h2>
+            <div class="export-options">
+                <div class="export-option">
+                    <div class="export-info">
+                        <h3>JSON Resume</h3>
+                        <p>Export your profile data in the standardized JSON Resume format. This format is compatible with many resume builders and professional platforms.</p>
+                    </div>
+                </div>
+                <div class="export-actions">
+                    <button @click="exportJSONResume" class="btn btn-primary export-btn">
+                        <i class="fas fa-file-export"></i> Export Resume
+                    </button>
+                </div>
+            </div>
+        </div>
         </div>
 
         <div class="followers">
@@ -122,22 +139,10 @@
             </div>
         </div>
 
-        <div class="exports">
-            <h2>Data Export</h2>
-            <div class="export-options">
-                <div class="export-option">
-                    <div class="export-info">
-                        <h3>JSON Resume</h3>
-                        <p>Export your profile data in the standardized JSON Resume format. This format is compatible with many resume builders and professional platforms.</p>
-                    </div>
-                </div>
-                <div class="export-actions">
-                    <button @click="exportJSONResume" class="btn btn-primary export-btn">
-                        <i class="fas fa-file-export"></i> Export Resume
-                    </button>
-                </div>
-            </div>
-        </div>
+        
+    </div>
+    <div v-else>
+        <h1 class="text-center">Error accessing app: access denied</h1>
     </div>
 </template>
 
@@ -154,6 +159,7 @@ const router = useRouter();
 
 let followers = ref([]);
 let following = ref([]);
+const isBanned = ref(false);
 
 const username = ref('');
 const bio = ref('');
@@ -175,9 +181,11 @@ onMounted(async () => {
 
     if (doc.exists) {
       // Get user data
+      isBanned.value = doc.data().role === "banned";
       username.value = doc.data().username || '';
       bio.value = doc.data().bio || '';
       email.value = doc.data().email || '';
+      
       
       // Set current avatar and preview if available
       if (doc.data().avatar) {

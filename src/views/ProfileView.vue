@@ -1,6 +1,6 @@
 <template>
   <mini-navbar></mini-navbar>
-  <div v-if="!isBanned">
+  <div v-if="!isBanned && !isCurrentBanned">
   <div class="container-fluid mt-3">
     <div class="d-flex justify-content-center align-items-center">
       <router-link 
@@ -33,7 +33,7 @@
                         class="btn btn-sm btn-outline view-profile"
                     >
                         <i class="fas fa-user-circle"></i> View
-                    </router-link>
+          </router-link>
         </div>
       </div>
 
@@ -305,30 +305,47 @@
 
       <!-- TimeLine -->
       <div class="mainbar" v-if="activeTab === 'Timeline'">
-          <h2>Timeline:</h2>
-              <div v-for="item in timeLine" :key="item.data.id" class="timeline-item">
+        <div class="dashboard-header">
+          <h1>Timeline</h1>
+          <div class="d-flex flex-row gap-2">
+            <label class="label">Type </label>
+            <select v-model="timelineType">
+                <option default value="All">All</option>
+                <option value="project">Projects</option>
+                <option value="objective">Objectives</option>
+                <option value="skill">Skills</option>
+            </select>
+            <label class="label">Year </label>
+            <select v-model="timeLineYear">
+                <option default value="All">All</option>
+                <option v-for="year in timelineYears" :key="year" :value="year">{{ year }}</option>
+            </select>
+          </div>
+        </div>
+              <div v-for="item in filteredTimeLine" :key="item.id" class="timeline-item">
                   <div v-if="item.type === 'project'">
                     <div class="timeline-title">
                       <i class="fas fa-diagram-project"></i>
                       <h3>{{ formatDate(item.createdAt) }}</h3>
                     </div>
-                      <p>Started project: {{ item.data.title }}</p>
+                      <p>Started project: {{ item.title }}</p>
+                      <p class="desc">{{ item.description }}</p>
                   </div>
                   <div v-else-if="item.type === 'objective'">
                     <div class="timeline-title">
                       <i class="fas fa-bullseye"></i>
                       <h4>{{ formatDate(item.createdAt) }}</h4>
                     </div>
-                      <p>Set objective: {{ item.data.title }}</p>
-                      <p>Status: {{ item.data.status }}</p>
+                      <p>Set objective: {{ item.title }}</p>
+                      <p class="desc">Status: {{ item.description }}</p>
                   </div>
                   <div v-else-if="item.type === 'skill'">
                     <div class="timeline-title">
                       <i class="fas fa-rocket"></i>
                       <h3>{{ formatDate(item.createdAt) }}</h3>
                     </div>
-                      <p>Acquired skill: {{ item.data.name }}</p>
-                      <p>Level: {{ item.data.level }}</p>
+                      <p>Acquired skill: {{ item.title }}</p>
+                      <p class="desc">Level: {{ item.description }}</p>
                   </div>
               </div>
               <div class="timeline-item">
@@ -549,6 +566,7 @@ const router = useRouter();
 const userId = ref(route.params.id);                         // Get the userId from the route params 
 const isCurrent = computed(() => userId.value === auth.currentUser.uid);    // Check if the userId is the same as the current user's id
 const isBanned = ref(false);                         // Check if the user is banned
+const isCurrentBanned = ref(false);                         // Check if the current user is banned
 const isFollowing = ref(false);                         // Check if the current user is following the userId
 const activeTab = ref("Profile");   // variable to switch between Profile and Timeline tabs
 
@@ -564,7 +582,25 @@ const followersError = ref(null);
 const following = ref([]);
 const followingLoading = ref(true);
 const followingError = ref(null);
+
+// timeline variables
 const timeLine = ref([]);
+const timeLineYear = ref('All');
+const timelineType = ref('All'); 
+const timelineYears = computed(() => {
+  const years = timeLine.value.map(item => item.createdAt.toDate().getFullYear());
+  return [...new Set(years)].sort((a,b) => b - a);
+})
+
+const filteredTimeLine = computed(() => {
+  return timeLine.value.filter(item => {
+    const itemYear = item.createdAt.toDate().getFullYear();
+    const yearMatch = timeLineYear.value === 'All' || itemYear === timeLineYear.value;
+    const typeMatch = timelineType.value === 'All' || item.type === timelineType.value;
+    return yearMatch && typeMatch;
+  })
+});
+
 
 // Dashboard data
 const {
@@ -618,8 +654,12 @@ watch(() => route.params.id, (newId) => {
 
 const loadProfileData = async () => {
   try {
+    db.collection("users").doc(auth.currentUser.uid).get().then((doc) => {
+      if (doc.exists) {
+        isCurrentBanned.value = doc.data().role === "banned";
+      }
+    });
     const userRef = db.collection("users").doc(userId.value);
-
     const doc = await userRef.get();
     if (doc.exists) {
       userData.value = doc.data();
@@ -637,11 +677,7 @@ const loadProfileData = async () => {
         project.id = doc.id;
         if (isCurrent.value || project.visibility) {
           userProjects.value.push(project);
-          timeLine.value.push({
-            type: "project",
-            data: project,
-            createdAt: project.createdAt ? project.createdAt.toDate() : new Date(),
-          });
+          
         }
       });
       console.log(userProjects.value)
@@ -652,11 +688,7 @@ const loadProfileData = async () => {
         const objective = doc.data();
         objective.id = doc.id;
         userObjectives.value.push(objective);
-        timeLine.value.push({
-          type: "objective",
-          data: objective,
-          createdAt: objective.createdAt ? objective.createdAt.toDate() : new Date(),
-        });
+       
       });
 
       userSkills.value = [];
@@ -664,11 +696,7 @@ const loadProfileData = async () => {
         const skill = doc.data();
         skill.id = doc.id;
         userSkills.value.push(skill);
-        timeLine.value.push({
-          type: "skill",
-          data: skill,
-          createdAt: skill.createdAt ? skill.createdAt.toDate() : new Date(),
-        });
+        
       });
 
     } else {
@@ -684,6 +712,23 @@ const loadProfileData = async () => {
       }
     }
 
+    await db.collection("timelineObjects").where("user", "==", userId.value)
+    .get().then((snapshot) => {
+      const timelineItems = [];
+
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        data.id = doc.id;
+        timelineItems.push(data);
+      });
+
+      timelineItems.sort((a,b) => {
+        return b.createdAt.toDate() - a.createdAt.toDate();
+      });
+
+      timeLine.value = timelineItems;
+    })
+
     const result = await getFollowers(userId.value);
     followers.value = result.followers.value;
     followersLoading.value = result.loading.value;
@@ -693,9 +738,7 @@ const loadProfileData = async () => {
     following.value = result2.following.value;
     followingLoading.value = result2.loading.value;
     followingError.value = result2.error.value;
-
-
-    timeLine.value.sort((a, b) => b.createdAt - a.createdAt);
+    
   } catch (error) {
     console.error("Error fetching user data:", error);
   }
@@ -748,6 +791,13 @@ const saveSingleSkill = async (index) => {
       level: skill.level,
       updatedAt: new Date()
     });
+    await db.collection("timelineObjects").add({
+      title: skill.name,
+      type: "skill",
+      user: auth.currentUser.uid,
+      description: skill.level,
+      createdAt: new Date(),
+    });
   }
 
   editingSkillIndex.value = null;
@@ -778,6 +828,13 @@ const saveSingleProject = async (index) => {
       githubURL: project.githubURL,
       visibility: project.visibility
     });
+    await db.collection("timelineObjects").add({
+      title: project.title,
+      type: "project",
+      user: auth.currentUser.uid,
+      description: project.description,
+      createdAt: new Date(),
+    });
   }
 
   editingProjectIndex.value = null;
@@ -806,6 +863,13 @@ const saveSingleObjective = async (index) => {
       progress: objective.progress,
       status: objective.status,
       lastUpdate: new Date()
+    });
+    await db.collection("timelineObjects").add({
+      title: objective.title,
+      type: "objective",
+      user: auth.currentUser.uid,
+      description: objective.status,
+      createdAt: new Date(),
     });
   }
 
@@ -1145,7 +1209,7 @@ body,
   margin-bottom: 4px;
 }
 
-.bio {
+.bio, .desc {
   margin-top: 0;
   margin-bottom: 16px;
   color: var(--github-secondary-text);
@@ -1326,6 +1390,10 @@ body,
 }
 
 /* Timeline Styling */
+.label{
+  position: relative;
+  top:5px;
+}
 .timeline-item {
   display: flex;
   flex-direction: column;

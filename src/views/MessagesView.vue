@@ -1,5 +1,5 @@
 <template>
-    <div class="messages-container">
+    <div class="messages-container" v-if="!isBanned">
         <mini-navbar />
         <!-- <div class="action-bar">
             <button class="btn btn-primary" @click="openAddChatModal">
@@ -96,6 +96,9 @@
             </div>
         </div>
     </div>
+    <div v-else>
+        <h1 class="text-center text-white mt-5">Error accessing app: Access denied</h1>
+    </div>
 </template>
 
 <script setup>
@@ -108,6 +111,7 @@ import { db, auth } from "@/firebase/config";
 import { useRouter } from "vue-router";
 
 const router = useRouter();
+const isBanned = ref(false);
 const { conversations, loading } = useConversations();
 const selectedChat = ref(null);
 const showAddChatModal = ref(false);
@@ -119,6 +123,11 @@ const usernameMap = ref({}); // Store usernames by user ID for searching
 
 // Fill username map on component mount
 onMounted(() => {
+    db.collection("users").doc(auth.currentUser?.uid).get().then(doc => {
+        if (doc.exists) {
+            isBanned.value = doc.data().role === "banned";
+        }
+    });
     // Initialize from localStorage cache if available
     try {
         const cachedUsernames = JSON.parse(localStorage.getItem('usernameCache') || '{}');

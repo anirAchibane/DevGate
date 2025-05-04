@@ -1,6 +1,6 @@
 <template>
     <mini-navbar></mini-navbar>
-    <div class="container-fluid py-4"  >
+    <div class="container-fluid py-4"  v-if="isMod">
         <div class="row g-4">
             <!-- Users List -->
             <div class="col-md-6">
@@ -161,6 +161,9 @@
             </div>
         </div>
     </div>
+    <div v-else>
+        <h1 class="text-center text-white mt-5">You're not supposed to access this page, go away!</h1>
+    </div>
 </template>
 
 <script setup>
@@ -170,6 +173,7 @@ import { auth, db } from '@/firebase/config.js'
 
 const usersList = ref([])
 const reportsList = ref([])
+const isMod = ref(false)
 
 const userSearch = ref('');
 const reportSearch = ref('');
@@ -193,6 +197,11 @@ const filteredReports = computed(() => {
 })
 
 onMounted(async () => {
+    db.collection("users").doc(auth.currentUser.uid).get().then((doc) => {
+    if (doc.exists) {
+      isMod.value = doc.data().role === "moderator";
+    }
+    });
     if (auth.currentUser) {
         try {
             // fetch users
