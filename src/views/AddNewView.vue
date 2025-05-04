@@ -124,22 +124,24 @@
       <div v-if="selectedType==='Skill'" class="card form-card bg-dark text-white mb-4 p-4">
         <h4 class="card-title mb-4 text-center">Add a new Skill</h4>
         <form @submit.prevent="submitForm">
-          <div class="mb-3">
-            <label class="form-label">Skill Name</label>
-            <input type="text" v-model="formDataskill.name" class="form-control input-dark" required />
+          <div class="skills-container">
+            <div class="mb-3">
+              <label class="form-label">Skill Name</label>
+              <input type="text" v-model="formDataskill.name" class="form-control input-dark" required />
+            </div>
+    
+            <div class="mb-3">
+              <label class="form-label">Skill Level</label>
+              <select v-model="formDataskill.level" class="form-select input-dark ms-0">
+                <option value="Beginner">Beginner</option>
+                <option value="Intermediate">Intermediate</option>
+                <option value="Advanced">Advanced</option>
+                <option value="Master">Master</option>
+              </select>
+              
+            </div>
           </div>
-  
-          <div class="mb-3">
-            <label class="form-label">Skill Level</label>
-            <select v-model="formDataskill.level" class="form-select input-dark ms-0">
-              <option value="Beginner">Beginner</option>
-              <option value="Intermediate">Intermediate</option>
-              <option value="Advanced">Advanced</option>
-              <option value="Master">Master</option>
-            </select>
-            
-          </div>
-  
+    
           <div class="text-center">
             <button type="submit" class="btn btn-primary submit-btn">Add {{ selectedType }}</button>
           </div>
@@ -421,5 +423,10 @@ const submitForm = async()=> {
 
 .post-action-btn:has(#skill:checked) i {
     color: var(--success-color);
+}
+
+.skills-container {
+    max-width: 400px;
+    overflow-x: auto;
 }
 </style>
