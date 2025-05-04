@@ -48,7 +48,27 @@
                 />
 
                 <!-- Sort/filter options -->
-                <div class="feed-sort">
+                <div class="feed-tabs">
+                    <div class="tabs-container">
+                        <button 
+                            class="tab-btn" 
+                            :class="{ 'active-tab': activeTab === 'devgate' }" 
+                            @click="activeTab = 'devgate'"
+                        >
+                            <i class="fas fa-home me-1"></i> DevGate Feed
+                        </button>
+                        <button 
+                            class="tab-btn" 
+                            :class="{ 'active-tab': activeTab === 'devto' }" 
+                            @click="activeTab = 'devto'"
+                        >
+                            <i class="fas fa-fire me-1"></i> Dev.to Trending
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Feed controls - only show for DevGate feed -->
+                <div class="feed-sort" v-if="activeTab === 'devgate'">
                     <div class="sort-divider"></div>
                     <div class="sort-option">
                         <span>Sort by:</span>
@@ -80,8 +100,13 @@
                 </div>
 
                 <!-- Posts feed -->
-                <div class="posts-feed">
+                <div class="posts-feed" v-if="activeTab === 'devgate'">
                     <posts-list :sort-option="sortOption" :display-mode="displayMode" />
+                </div>
+
+                <!-- Dev.to trending feed -->
+                <div class="devto-feed" v-else-if="activeTab === 'devto'">
+                    <DevToTrendingFeed />
                 </div>
             </div>
 
@@ -170,6 +195,7 @@ import PostsList from "@/components/PostsList.vue";
 import FollowableUsersList from "@/components/FollowableUsersList.vue";
 import LoadingOverlay from "@/components/LoadingOverlay.vue";
 import PostCreation from "@/components/PostCreation.vue";
+import DevToTrendingFeed from "@/components/DevToTrendingFeed.vue";
 import { db, auth } from "@/firebase/config.js";
 import { onMounted, ref } from "vue";
 import firebase from "firebase/app";
@@ -190,6 +216,7 @@ const postContent = ref("");
 const postImage = ref(null);
 const uploadingImage = ref(false);
 const savingPost = ref(false);
+const activeTab = ref("devgate"); // Add active tab state
 
 const fetchUserData = async (userId) => {
     try {
@@ -881,6 +908,108 @@ body,
     background-color: #555d69;
     cursor: not-allowed;
     opacity: 0.7;
+}
+
+/* Tabs styling */
+.feed-tabs {
+    margin-bottom: 15px;
+}
+
+.tabs-container {
+    display: flex;
+    background-color: #1a2233;
+    border-radius: 8px;
+    padding: 5px;
+    border: 1px solid #555d69;
+    overflow: hidden;
+}
+
+.tab-btn {
+    flex: 1;
+    border: none;
+    background: transparent;
+    color: #cfd8dc;
+    padding: 12px 15px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.tab-btn:hover:not(.active-tab) {
+    background-color: rgba(52, 152, 219, 0.1);
+    color: #ffffff;
+}
+
+.tab-btn.active-tab {
+    background-color: rgba(52, 152, 219, 0.2);
+    color: #3498db;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.tab-btn i {
+    font-size: 16px;
+}
+
+/* Dev.to feed styling */
+.devto-feed {
+    width: 100%;
+}
+
+.devto-feed :deep(.devto-trending-container) {
+    border-radius: 8px;
+    border: 1px solid #555d69;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    margin-bottom: 0;
+}
+
+.devto-feed :deep(.trending-header) {
+    padding: 15px 20px;
+    border-bottom: 1px solid #555d69;
+}
+
+.devto-feed :deep(.trending-title) {
+    font-size: 18px;
+}
+
+.devto-feed :deep(.article-title) {
+    margin-top: 5px;
+    margin-bottom: 10px;
+    font-size: 16px;
+}
+
+.devto-feed :deep(.trending-item) {
+    transition: all 0.2s ease;
+    padding: 15px;
+}
+
+.devto-feed :deep(.trending-item:hover) {
+    background-color: rgba(52, 152, 219, 0.05);
+}
+
+.devto-feed :deep(.article-link:hover) {
+    text-decoration: none;
+}
+
+.devto-feed :deep(.article-link:hover .article-title) {
+    color: #3498db;
+}
+
+/* Media queries for responsive tabs */
+@media (max-width: 480px) {
+    .tab-btn {
+        padding: 10px;
+        font-size: 14px;
+    }
+    
+    .tab-btn i {
+        font-size: 14px;
+    }
 }
 
 /* Media queries for responsive design */
