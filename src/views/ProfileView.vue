@@ -369,6 +369,16 @@
           </div>
         </div>
 
+        <!-- GitHub Repositories -->
+        <div v-if="isCurrent" class="card text-white bg-dark mb-4 edit-card">
+          <div class="card-header">
+            <h5>GitHub Repositories</h5>
+          </div>
+          <div class="card-body">
+            <GitHubRepositories :userId="userId" />
+          </div>
+        </div>
+
       </div>
 
       <!-- TimeLine -->
@@ -619,6 +629,7 @@ import ProjectCompletionChart from "@/components/charts/ProjectCompletionChart.v
 import ContributionHeatmap from "@/components/charts/ContributionHeatmap.vue";
 import LoadingOverlay from "@/components/LoadingOverlay.vue";
 import DevToArticles from "@/components/DevToArticles.vue";
+import GitHubRepositories from "@/components/GitHubRepositories.vue";
 
 // Import analytics composables
 import useSkillsAnalytics from "@/composables/analytics/useSkillsAnalytics";

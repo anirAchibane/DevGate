@@ -59,8 +59,14 @@ export async function calculateUserLevel(userId) {
             .doc(userId)
             .collection("projects")
             .get();
+        
+        // Count completed projects (status can be "completed", "Completed", or "Finished")
         const completedProjects = projectsSnapshot.docs.filter(
-            (doc) => doc.data().status === "completed"
+            (doc) => {
+                const status = doc.data().status || '';
+                return status.toLowerCase() === "completed" || 
+                       status.toLowerCase() === "finished";
+            }
         ).length;
 
         // Get user skills
