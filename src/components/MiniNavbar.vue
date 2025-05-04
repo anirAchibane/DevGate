@@ -36,18 +36,6 @@
                         </div>
                     </router-link>
 
-                    <!-- My Network - We might add it later
-                    <router-link to="/network" class="navlink">
-                        <div
-                            class="nav-item d-flex flex-column align-items-center"
-                        >
-                            <div class="nav-icon">
-                                <i class="fa-solid fa-user-group"></i>
-                            </div>
-                            <span>My Network</span>
-                        </div>
-                    </router-link> -->
-
                     <!-- Messaging -->
                     <router-link to="/messages" class="navlink">
                         <div class="nav-item d-flex flex-column align-items-center">

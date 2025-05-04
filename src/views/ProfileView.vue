@@ -15,6 +15,7 @@
   <div class="choice d-flex justify-content-center align-items-center mt-3">
     <button class="btn btn-sm btn-outline" @click="switchTab('Profile')">Profile</button>
     <button class="btn btn-sm btn-outline" @click="switchTab('Timeline')">Timeline</button>
+    <button class="btn btn-sm btn-outline" @click="switchTab('Dashboard')">Dashboard</button>
   </div>
   <!-- Popup Modal for Followers/Following -->
   <div v-if="showFollowersPopup || showFollowingPopup" class="popup-overlay" @click.self="closePopup">
@@ -80,7 +81,8 @@
             <p class="card-text">{{ userData.email }}</p>
             <p class="card-text clickable" @click="showFollowersPopup = true">Followers: {{ followers.length }}</p>
             <p class="card-text clickable" @click="showFollowingPopup = true">Following: {{ following.length }}</p>
-
+            <p class="card-text">Current Level: <span class="level-badge">{{ currentLevel }}</span></p>
+            <p class="card-text" v-if="nextLevelRequirements">Next Level: {{ nextLevelRequirements }}</p>
 
             <div class="mt-3 d-flex gap-2 justify-content-center">
               <button v-if="isCurrent" @click="settings()" class="btn btn-outline-light btn-sm">
@@ -302,7 +304,7 @@
       </div>
 
       <!-- TimeLine -->
-      <div class="timeline-bar" v-if="activeTab === 'Timeline'">
+      <div class="mainbar" v-if="activeTab === 'Timeline'">
           <h2>Timeline:</h2>
               <div v-for="item in timeLine" :key="item.data.id" class="timeline-item">
                   <div v-if="item.type === 'project'">
@@ -337,6 +339,150 @@
               </div>
       </div>
 
+      <!-- Dashboard -->
+      <div class="mainbar" v-if="activeTab === 'Dashboard'">
+        <div class="dashboard-header">
+          <h2>Developer Dashboard</h2>
+          <button @click="refreshDashboardData" class="btn btn-refresh" title="Refresh dashboard data">
+            <i class="fas fa-sync-alt"></i> Refresh
+          </button>
+        </div>
+        
+        <div class="dashboard-description">
+          <p>Track your development progress and growth metrics over time.</p>
+        </div>
+
+        <div class="charts-grid">
+          <div class="chart-card">
+              <div class="chart-container">
+                <div class="chart-info-section">
+                  <h3>Skills Growth</h3>
+                  <span class="chart-info">Your skill progression over time</span>
+                  <div class="chart-action-container">
+                    <button v-if="isCurrent" @click="scrollToSkills()" class="btn btn-action add-skill">
+                      <i class="fas fa-plus-circle"></i> Add Skill
+                    </button>
+                  </div>
+                </div>
+                <div class="chart-display-section">
+                  <LoadingOverlay v-if="skillsLoading" />
+                  <div v-else-if="!skillsData || !skillsData.labels || skillsData.labels.length === 0" class="no-data-message">
+                    <i class="fas fa-chart-line"></i>
+                    <p>No skills data available</p>
+                    <small v-if="isCurrent">Add skills to your profile to see analytics</small>
+                  </div>
+                  <SkillsChart v-else :chartData="skillsData" />
+                </div>
+              </div>
+          </div>
+
+          <div class="chart-card">
+              <div class="chart-container">
+                <div class="chart-info-section">
+                  <h3>Coding Time</h3>
+                  <span class="chart-info">Hours spent coding per period</span>
+                  <div class="chart-action-container">
+                    <button v-if="isCurrent" @click="showCodingTimeForm = true" class="btn btn-info btn-sm">
+                      <i class="fas fa-clock"></i> Log Coding Time
+                    </button>
+                  </div>
+                </div>
+                <div class="chart-display-section">
+                  <LoadingOverlay v-if="codingTimeLoading" />
+                  <div v-else-if="!codingTimeData || !codingTimeData.labels || codingTimeData.labels.length === 0" class="no-data-message">
+                    <i class="fas fa-clock"></i>
+                    <p>No coding time data available</p>
+                    <small v-if="isCurrent">Log your coding hours to track progress</small>
+                  </div>
+                  <CodingTimeChart v-else :chartData="codingTimeData" />
+                </div>
+              </div>
+          </div>
+
+          <div class="chart-card">
+              <div class="chart-container">
+                <div class="chart-info-section">
+                  <h3>Level Progression</h3>
+                  <span class="chart-info">Your development level over time</span>
+                  <div class="chart-action-container">
+                    <p class="current-level">Current Level: {{ currentLevel || 1 }}</p>
+                    <p class="level-hint">Complete objectives to level up</p>
+                    <button v-if="isCurrent" @click="showLevelSystem = true" class="btn btn-info btn-sm">
+                      <i class="fas fa-info-circle"></i> About Levels
+                    </button>
+                  </div>
+                </div>
+                <div class="chart-display-section">
+                  <LoadingOverlay v-if="levelLoading" />
+                  <div v-else-if="!levelsData || !levelsData.labels || levelsData.labels.length === 0" class="no-data-message">
+                    <i class="fas fa-trophy"></i>
+                    <p>No level data available</p>
+                    <small v-if="isCurrent">Complete objectives to level up</small>
+                  </div>
+                  <LevelProgressionChart v-else :chartData="levelsData" />
+                </div>
+              </div>
+          </div>
+
+          <div class="chart-card">
+              <div class="chart-container">
+                <div class="chart-info-section">
+                  <h3>Completed Projects</h3>
+                  <span class="chart-info">Projects completed by category</span>
+                  <div class="chart-action-container">
+                    <p class="project-count">Total: {{ completedProjectCount || 0 }}</p>
+                    <button v-if="isCurrent" @click="switchTab('Profile')" class="btn btn-action view-projects">
+                      <i class="fas fa-tasks"></i> View Projects
+                    </button>
+                  </div>
+                </div>
+                <div class="chart-display-section">
+                  <LoadingOverlay v-if="projectsLoading" />
+                  <div v-else-if="!projectsData || !projectsData.labels || projectsData.labels.length === 0" class="no-data-message">
+                    <i class="fas fa-project-diagram"></i>
+                    <p>No projects data available</p>
+                    <small v-if="isCurrent">Add projects to see completion stats</small>
+                  </div>
+                  <ProjectCompletionChart v-else :chartData="projectsData" />
+                </div>
+              </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  
+  <!-- Coding Time Modal -->
+  <div v-if="showCodingTimeForm" class="popup-overlay" @click.self="showCodingTimeForm = false">
+    <div class="popup-content">
+      <CodingTimeForm 
+        :userId="auth.currentUser.uid" 
+        @submit-success="handleCodingTimeSubmit" 
+        @cancel="showCodingTimeForm = false" 
+      />
+    </div>
+  </div>
+  
+  <!-- Level System Modal -->
+  <div v-if="showLevelSystem" class="popup-overlay" @click.self="showLevelSystem = false">
+    <div class="popup-content">
+      <h2>DevGate Level System</h2>
+      <p class="mb-3">Level up your developer journey by completing objectives, adding skills, and logging your coding time.</p>
+      
+      <div class="level-table">
+        <div v-for="level in levelSystemInfo.levels" :key="level.level" class="level-row" :class="{'current-level-row': level.level === currentLevel}">
+          <div class="level-number">Level {{ level.level }}</div>
+          <div class="level-details">
+            <div class="level-name">{{ level.name }}</div>
+            <div class="level-requirements">{{ level.requirements }}</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="text-end mt-4">
+        <button @click="showLevelSystem = false" class="btn btn-secondary">Close</button>
+      </div>
     </div>
   </div>
   </div>
@@ -356,7 +502,21 @@ import { db, auth  } from "@/firebase/config.js";
 import { useRoute, useRouter  } from "vue-router";
 import { onMounted , computed , watch } from "vue";
 import { getFollowers , getFollowing } from "@/composables/userFollow";
- 
+
+// Import chart components
+import SkillsChart from "@/components/charts/SkillsChart.vue";
+import CodingTimeChart from "@/components/charts/CodingTimeChart.vue";
+import LevelProgressionChart from "@/components/charts/LevelProgressionChart.vue";
+import ProjectCompletionChart from "@/components/charts/ProjectCompletionChart.vue";
+import LoadingOverlay from "@/components/LoadingOverlay.vue";
+
+// Import analytics composables
+import useSkillsAnalytics from "@/composables/analytics/useSkillsAnalytics";
+import useCodingTimeMetrics from "@/composables/analytics/useCodingTimeMetrics";
+import useLevelProgression from "@/composables/analytics/useLevelProgression";
+import useProjectCompletionStats from "@/composables/analytics/useProjectCompletionStats";
+import CodingTimeForm from "@/components/forms/CodingTimeForm.vue";
+
 // Routing:
 const route = useRoute();
 const router = useRouter();
@@ -382,14 +542,44 @@ const followingLoading = ref(true);
 const followingError = ref(null);
 const timeLine = ref([]);
 
+// Dashboard data
+const {
+    skillsData,
+    isLoading: skillsLoading,
+    fetchSkillsData,
+} = useSkillsAnalytics();
 
+const {
+    codingTimeData,
+    isLoading: codingTimeLoading,
+    fetchCodingTimeData,
+} = useCodingTimeMetrics();
+
+const {
+    levelsData,
+    isLoading: levelLoading,
+    fetchLevelData,
+    currentLevel,
+    nextLevelRequirements,
+    checkAndUpdateLevel,
+} = useLevelProgression();
+
+const {
+    projectsData,
+    isLoading: projectsLoading,
+    fetchProjectData,
+} = useProjectCompletionStats();
 
 const editingSkillIndex = ref(null);
 const editingProjectIndex = ref(null);
 const editingObjectiveIndex = ref(null);
 
-
-
+// New variables for dashboard interactions
+const showCodingTimeForm = ref(false);
+const showLevelSystem = ref(false);
+const completedProjectCount = computed(() => {
+  return userProjects.value.length;
+});
 
 watch(() => route.params.id, (newId) => {
   userId.value = newId;
@@ -487,6 +677,12 @@ const loadProfileData = async () => {
 
 onMounted(() => {
    loadProfileData();
+   
+   // Load dashboard data
+   fetchSkillsData(userId.value);
+   fetchCodingTimeData(userId.value);
+   fetchLevelData(userId.value);
+   fetchProjectData(userId.value);
 });
 
 
@@ -527,6 +723,19 @@ const saveSingleSkill = async (index) => {
   }
 
   editingSkillIndex.value = null;
+  
+  // Check if the user's level should be updated after adding/updating skills
+  if (isCurrent.value) {
+    try {
+      const { level, updated } = await checkAndUpdateLevel(auth.currentUser.uid);
+      if (updated) {
+        // If level was updated, show a notification
+        alert(`Congratulations! You've reached level ${level}!`);
+      }
+    } catch (error) {
+      console.error("Error checking level after skill update:", error);
+    }
+  }
 };
 
 const saveSingleProject = async (index) => {
@@ -544,6 +753,18 @@ const saveSingleProject = async (index) => {
   }
 
   editingProjectIndex.value = null;
+  
+  // Check if user level should be updated after modifying the project
+  if (isCurrent.value) {
+    try {
+      const { level, updated } = await checkAndUpdateLevel(auth.currentUser.uid);
+      if (updated) {
+        alert(`Congratulations! You've reached level ${level}!`);
+      }
+    } catch (error) {
+      console.error("Error checking level after project update:", error);
+    }
+  }
 };
 
 const saveSingleObjective = async (index) => {
@@ -558,10 +779,22 @@ const saveSingleObjective = async (index) => {
       status: objective.status,
       lastUpdate: new Date()
     });
-    //window.location.reload();
   }
 
   editingObjectiveIndex.value = null;
+  
+  // Check if the user's level should be updated after adding/updating an objective
+  if (isCurrent.value) {
+    try {
+      const { level, updated } = await checkAndUpdateLevel(auth.currentUser.uid);
+      if (updated) {
+        // If level was updated, show a notification
+        alert(`Congratulations! You've reached level ${level}!`);
+      }
+    } catch (error) {
+      console.error("Error checking level after objective update:", error);
+    }
+  }
 };
 
 
@@ -725,6 +958,66 @@ const deleteObjective = async (objectiveId) => {
   } catch (error) {
     console.error("Error deleting skill:", error);
   
+  }
+};
+
+// Added function to refresh dashboard data
+const refreshDashboardData = async () => {
+  try {
+    await Promise.all([
+      fetchSkillsData(userId.value),
+      fetchCodingTimeData(userId.value),
+      fetchLevelData(userId.value),
+      fetchProjectData(userId.value)
+    ]);
+  } catch (error) {
+    console.error("Error refreshing dashboard data:", error);
+  }
+};
+
+// Dashboard interaction functions
+const scrollToSkills = () => {
+  // Navigate to the Add New page with skill option pre-selected
+  if (auth.currentUser) {
+    router.push({
+      path: `/add/${auth.currentUser.uid}`,
+      query: { type: 'Skill' }
+    });
+  }
+};
+
+
+
+// Level system modal
+const levelSystemInfo = {
+  levels: [
+    { level: 1, name: "Beginner", requirements: "Join DevGate" },
+    { level: 2, name: "Code Explorer", requirements: "Complete 2 projects" },
+    { level: 3, name: "Developer", requirements: "Log 50 hours of coding" },
+    { level: 4, name: "Code Craftsman", requirements: "Complete 5 projects & add 5 skills" },
+    { level: 5, name: "Master Programmer", requirements: "Log 200 hours & complete 10 projects" }
+  ]
+};
+
+const handleCodingTimeSubmit = async () => {
+  showCodingTimeForm.value = false;
+  await fetchCodingTimeData(userId.value);
+  
+  // Check if the user's level should be updated after logging coding time
+  if (isCurrent.value) {
+    try {
+      const { level, updated } = await checkAndUpdateLevel(auth.currentUser.uid);
+      if (updated) {
+        alert(`Congratulations! You've reached level ${level}! Your coding time helped you level up.`);
+      } else {
+        alert("Coding time logged successfully!");
+      }
+    } catch (error) {
+      console.error("Error checking level after logging coding time:", error);
+      alert("Coding time logged successfully!");
+    }
+  } else {
+    alert("Coding time logged successfully!");
   }
 };
 </script>
@@ -964,7 +1257,7 @@ body,
 }
 
 .objective .fw-bold {
-  color: var(--github-link);
+  color: var (--github-link);
   font-size: 16px;
   font-weight: 600;
   margin-bottom: 6px;
@@ -1234,4 +1527,323 @@ body,
   color:            #ffffff;
 }
 
+/* Dashboard Styling */
+.dashboard-bar {
+  padding: 16px;
+  background-color: var(--github-sidebar-bg);
+  border: 1px solid var(--github-border);
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.dashboard-bar h2 {
+  margin-bottom: 20px;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--github-text);
+  border-bottom: 1px solid var(--github-border);
+  padding-bottom: 10px;
+}
+
+.charts-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 10px 0;
+}
+
+.chart-card {
+  background-color: var(--github-card-bg);
+  border: 1px solid var(--github-border);
+  border-radius: 6px;
+  padding: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: relative;
+  height: 300px;
+}
+
+.chart-card h3 {
+  font-size: 16px;
+  margin-bottom: 15px;
+  color: var(--github-link);
+  font-weight: 600;
+}
+
+/* Dashboard Enhanced Styling */
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--github-border);
+}
+
+.dashboard-header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--github-text);
+}
+
+.btn-refresh {
+  background-color: rgba(56, 139, 253, 0.1);
+  color: var(--github-link);
+  border: 1px solid var(--github-border);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.btn-refresh:hover {
+  background-color: rgba(56, 139, 253, 0.2);
+  border-color: var(--github-link);
+}
+
+.btn-refresh i {
+  font-size: 14px;
+}
+
+.dashboard-description {
+  margin-bottom: 24px;
+  color: var(--github-secondary-text);
+  font-size: 14px;
+}
+
+.chart-header {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 12px;
+}
+
+.chart-info {
+  font-size: 12px;
+  color: var(--github-secondary-text);
+  margin-top: 4px;
+}
+
+.no-data-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: var(--github-secondary-text);
+  text-align: center;
+  padding: 20px;
+}
+
+.no-data-message i {
+  font-size: 36px;
+  margin-bottom: 16px;
+  color: var(--github-border);
+}
+
+.no-data-message p {
+  margin-bottom: 4px;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.no-data-message small {
+  font-size: 12px;
+}
+
+@media (max-width: 768px) {
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .main {
+    flex-direction: column;
+  }
+  
+  .sidebar {
+    flex: 0 0 100%;
+  }
+}
+
+.chart-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-start;
+  height: 100%;
+}
+
+.chart-info-section {
+  flex: 1;
+  padding-right: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.chart-display-section {
+  flex: 2;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.btn-action {
+  color: #ffffff;
+  font-size: 13px;
+  padding: 6px 12px;
+  transition: all 0.3s ease;
+  font-weight: 600;
+  box-shadow: 0 1px 0 rgba(27,31,36,0.1), inset 0 1px 0 rgba(255,255,255,0.25);
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(240, 246, 252, 0.1);
+  text-decoration: none;
+  letter-spacing: 0.02em;
+}
+
+.btn-action:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  filter: brightness(110%);
+}
+
+.btn-action:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.btn-action i {
+  font-size: 14px;
+}
+
+/* Different background colors for each action button */
+.btn-action.add-skill {
+  background-color: #238636; /* Green */
+  border-color: rgba(35, 134, 54, 0.4);
+}
+
+.btn-action.add-skill:hover {
+  background-color: #2ea043;
+  border-color: rgba(46, 160, 67, 0.6);
+}
+
+.btn-action.view-projects {
+  background-color: #8957e5; /* Purple */
+  border-color: rgba(137, 87, 229, 0.4);
+}
+
+.btn-action.view-projects:hover {
+  background-color: #9e77f5;
+  border-color: rgba(158, 119, 245, 0.6);
+}
+
+.btn-info.btn-sm {
+  background-color: #1f6feb; /* Blue */
+  border-color: rgba(31, 111, 235, 0.4);
+  color: #ffffff;
+  font-size: 13px;
+  padding: 6px 12px;
+  transition: all 0.3s ease;
+  font-weight: 600;
+  box-shadow: 0 1px 0 rgba(27,31,36,0.1), inset 0 1px 0 rgba(255,255,255,0.25);
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  letter-spacing: 0.02em;
+}
+
+.btn-info.btn-sm:hover {
+  background-color: #388bfd;
+  border-color: rgba(56, 139, 253, 0.6);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  filter: brightness(110%);
+}
+
+.btn-info.btn-sm:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Level system modal styling */
+.level-table {
+  margin: 16px 0;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.level-row {
+  display: flex;
+  border-bottom: 1px solid #30363d;
+  padding: 12px;
+  background-color: #21262d;
+}
+
+.level-row:last-child {
+  border-bottom: none;
+}
+
+.level-number {
+  flex: 0 0 80px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #161b22;
+  margin: -12px 12px -12px -12px;
+  padding: 12px;
+}
+
+.level-details {
+  flex: 1;
+}
+
+.level-name {
+  font-weight: 600;
+  font-size: 15px;
+  margin-bottom: 4px;
+  color: #58a6ff;
+}
+
+.level-requirements {
+  color: #8b949e;
+  font-size: 14px;
+}
+
+.current-level-row {
+  background-color: rgba(88, 166, 255, 0.1);
+  position: relative;
+}
+
+.current-level-row::before {
+  content: "Current";
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background-color: #1f6feb;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 12px;
+}
+
+.level-badge {
+  background-color: #1f6feb;
+  color: #ffffff;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 14px;
+  display: inline-block;
+  margin-left: 4px;
+}
 </style>

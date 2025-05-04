@@ -144,10 +144,11 @@
 
 import router from "@/router";
 import {db,auth} from "@/firebase/config.js"
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
 import MiniNavbar from "@/components/MiniNavbar.vue";
+import { useRoute } from "vue-router";
 
-
+const route = useRoute();
 const selectedType = ref('Project');
 const tagsInput = ref('');
 const formDataProject = ref({
@@ -170,7 +171,19 @@ const formDataObjective = ref({
     progress: "",
     lastUpdate: new Date,
     startDate: new Date()
-})
+});
+
+// Check if there's a type parameter in the URL and set the selectedType accordingly
+onMounted(() => {
+  if (route.query.type) {
+    // Make sure the type is one of the valid options
+    const validTypes = ['Project', 'Objective', 'Skill'];
+    if (validTypes.includes(route.query.type)) {
+      selectedType.value = route.query.type;
+    }
+  }
+});
+
 const submitForm = async()=> {
     try{
     const userRef = db.collection("users").doc(auth.currentUser.uid) ;

@@ -6,13 +6,9 @@ import SignupView from "../views/SignupView.vue";
 import ModeratorView from "@/views/ModeratorView.vue";
 import MessagesView from "@/views/MessagesView.vue"; 
 import NewReportView from "@/views/NewReportView.vue";
-
 import SettingsView from "../views/SettingsView.vue";
 import AddNewView from "../views/AddNewView";
-
-
 import { auth, db } from "../firebase/config"; // Import Firebase auth
-
 
 const routes = [
     {
