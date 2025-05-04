@@ -15,7 +15,17 @@
 
             <!-- Navigation items -->
             <div class="nav-items-section">
-                <div class="nav-items d-flex">
+                
+                <div class="nav-items d-flex" >
+                    <router-link to="/dashboard" class="navlink" v-if="isModerator">
+                        <div class="nav-item d-flex flex-column align-items-center">
+                            <div class="nav-icon">
+                                <i class="fa-solid fa-gear"></i>
+                            </div>
+                            <span>Dashboard</span>
+                        </div>
+                    </router-link>
+
                     <!-- Home -->
                     <router-link to="/home" class="navlink">
                         <div class="nav-item d-flex flex-column align-items-center">
@@ -254,6 +264,7 @@ const router = useRouter();
 const userProfilePic = ref(null);
 const hasUnreadMessages = ref(false);
 let unsubscribe = null;
+const isModerator = ref(false);
 
 onMounted(async () => {
     if (auth.currentUser) {
@@ -265,6 +276,7 @@ onMounted(async () => {
                 .get();
             if (userDoc.exists) {
                 userProfilePic.value = userDoc.data().avatar || null;
+                isModerator.value = userDoc.data().role === "moderator";
             }
 
             // Setup listener for unread messages

@@ -3,7 +3,9 @@ import Homeview from "../views/HomeView.vue";
 import ProfileView from "../views/ProfileView.vue";
 import LoginView from "../views/LoginView.vue";
 import SignupView from "../views/SignupView.vue";
+import ModeratorView from "@/views/ModeratorView.vue";
 import MessagesView from "@/views/MessagesView.vue"; 
+import NewReportView from "@/views/NewReportView.vue";
 import SettingsView from "../views/SettingsView.vue";
 import AddNewView from "../views/AddNewView";
 import { auth, db } from "../firebase/config"; // Import Firebase auth
@@ -37,7 +39,8 @@ const routes = [
         meta: { requiresAuth: true },
     },
 
-    {  path: "/settings",
+    {  
+        path: "/settings",
         name: "Settings",
         component: SettingsView,
     },
@@ -45,6 +48,15 @@ const routes = [
         path: "/add/:id",
         name: "Add",
         component: AddNewView,
+    },
+    {
+        path: "/dashboard",
+        name: "dashboard",
+        component: ModeratorView,
+    },
+    {
+        path: "/newreport",
+        component: NewReportView,
     }
 ];
 
