@@ -1266,17 +1266,16 @@ const slideSkills = (direction) => {
   if (!slider) return;
   
   const cardWidth = slider.querySelector('.skill-card')?.offsetWidth || 212; // 200px width + 12px margin
-  const visibleWidth = slider.offsetWidth;
-  const visibleCards = Math.floor(visibleWidth / cardWidth);
-  const maxSlidePosition = Math.max(0, userSkills.value.length - visibleCards);
   
-  if (direction === 'next' && skillSlidePosition.value < maxSlidePosition) {
+  if (direction === 'next') {
+    // Scroll one card width to the right
+    slider.scrollBy({ left: cardWidth, behavior: 'smooth' });
     skillSlidePosition.value += 1;
-  } else if (direction === 'prev' && skillSlidePosition.value > 0) {
-    skillSlidePosition.value -= 1;
+  } else if (direction === 'prev') {
+    // Scroll one card width to the left
+    slider.scrollBy({ left: -cardWidth, behavior: 'smooth' });
+    skillSlidePosition.value = Math.max(0, skillSlidePosition.value - 1);
   }
-  
-  slider.style.transform = `translateX(-${skillSlidePosition.value * cardWidth}px)`;
 };
 
 const isLastSkillVisible = computed(() => {
@@ -1628,7 +1627,7 @@ body,
 
 .objective .btn-outline-light:hover {
   background-color: rgba(56, 139, 253, 0.15);
-  border-color: var(--github-link);
+  border-color: var (--github-link);
   color: var (--github-link);
 }
 
@@ -2292,14 +2291,31 @@ body,
   gap: 12px;
   margin-top: 16px;
   position: relative;
+  max-width: 100%;
 }
 
 .skills-slider {
   display: flex;
-  overflow: hidden;
+  overflow-x: auto;
   scroll-behavior: smooth;
   width: 100%;
-  transition: transform 0.3s ease-in-out;
+  max-width: 440px; /* Limit to show about 2 skills (200px per skill + margins) */
+  margin: 0 auto;
+  padding-bottom: 8px; /* Add padding to accommodate scrollbar */
+}
+
+/* Hide scrollbar but keep functionality */
+.skills-slider::-webkit-scrollbar {
+  height: 4px;
+}
+
+.skills-slider::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.skills-slider::-webkit-scrollbar-thumb {
+  background: var(--github-border);
+  border-radius: 4px;
 }
 
 .skill-card {
