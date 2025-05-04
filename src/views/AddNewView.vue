@@ -100,14 +100,19 @@
           </div>
   
           <div class="mb-3">
-            <label class="form-label">Status</label>
-            <input type="text" v-model="formDataObjective.status" class="form-control" required />
+            <label class="form-label  ">Status</label>
+            <select v-model="formDataObjective.status" class="ms-2" required>
+              <option> Achieved  </option>
+              <option> Non Achieved </option>
+            </select>
           </div>
   
           <div class="mb-3">
             <label class="form-label">Progress</label>
-            <input type="text" v-model="formDataObjective.progress" class="form-control" required />
+            <input type="text" v-model="formDataObjective.progress" class="form-control"  required placeholder=" Add a description of the tracked progress" />
           </div>
+
+          
   
           <div class="text-center">
             <button type="submit" class="btn btn-success">Add {{ selectedType }}</button>
@@ -126,7 +131,13 @@
   
           <div class="mb-3">
             <label class="form-label">Skill Level</label>
-            <input type="text" v-model="formDataskill.level" class="form-control" />
+            <select v-model="formDataskill.level" class="ms-2" >
+              <option> Beginner </option>
+              <option> Intermediate </option>
+              <option> Advanced </option>
+              <option> Master </option>
+            </select>
+            
           </div>
   
           <div class="text-center">
