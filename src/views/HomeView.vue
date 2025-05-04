@@ -1,5 +1,5 @@
 <template>
-    <div class="all">
+    <div class="all" v-if="!isBanned">
         <mini-navbar />
         <div class="home-container">
             <!-- Full-page loading overlay when everything is loading -->
@@ -159,6 +159,9 @@
             </div>
         </div>
     </div>
+    <div v-else>
+        <h1 class="text-center text-white mt-5">Error accessing app: Access denied</h1>
+    </div>
 </template>
 
 <script setup>
@@ -173,6 +176,7 @@ import firebase from "firebase/app";
 import { uploadToGitHub } from "@/composables/uploadToGitHub";
 
 const user = ref(null);
+const isBanned = ref(false);
 const userData = ref(null);
 const sortOption = ref("newest");
 const displayMode = ref("list"); // Add display mode state: "list" or "gallery"
@@ -315,7 +319,14 @@ const handlePostCreated = (postId) => {
     // This ensures the feed gets updated when a new post is added
 };
 
-onMounted(() => {
+onMounted(async () => {
+    db.collection("users").doc(auth.currentUser.uid).get().then((doc) => {
+        if (doc.exists) {
+           isBanned.value = doc.data().role === "banned";
+        } else {
+            console.log("No such document!");
+        }
+    });
     initialLoading.value = true;
 
     // Set a timeout to ensure initial loading doesn't flash if data loads quickly

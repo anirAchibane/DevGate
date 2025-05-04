@@ -22,7 +22,3 @@
 5. **Automatic Progress Tracking**
 
     - The objectives have manual progress tracking, but there's no implementation for automatic tracking.
-
-6. **Time Tracking**
-
-    - No feature to track time spent coding, either manually or automatically.
