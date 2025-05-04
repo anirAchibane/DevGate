@@ -1491,6 +1491,14 @@ body,
   padding: 16px !important;
   margin-bottom: 16px !important;
   position: relative;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.project:hover {
+  transform: translateY(-3px);
+  border-color: var(--github-link);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
 }
 
 .project .fw-bold {
@@ -1501,7 +1509,7 @@ body,
 }
 
 .project p {
-  margin-bottom: 6px;
+  margin-bottom: 8px;
   font-size: 14px;
   color: var(--github-text);
 }
@@ -1509,6 +1517,12 @@ body,
 .project p a {
   color: var(--github-link);
   text-decoration: none;
+  display: inline-block;
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
 }
 
 .project p a:hover {
@@ -1516,18 +1530,68 @@ body,
 }
 
 .project .btn-outline-light {
-  position: absolute;
-  top: 16px;
-  right: 16px;
+  background-color: rgba(56, 139, 253, 0.1);
+  border: 1px solid var(--github-border);
+  color: var(--github-text);
   font-size: 12px;
-  padding: 2px 8px;
-  border-color: var(--github-border);
+  padding: 4px 10px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  margin-top: 8px;
 }
 
 .project .btn-outline-light:hover {
-  background-color: rgba(56, 139, 253, 0.15);
+  background-color: rgba(56, 139, 253, 0.2);
   border-color: var(--github-link);
   color: var(--github-link);
+}
+
+/* Project tag styling */
+.project .tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.project .tag {
+  display: inline-block;
+  padding: 2px 8px;
+  background-color: rgba(56, 139, 253, 0.1);
+  color: var(--github-link);
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.project .visibility-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  margin-left: 6px;
+}
+
+.project .visibility-public {
+  background-color: rgba(46, 160, 67, 0.1);
+  color: #2ea043;
+}
+
+.project .visibility-private {
+  background-color: rgba(218, 54, 51, 0.1);
+  color: #da3633;
+}
+
+/* Edit form styling */
+.edit-project-form {
+  background-color: var(--github-sidebar-bg) !important;
+  border: 1px solid var(--github-border);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+.edit-project-form .form-label {
+  margin-bottom: 4px;
 }
 
 /* Objectives Styling */
