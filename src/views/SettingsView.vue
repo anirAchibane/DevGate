@@ -121,6 +121,23 @@
                     </button>
             </div>
         </div>
+
+        <div class="exports">
+            <h2>Data Export</h2>
+            <div class="export-options">
+                <div class="export-option">
+                    <div class="export-info">
+                        <h3>JSON Resume</h3>
+                        <p>Export your profile data in the standardized JSON Resume format. This format is compatible with many resume builders and professional platforms.</p>
+                    </div>
+                </div>
+                <div class="export-actions">
+                    <button @click="exportJSONResume" class="btn btn-primary export-btn">
+                        <i class="fas fa-file-export"></i> Export Resume
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 </template>
 
@@ -386,6 +403,142 @@ const filteredFollowing = computed(() => {
 
 });
 
+// JSON Resume Export functionality
+const exportJSONResume = async () => {
+    try {
+        // Show loading state or notification
+        alert("Preparing your resume data...");
+        
+        const userId = auth.currentUser.uid;
+        const userRef = db.collection("users").doc(userId);
+        
+        // Fetch all the necessary data
+        const [
+            userDoc,
+            skillsSnapshot,
+            projectsSnapshot,
+            objectivesSnapshot
+        ] = await Promise.all([
+            userRef.get(),
+            userRef.collection("skills").get(),
+            userRef.collection("projects").get(),
+            userRef.collection("objectives").get()
+        ]);
+        
+        if (!userDoc.exists) {
+            alert("Error: User profile not found");
+            return;
+        }
+        
+        const userData = userDoc.data();
+        
+        // Format skills data
+        const skills = [];
+        skillsSnapshot.forEach(doc => {
+            const skill = doc.data();
+            skills.push({
+                name: skill.name,
+                level: skill.level
+            });
+        });
+        
+        // Format projects data
+        const projects = [];
+        projectsSnapshot.forEach(doc => {
+            const project = doc.data();
+            projects.push({
+                name: project.title,
+                description: project.description || "",
+                url: project.githubURL || "",
+                highlights: project.tags || [],
+                startDate: formatFirestoreTimestamp(project.createdAt, true)
+            });
+        });
+        
+        // Format objectives as "work" experience or "accomplishments"
+        const accomplishments = [];
+        objectivesSnapshot.forEach(doc => {
+            const objective = doc.data();
+            if (objective.status === "Completed" || objective.status === "In Progress") {
+                accomplishments.push({
+                    name: objective.title,
+                    date: formatFirestoreTimestamp(objective.lastUpdate, true),
+                    summary: objective.progress || ""
+                });
+            }
+        });
+        
+        // Construct the JSON Resume object following schema at https://jsonresume.org/schema/
+        const resumeData = {
+            basics: {
+                name: userData.username || "Developer",
+                label: "Software Developer",
+                image: userData.avatar || "",
+                email: userData.email || "",
+                summary: userData.bio || "",
+                profiles: [
+                    {
+                        network: "DevGate",
+                        username: userData.username,
+                        url: `${window.location.origin}/profil/${userId}`
+                    }
+                ]
+            },
+            skills: skills.map(skill => ({
+                name: skill.name,
+                level: skill.level
+            })),
+            projects: projects,
+            education: [],
+            work: [],
+            volunteer: [],
+            awards: accomplishments
+        };
+        
+        // Create a Blob with the JSON data
+        const jsonString = JSON.stringify(resumeData, null, 2);
+        const blob = new Blob([jsonString], { type: 'application/json' });
+        
+        // Create a download link and trigger download
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${userData.username || 'developer'}_resume.json`;
+        document.body.appendChild(link);
+        link.click();
+        
+        // Clean up
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        
+        alert("Your resume has been downloaded as a JSON file!");
+    } catch (error) {
+        console.error("Error exporting resume:", error);
+        alert(`Error exporting resume: ${error.message}`);
+    }
+};
+
+// Helper function to format Firestore timestamps for the resume
+function formatFirestoreTimestamp(timestamp, dateOnly = false) {
+    if (!timestamp) return "";
+
+    let date;
+    if (timestamp.toDate) {
+        // If it's an actual Firestore Timestamp object
+        date = timestamp.toDate();
+    } else if (timestamp.seconds !== undefined) {
+        // If it's a plain object { seconds: ..., nanoseconds: ... }
+        date = new Date(timestamp.seconds * 1000);
+    } else {
+        return "";
+    }
+
+    if (dateOnly) {
+        return date.toISOString().split('T')[0]; // YYYY-MM-DD format
+    }
+    
+    return date.toISOString(); // Full ISO string
+}
 </script>
 
 <style scoped>
@@ -577,5 +730,65 @@ const filteredFollowing = computed(() => {
     background-color: #0D1117;
     color: #fff;
     margin-bottom: 16px;
+}
+
+/* Data export styles */
+.exports {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    background-color: #0D1117;
+    padding: 16px;
+    border-radius: 8px;
+    border: 1px solid #555d69;
+    margin-bottom: 16px;
+}
+
+.export-options {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.export-option {
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+    background-color: #1a2233;
+    border-radius: 8px;
+    border: 1px solid #30363d;
+    transition: transform 0.3s ease, border-color 0.3s ease;
+}
+
+.export-info {
+    margin-bottom: 16px;
+}
+
+.export-actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.export-btn {
+    padding: 8px 16px;
+    background-color: #2ea043;
+    border: none;
+}
+
+.export-btn:hover {
+    background-color: #3fb950;
+}
+
+.export-info h3 {
+    margin: 0 0 8px 0;
+    font-size: 16px;
+    color: #58a6ff;
+}
+
+.export-info p {
+    margin: 0;
+    font-size: 14px;
+    color: #8b949e;
+    line-height: 1.5;
 }
 </style>
