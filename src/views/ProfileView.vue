@@ -133,45 +133,82 @@
                 </button>
                 <p v-else class="empty-state-message">This user hasn't added any skills yet</p>
               </div>
-              <div v-for="(skill, index) in userSkills" :key="skill.id" class="skill mb-2">
-                <template v-if="editingSkillIndex === index">
-                  <div class="edit-skill-form p-3 bg-dark text-white rounded shadow-sm mb-3">
-                    <div class="mb-2">
-                      <label class="form-label small text-white fw-bold">Skill Name</label>
-                      <input v-model="skill.name" class="form-control mb-1 input-dark" placeholder="Skill name" />
-                    </div>
-                    
-                    <div class="mb-3">
-                      <label class="form-label small text-white fw-bold">Skill Level</label>
-                      <select v-model="skill.level" class="forrm-control ms-2 input-dark" placeholder="Skill level">
-                        <option> Beginner </option>
-                        <option> Intermediate </option>
-                        <option> Advanced </option>
-                        <option> Master </option>
-                      </select>
+              
+              <!-- Skills Slider -->
+              <div v-if="userSkills.length > 0" class="skills-slider-container">
+                <button class="slider-nav-btn prev-btn" @click="slideSkills('prev')" :disabled="skillSlidePosition <= 0">
+                  <i class="fas fa-chevron-left"></i>
+                </button>
+                
+                <div class="skills-slider" ref="skillsSlider">
+                  <div 
+                    v-for="(skill, index) in userSkills" 
+                    :key="skill.id" 
+                    class="skill-card"
+                    :class="{'editing': editingSkillIndex === index}"
+                  >
+                    <template v-if="editingSkillIndex === index">
+                      <div class="edit-skill-form p-3 bg-dark text-white rounded shadow-sm mb-3">
+                        <div class="mb-2">
+                          <label class="form-label small text-white fw-bold">Skill Name</label>
+                          <input v-model="skill.name" class="form-control mb-1 input-dark" placeholder="Skill name" />
+                        </div>
+                        
+                        <div class="mb-3">
+                          <label class="form-label small text-white fw-bold">Skill Level</label>
+                          <select v-model="skill.level" class="form-select input-dark" placeholder="Skill level">
+                            <option>Beginner</option>
+                            <option>Intermediate</option>
+                            <option>Advanced</option>
+                            <option>Master</option>
+                          </select>
+                        </div>
+                        
+                        <div class="d-flex gap-2">
+                          <button @click="saveSingleSkill(index)" class="btn btn-success">
+                            <i class="bi bi-check-lg me-1"></i> Save
+                          </button>
+                          <button @click="deleteSkill(skill.id)" class="btn btn-danger">
+                            <i class="bi bi-trash me-1"></i> Delete
+                          </button>
+                          <button @click="editingSkillIndex = null" class="btn btn-secondary">
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    </template>
+                    <template v-else>
+                      <div class="skill-level-badge" :class="'level-' + skill.level.toLowerCase()">
+                        {{ skill.level }}
+                      </div>
+                      <h4 class="skill-title">{{ skill.name }}</h4>
                       
-                    </div>
-                    
-                    <div class="d-flex gap-2">
-                      <button @click="saveSingleSkill(index)" class="btn btn-success">
-                        <i class="bi bi-check-lg me-1"></i> Save
+                      <!-- Progress slider for skill level -->
+                      <div class="skill-progress-container">
+                        <div class="skill-progress-bar">
+                          <div class="skill-progress-fill" :class="'level-' + skill.level.toLowerCase()" :style="{ width: getSkillLevelPercentage(skill.level) }"></div>
+                        </div>
+                        <span class="skill-progress-text">{{ getSkillLevelPercentage(skill.level) }}</span>
+                      </div>
+                      
+                      <p class="skill-date">Acquired: {{ formatFirestoreTimestamp(skill.acquiredAt) }}</p>
+                      <p class="skill-date">Updated: {{ formatFirestoreTimestamp(skill.updatedAt) }}</p>
+                      <button v-if="isCurrent" @click="editingSkillIndex = index" class="btn btn-outline-light btn-sm mt-1">
+                        <i class="fas fa-edit me-1"></i> Edit
                       </button>
-                      <button @click="deleteSkill(skill.id)" class="btn btn-danger">
-                        <i class="bi bi-trash me-1"></i> Delete
-                      </button>
-                      <button @click="editingSkillIndex = null" class="btn btn-secondary">
-                        Cancel
-                      </button>
-                    </div>
+                    </template>
                   </div>
-                </template>
-                <template v-else>
-                  <p class="mb-1 fw-bold">{{ skill.name }}</p>
-                  <p class="mb-1">Level : {{ skill.level }}</p>
-                  <p class="mb-1">Acquired at : {{ formatFirestoreTimestamp(skill.acquiredAt) }}</p>
-                  <p class="mb-1">Updated at : {{ formatFirestoreTimestamp(skill.updatedAt) }}</p>
-                  <button v-if="isCurrent" @click="editingSkillIndex = index" class="btn btn-outline-light btn-sm mt-1">Edit</button>
-                </template>
+                </div>
+                
+                <button class="slider-nav-btn next-btn" @click="slideSkills('next')" :disabled="isLastSkillVisible">
+                  <i class="fas fa-chevron-right"></i>
+                </button>
+              </div>
+              
+              <div v-if="userSkills.length > 0 && isCurrent" class="text-center mt-3">
+                <button @click="navigateToAdd('Skill')" class="btn btn-outline-primary btn-sm">
+                  <i class="fas fa-plus-circle me-1"></i> Add More Skills
+                </button>
               </div>
             </div>
           </div>
@@ -1220,6 +1257,53 @@ const handleContributionsLoaded = (data) => {
   });
 };
 
+// Skills slider functionality
+const skillSlidePosition = ref(0);
+const skillsSlider = ref(null);
+
+const slideSkills = (direction) => {
+  const slider = skillsSlider.value;
+  if (!slider) return;
+  
+  const cardWidth = slider.querySelector('.skill-card')?.offsetWidth || 212; // 200px width + 12px margin
+  const visibleWidth = slider.offsetWidth;
+  const visibleCards = Math.floor(visibleWidth / cardWidth);
+  const maxSlidePosition = Math.max(0, userSkills.value.length - visibleCards);
+  
+  if (direction === 'next' && skillSlidePosition.value < maxSlidePosition) {
+    skillSlidePosition.value += 1;
+  } else if (direction === 'prev' && skillSlidePosition.value > 0) {
+    skillSlidePosition.value -= 1;
+  }
+  
+  slider.style.transform = `translateX(-${skillSlidePosition.value * cardWidth}px)`;
+};
+
+const isLastSkillVisible = computed(() => {
+  if (!skillsSlider.value) return true;
+  
+  const cardWidth = skillsSlider.value.querySelector('.skill-card')?.offsetWidth || 212;
+  const visibleWidth = skillsSlider.value.offsetWidth;
+  const visibleCards = Math.floor(visibleWidth / cardWidth);
+  
+  return skillSlidePosition.value >= userSkills.value.length - visibleCards;
+});
+
+const getSkillLevelPercentage = (level) => {
+  switch (level.toLowerCase()) {
+    case 'beginner':
+      return '25%';
+    case 'intermediate':
+      return '50%';
+    case 'advanced':
+      return '75%';
+    case 'master':
+      return '100%';
+    default:
+      return '0%';
+  }
+};
+
 </script>
 
 <style >
@@ -1407,6 +1491,14 @@ body,
   padding: 16px !important;
   margin-bottom: 16px !important;
   position: relative;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.project:hover {
+  transform: translateY(-3px);
+  border-color: var(--github-link);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
 }
 
 .project .fw-bold {
@@ -1417,7 +1509,7 @@ body,
 }
 
 .project p {
-  margin-bottom: 6px;
+  margin-bottom: 8px;
   font-size: 14px;
   color: var(--github-text);
 }
@@ -1425,6 +1517,12 @@ body,
 .project p a {
   color: var(--github-link);
   text-decoration: none;
+  display: inline-block;
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
 }
 
 .project p a:hover {
@@ -1432,18 +1530,68 @@ body,
 }
 
 .project .btn-outline-light {
-  position: absolute;
-  top: 16px;
-  right: 16px;
+  background-color: rgba(56, 139, 253, 0.1);
+  border: 1px solid var(--github-border);
+  color: var(--github-text);
   font-size: 12px;
-  padding: 2px 8px;
-  border-color: var(--github-border);
+  padding: 4px 10px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  margin-top: 8px;
 }
 
 .project .btn-outline-light:hover {
-  background-color: rgba(56, 139, 253, 0.15);
+  background-color: rgba(56, 139, 253, 0.2);
   border-color: var(--github-link);
   color: var(--github-link);
+}
+
+/* Project tag styling */
+.project .tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.project .tag {
+  display: inline-block;
+  padding: 2px 8px;
+  background-color: rgba(56, 139, 253, 0.1);
+  color: var(--github-link);
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.project .visibility-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  margin-left: 6px;
+}
+
+.project .visibility-public {
+  background-color: rgba(46, 160, 67, 0.1);
+  color: #2ea043;
+}
+
+.project .visibility-private {
+  background-color: rgba(218, 54, 51, 0.1);
+  color: #da3633;
+}
+
+/* Edit form styling */
+.edit-project-form {
+  background-color: var(--github-sidebar-bg) !important;
+  border: 1px solid var(--github-border);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+.edit-project-form .form-label {
+  margin-bottom: 4px;
 }
 
 /* Objectives Styling */
@@ -1481,7 +1629,7 @@ body,
 .objective .btn-outline-light:hover {
   background-color: rgba(56, 139, 253, 0.15);
   border-color: var(--github-link);
-  color: var(--github-link);
+  color: var (--github-link);
 }
 
 /* Timeline Styling */
@@ -2135,6 +2283,151 @@ body,
   font-size: 14px;
   color: var(--github-secondary-text);
   font-style: italic;
+}
+
+/* Skills Slider Styling */
+.skills-slider-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+  position: relative;
+}
+
+.skills-slider {
+  display: flex;
+  overflow: hidden;
+  scroll-behavior: smooth;
+  width: 100%;
+  transition: transform 0.3s ease-in-out;
+}
+
+.skill-card {
+  background-color: var(--github-card-bg);
+  border: 1px solid var(--github-border);
+  border-radius: 6px;
+  padding: 16px;
+  margin-right: 12px;
+  flex: 0 0 200px;
+  position: relative;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.skill-card:hover:not(.editing) {
+  transform: translateY(-5px);
+  border-color: var(--github-link);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.skill-card.editing {
+  transform: scale(1.05);
+  z-index: 1;
+  border-color: var(--github-accent);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+}
+
+.skill-level-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.level-beginner {
+  background-color: rgba(56, 139, 253, 0.15);
+  color: #58a6ff;
+  border: 1px solid rgba(56, 139, 253, 0.4);
+}
+
+.level-intermediate {
+  background-color: rgba(246, 185, 59, 0.15);
+  color: #f6b93b;
+  border: 1px solid rgba(246, 185, 59, 0.4);
+}
+
+.level-advanced {
+  background-color: rgba(46, 204, 113, 0.15);
+  color: #2ecc71;
+  border: 1px solid rgba(46, 204, 113, 0.4);
+}
+
+.level-master {
+  background-color: rgba(155, 89, 182, 0.15);
+  color: #9b59b6;
+  border: 1px solid rgba(155, 89, 182, 0.4);
+}
+
+.skill-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: var(--github-link);
+}
+
+.skill-date {
+  font-size: 13px;
+  color: var(--github-secondary-text);
+  margin-bottom: 4px;
+}
+
+.slider-nav-btn {
+  background-color: var(--github-card-bg);
+  border: 1px solid var(--github-border);
+  color: var(--github-text);
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 2;
+}
+
+.slider-nav-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.slider-nav-btn:hover:not(:disabled) {
+  background-color: rgba(56, 139, 253, 0.1);
+  border-color: var(--github-link);
+  color: var(--github-link);
+}
+
+.prev-btn {
+  left: 0;
+}
+
+.next-btn {
+  right: 0;
+}
+
+.skill-progress-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.skill-progress-bar {
+  flex: 1;
+  height: 8px;
+  background-color: var(--github-border);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.skill-progress-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.skill-progress-text {
+  font-size: 12px;
+  color: var(--github-secondary-text);
 }
 
 </style>

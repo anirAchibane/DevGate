@@ -50,22 +50,22 @@
 
   
       <!-- Project Form -->
-      <div v-if="selectedType==='Project'" class="card bg-dark text-white mb-4 p-4">
+      <div v-if="selectedType==='Project'" class="card form-card bg-dark text-white mb-4 p-4">
         <h4 class="card-title mb-4 text-center">Add a new project</h4>
         <form @submit.prevent="submitForm">
           <div class="mb-3">
             <label class="form-label">Title</label>
-            <input type="text" v-model="formDataProject.title" class="form-control" required>
+            <input type="text" v-model="formDataProject.title" class="form-control input-dark" required>
           </div>
   
           <div class="mb-3">
             <label class="form-label">Description</label>
-            <textarea v-model="formDataProject.description" class="form-control" rows="3"></textarea>
+            <textarea v-model="formDataProject.description" class="form-control input-dark" rows="3"></textarea>
           </div>
   
           <div class="mb-3">
             <label class="form-label">Github Url</label>
-            <input type="text" v-model="formDataProject.githubURL" class="form-control">
+            <input type="text" v-model="formDataProject.githubURL" class="form-control input-dark">
           </div>
 
           <div class="mb-3">
@@ -73,7 +73,7 @@
           <input 
             type="text" 
             v-model="tagsInput"
-            class="form-control"
+            class="form-control input-dark"
             placeholder="e.g., Vue, Firebase, WebDev"
           >
         </div>
@@ -85,63 +85,63 @@
           </div>
   
           <div class="text-center">
-            <button type="submit" class="btn btn-success">Add {{ selectedType }}</button>
+            <button type="submit" class="btn btn-primary submit-btn">Add {{ selectedType }}</button>
           </div>
         </form>
       </div>
   
       <!-- Objective Form -->
-      <div v-if="selectedType==='Objective'" class="card bg-dark text-white mb-4 p-4">
+      <div v-if="selectedType==='Objective'" class="card form-card bg-dark text-white mb-4 p-4">
         <h4 class="card-title mb-4 text-center">Add a new Objective</h4>
         <form @submit.prevent="submitForm">
           <div class="mb-3">
             <label class="form-label">Title</label>
-            <input type="text" v-model="formDataObjective.title" class="form-control" required />
+            <input type="text" v-model="formDataObjective.title" class="form-control input-dark" required />
           </div>
   
           <div class="mb-3">
-            <label class="form-label  ">Status</label>
-            <select v-model="formDataObjective.status" class="ms-2" required>
-              <option> Achieved  </option>
-              <option> Non Achieved </option>
+            <label class="form-label">Status</label>
+            <select v-model="formDataObjective.status" class="form-select input-dark ms-0" required>
+              <option value="Achieved">Achieved</option>
+              <option value="Non Achieved">Non Achieved</option>
             </select>
           </div>
   
           <div class="mb-3">
             <label class="form-label">Progress</label>
-            <input type="text" v-model="formDataObjective.progress" class="form-control"  required placeholder=" Add a description of the tracked progress" />
+            <input type="text" v-model="formDataObjective.progress" class="form-control input-dark" required placeholder="Add a description of the tracked progress" />
           </div>
 
           
   
           <div class="text-center">
-            <button type="submit" class="btn btn-success">Add {{ selectedType }}</button>
+            <button type="submit" class="btn btn-primary submit-btn">Add {{ selectedType }}</button>
           </div>
         </form>
       </div>
   
       <!-- Skill Form -->
-      <div v-if="selectedType==='Skill'" class="card bg-dark text-white mb-4 p-4">
+      <div v-if="selectedType==='Skill'" class="card form-card bg-dark text-white mb-4 p-4">
         <h4 class="card-title mb-4 text-center">Add a new Skill</h4>
         <form @submit.prevent="submitForm">
           <div class="mb-3">
             <label class="form-label">Skill Name</label>
-            <input type="text" v-model="formDataskill.name" class="form-control" required />
+            <input type="text" v-model="formDataskill.name" class="form-control input-dark" required />
           </div>
   
           <div class="mb-3">
             <label class="form-label">Skill Level</label>
-            <select v-model="formDataskill.level" class="ms-2" >
-              <option> Beginner </option>
-              <option> Intermediate </option>
-              <option> Advanced </option>
-              <option> Master </option>
+            <select v-model="formDataskill.level" class="form-select input-dark ms-0">
+              <option value="Beginner">Beginner</option>
+              <option value="Intermediate">Intermediate</option>
+              <option value="Advanced">Advanced</option>
+              <option value="Master">Master</option>
             </select>
             
           </div>
   
           <div class="text-center">
-            <button type="submit" class="btn btn-success">Add {{ selectedType }}</button>
+            <button type="submit" class="btn btn-primary submit-btn">Add {{ selectedType }}</button>
           </div>
         </form>
       </div>
@@ -259,12 +259,43 @@ const submitForm = async()=> {
 </script>
 
 <style lang="scss" scoped>
+.post-action-btn {
+    padding: 10px 18px;
+    background-color: var(--background-secondary);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.post-action-btn:hover {
+    background-color: rgba(52, 152, 219, 0.1);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: rgba(52, 152, 219, 0.3);
+}
+
+.post-action-btn i {
+    font-size: 20px;
+    margin-bottom: 4px;
+}
+
 .active-post-action {
-    color: #3498db;
+    color: var(--primary-color);
     transform: translateY(-2px);
     position: relative;
     overflow: hidden;
-    transition: all 0.3s ease;
+    transition: all var(--transition-normal);
+    background-color: rgba(52, 152, 219, 0.15);
+    border-color: rgba(52, 152, 219, 0.4);
+    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.25);
 }
 
 /* Create the animated background circle */
@@ -290,7 +321,105 @@ const submitForm = async()=> {
 
 /* Optional: improve text hover */
 .active-post-action:hover {
-    color: #5dade2;
+    color: var(--accent-color);
 }
 
+.form-card {
+    background-color: var(--background-secondary) !important;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+}
+
+.form-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--primary-color);
+}
+
+.form-label {
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+}
+
+.input-dark {
+    background-color: var(--background-primary) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-color) !important;
+    padding: 10px 12px;
+    border-radius: var(--radius-md);
+    transition: all var(--transition-normal);
+}
+
+.input-dark:hover {
+    background-color: rgba(13, 17, 23, 0.8) !important;
+    border-color: rgba(52, 152, 219, 0.5) !important;
+}
+
+.input-dark:focus {
+    background-color: var(--background-primary) !important;
+    border-color: var(--primary-color) !important;
+    color: var(--text-primary) !important;
+    box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.3) !important;
+    outline: none;
+}
+
+.input-dark::placeholder {
+    color: var(--text-muted) !important;
+}
+
+.form-check-input {
+    background-color: var(--background-primary);
+    border: 1px solid var(--border-color);
+}
+
+.form-check-input:checked {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.form-check-label {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+}
+
+.submit-btn {
+    padding: 10px 25px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    min-width: 150px;
+}
+
+.submit-btn:hover {
+    background-color: var(--primary-hover);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+}
+
+.submit-btn:active:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Type colors for labels */
+.post-action-btn:has(#project:checked) i {
+    color: var(--primary-color);
+}
+
+.post-action-btn:has(#objective:checked) i {
+    color: var(--warning-color);
+}
+
+.post-action-btn:has(#skill:checked) i {
+    color: var(--success-color);
+}
 </style>

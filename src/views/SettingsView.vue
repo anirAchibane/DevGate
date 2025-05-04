@@ -551,24 +551,26 @@ function formatFirestoreTimestamp(timestamp, dateOnly = false) {
 
 <style scoped>
 .main{
-    width:100%;
-    justify-self: center; align-self: center;
+    width: 100%;
+    justify-self: center; 
+    align-self: center;
     display: flex;
     padding: 20px;
-    background-color: #0D1117;
+    background-color: var(--background-primary);
 }
 
 .profile{
     display: flex;
     flex-direction: column;
     gap: 16px;
-    background-color: #0D1117;
+    background-color: var(--background-primary);
     padding: 16px;
-    border-radius: 8px;
-    border: 1px solid #555d69;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
 }
+
 .user-form-row {
-    margin:8px;
+    margin: 8px;
 }
 
 .profile button {
@@ -578,13 +580,21 @@ function formatFirestoreTimestamp(timestamp, dateOnly = false) {
 .user-form-row input, .user-form-row textarea {
     width: 400px;
     padding: 8px;
-    border-radius: 4px;
-    border: 1px solid #555d69;
-    background-color: #0D1117;
-    color: #fff;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    background-color: var(--background-primary);
+    color: var(--text-primary);
+    transition: all var(--transition-normal);
 }
+
+.user-form-row input:focus, .user-form-row textarea:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.3);
+    outline: none;
+}
+
 .user-form-row{
-    gap:20px;
+    gap: 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -605,8 +615,8 @@ function formatFirestoreTimestamp(timestamp, dateOnly = false) {
     border-radius: 50%;
     overflow: hidden;
     cursor: pointer;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-    transition: box-shadow 0.3s ease;
+    box-shadow: var(--shadow-md);
+    transition: box-shadow var(--transition-normal), transform var(--transition-normal);
 }
 
 .profile-preview-wrapper:hover {
@@ -618,9 +628,9 @@ function formatFirestoreTimestamp(timestamp, dateOnly = false) {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    border: 2px solid #3498db;
-    background-color: #1a2233;
-    transition: transform 0.3s ease;
+    border: 2px solid var(--primary-color);
+    background-color: var(--background-secondary);
+    transition: transform var(--transition-normal);
 }
 
 .profile-overlay {
@@ -634,7 +644,7 @@ function formatFirestoreTimestamp(timestamp, dateOnly = false) {
     justify-content: center;
     align-items: center;
     opacity: 0;
-    transition: opacity 0.3s ease;
+    transition: opacity var(--transition-normal);
 }
 
 .profile-preview-wrapper:hover .profile-overlay {
@@ -644,11 +654,11 @@ function formatFirestoreTimestamp(timestamp, dateOnly = false) {
 
 .profile-preview-wrapper:hover .profile-preview {
     transform: scale(1.08);
-    border-color: #2ecc71;
+    border-color: var(--success-color);
 }
 
 .profile-overlay i {
-    color: #ffffff;
+    color: var(--text-primary);
     font-size: 2rem;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
@@ -667,7 +677,7 @@ function formatFirestoreTimestamp(timestamp, dateOnly = false) {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    color: #3498db;
+    color: var(--primary-color);
     font-size: 0.9rem;
 }
 
@@ -677,7 +687,7 @@ function formatFirestoreTimestamp(timestamp, dateOnly = false) {
     height: 1.25rem;
     margin-right: 0.5rem;
     border: 2px solid rgba(255, 255, 255, 0.3);
-    border-top-color: #ffffff;
+    border-top-color: var(--text-primary);
     border-radius: 50%;
     animation: spinner 0.8s linear infinite;
 }
@@ -693,16 +703,16 @@ function formatFirestoreTimestamp(timestamp, dateOnly = false) {
     justify-content: space-between;
     align-items: center;
     padding: 16px;
-    background-color: #1a2233;
-    border-radius: 8px;
-    border: 1px solid #555d69;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    background-color: var(--background-secondary);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    transition: transform var(--transition-normal), box-shadow var(--transition-normal), border-color var(--transition-normal);
 }
 
 .user-card:hover {
     transform: translateY(-3px);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
-    border-color: #3498db;
+    box-shadow: var(--shadow-md);
+    border-color: var(--primary-color);
 }
 
 .user-avatar {
@@ -715,29 +725,36 @@ function formatFirestoreTimestamp(timestamp, dateOnly = false) {
     height: 60px;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid #3498db;
-    background-color: #0d1117;
+    border: 2px solid var(--primary-color);
+    background-color: var(--background-primary);
 }
 
 .followers, .following{
-    width:100%;
+    width: 100%;
     padding: 16px;
-    gap:16px;
+    gap: 16px;
     display: flex;
     flex-direction: column;
-    background-color: #0D1117;
-    border-radius: 8px;
-    border: 1px solid #555d69;
+    background-color: var(--background-primary);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
 }
 
 .search {
     width: 100%;
     padding: 8px;
-    border-radius: 4px;
-    border: 1px solid #555d69;
-    background-color: #0D1117;
-    color: #fff;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    background-color: var(--background-primary);
+    color: var(--text-primary);
     margin-bottom: 16px;
+    transition: all var(--transition-normal);
+}
+
+.search:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.3);
+    outline: none;
 }
 
 /* Data export styles */
@@ -745,10 +762,10 @@ function formatFirestoreTimestamp(timestamp, dateOnly = false) {
     display: flex;
     flex-direction: column;
     gap: 16px;
-    background-color: #0D1117;
+    background-color: var(--background-primary);
     padding: 16px;
-    border-radius: 8px;
-    border: 1px solid #555d69;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
     margin-bottom: 16px;
 }
 
@@ -762,10 +779,15 @@ function formatFirestoreTimestamp(timestamp, dateOnly = false) {
     display: flex;
     flex-direction: column;
     padding: 16px;
-    background-color: #1a2233;
-    border-radius: 8px;
-    border: 1px solid #30363d;
-    transition: transform 0.3s ease, border-color 0.3s ease;
+    background-color: var(--background-secondary);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-light);
+    transition: transform var(--transition-normal), border-color var(--transition-normal);
+}
+
+.export-option:hover {
+    transform: translateY(-2px);
+    border-color: var(--primary-color);
 }
 
 .export-info {
@@ -779,24 +801,27 @@ function formatFirestoreTimestamp(timestamp, dateOnly = false) {
 
 .export-btn {
     padding: 8px 16px;
-    background-color: #2ea043;
+    background-color: var(--success-color);
     border: none;
+    transition: background-color var(--transition-normal), transform var(--transition-normal);
 }
 
 .export-btn:hover {
-    background-color: #3fb950;
+    background-color: var(--success-color);
+    opacity: 0.9;
+    transform: translateY(-2px);
 }
 
 .export-info h3 {
     margin: 0 0 8px 0;
     font-size: 16px;
-    color: #58a6ff;
+    color: var(--primary-color);
 }
 
 .export-info p {
     margin: 0;
     font-size: 14px;
-    color: #8b949e;
+    color: var(--text-muted);
     line-height: 1.5;
 }
 </style>
