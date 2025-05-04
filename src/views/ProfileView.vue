@@ -131,7 +131,13 @@
                     
                     <div class="mb-3">
                       <label class="form-label small text-white fw-bold">Skill Level</label>
-                      <input v-model="skill.level" class="form-control mb-1 input-dark" placeholder="Skill level" />
+                      <select v-model="skill.level" class="forrm-control ms-2 input-dark" placeholder="Skill level">
+                        <option> Beginner </option>
+                        <option> Intermediate </option>
+                        <option> Advanced </option>
+                        <option> Master </option>
+                      </select>
+                      
                     </div>
                     
                     <div class="d-flex gap-2">
@@ -288,14 +294,30 @@
                   </div>
                   </template>
                   <template v-else>
-                  <p class="mb-1 fw-bold">{{ objective.title }}</p>
-                  <p class="mb-1">Status : {{ objective.status}}</p>
-                  <p class="mb-1">Progress : {{ objective.progress }}</p>
-                  <p class="mb-1">Visibility : {{ objective.visibility ? 'Public' : 'Private' }}</p>
-                  <p class="mb-1">Created at : {{ formatFirestoreTimestamp(objective.startDate) }} </p>
-                  <p class="mb-1">Last updated at : {{ formatFirestoreTimestamp(objective.lastUpdate) }}</p>
-                  <button v-if="isCurrent" @click="editingObjectiveIndex = index" class="btn btn-outline-light btn-sm mt-1">Edit</button>
-                </template>
+                    <!-- Display objective just like a project card -->
+                    <p class="mb-1 fw-bold objective-title">{{ objective.title }}</p>
+                    <p class="mb-1 objective-desc">
+                      Progress: {{ objective.progress }}
+                    </p>
+                    <p class="mb-1 objective-status">
+                      Status: {{ objective.status }}
+                    </p>
+                    <p class="mb-1 objective-date">
+                      Started: {{ formatFirestoreTimestamp(objective.startDate) }}
+                    </p>
+                    <p class="mb-1 objective-date">
+                      Last updated: {{ formatFirestoreTimestamp(objective.lastUpdate) }}
+                    </p>
+                    <div class="objective-actions mt-2">
+                      <button
+                        v-if="isCurrent"
+                        @click="editingObjectiveIndex = index"
+                        class="btn btn-outline-light btn-sm"
+                      >
+                        Edit
+                      </button>
+                    </div>
+                  </template>
               </div>
             </div>
           </div>
@@ -1914,4 +1936,21 @@ body,
   display: inline-block;
   margin-left: 4px;
 }
+.objective-title { 
+  color: var(--github-link);
+  font-size: 16px;
+  font-weight: 600;
+}
+.objective-desc,
+.objective-status,
+.objective-date {
+  color: var(--github-text);
+  font-size: 14px;
+  margin-bottom: 6px;
+}
+.objective-actions { 
+  display: flex; 
+  gap: 8px; 
+}
+
 </style>
