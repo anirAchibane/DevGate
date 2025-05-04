@@ -261,12 +261,12 @@ const submitForm = async()=> {
 <style lang="scss" scoped>
 .post-action-btn {
     padding: 10px 18px;
-    background-color: rgba(16, 21, 31, 0.6);
-    border: 1px solid rgba(85, 93, 105, 0.5);
-    border-radius: 8px;
-    color: #cfd8dc;
+    background-color: var(--background-secondary);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all var(--transition-normal);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -278,7 +278,7 @@ const submitForm = async()=> {
 .post-action-btn:hover {
     background-color: rgba(52, 152, 219, 0.1);
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    box-shadow: var(--shadow-md);
     border-color: rgba(52, 152, 219, 0.3);
 }
 
@@ -288,11 +288,11 @@ const submitForm = async()=> {
 }
 
 .active-post-action {
-    color: #3498db;
+    color: var(--primary-color);
     transform: translateY(-2px);
     position: relative;
     overflow: hidden;
-    transition: all 0.3s ease;
+    transition: all var(--transition-normal);
     background-color: rgba(52, 152, 219, 0.15);
     border-color: rgba(52, 152, 219, 0.4);
     box-shadow: 0 4px 12px rgba(52, 152, 219, 0.25);
@@ -321,37 +321,37 @@ const submitForm = async()=> {
 
 /* Optional: improve text hover */
 .active-post-action:hover {
-    color: #5dade2;
+    color: var(--accent-color);
 }
 
 .form-card {
-    background-color: #1a2233 !important;
-    border: 1px solid #555d69;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    background-color: var(--background-secondary) !important;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    transition: transform var(--transition-normal), box-shadow var(--transition-normal);
 }
 
 .form-card:hover {
     transform: translateY(-3px);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
-    border-color: #3498db;
+    box-shadow: var(--shadow-md);
+    border-color: var(--primary-color);
 }
 
 .form-label {
-    color: #ffffff;
+    color: var(--text-primary);
     font-weight: 600;
     font-size: 0.95rem;
     margin-bottom: 0.5rem;
 }
 
 .input-dark {
-    background-color: #0d1117 !important;
-    color: #c9d1d9 !important;
-    border: 1px solid #30363d !important;
+    background-color: var(--background-primary) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-color) !important;
     padding: 10px 12px;
-    border-radius: 6px;
-    transition: all 0.3s ease;
+    border-radius: var(--radius-md);
+    transition: all var(--transition-normal);
 }
 
 .input-dark:hover {
@@ -360,66 +360,66 @@ const submitForm = async()=> {
 }
 
 .input-dark:focus {
-    background-color: #0d1117 !important;
-    border-color: #58a6ff !important;
-    color: #c9d1d9 !important;
+    background-color: var(--background-primary) !important;
+    border-color: var(--primary-color) !important;
+    color: var(--text-primary) !important;
     box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.3) !important;
     outline: none;
 }
 
 .input-dark::placeholder {
-    color: #8b949e !important;
+    color: var(--text-muted) !important;
 }
 
 .form-check-input {
-    background-color: #0d1117;
-    border: 1px solid #30363d;
+    background-color: var(--background-primary);
+    border: 1px solid var(--border-color);
 }
 
 .form-check-input:checked {
-    background-color: #3498db;
-    border-color: #3498db;
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
 }
 
 .form-check-label {
-    color: #c9d1d9;
+    color: var(--text-secondary);
     font-size: 0.95rem;
 }
 
 .submit-btn {
     padding: 10px 25px;
-    background-color: #3498db;
+    background-color: var(--primary-color);
     color: white;
     border: none;
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all var(--transition-normal);
     font-weight: 600;
     letter-spacing: 0.5px;
     min-width: 150px;
 }
 
 .submit-btn:hover {
-    background-color: #2980b9;
+    background-color: var(--primary-hover);
     transform: translateY(-3px);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.25), 0 4px 8px rgba(52, 152, 219, 0.2);
+    box-shadow: var(--shadow-lg);
 }
 
 .submit-btn:active:not(:disabled) {
     transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--shadow-sm);
 }
 
 /* Type colors for labels */
 .post-action-btn:has(#project:checked) i {
-    color: #3498db;
+    color: var(--primary-color);
 }
 
 .post-action-btn:has(#objective:checked) i {
-    color: #f4d03f;
+    color: var(--warning-color);
 }
 
 .post-action-btn:has(#skill:checked) i {
-    color: #58d68d;
+    color: var(--success-color);
 }
 </style>
