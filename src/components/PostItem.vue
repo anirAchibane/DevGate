@@ -1,30 +1,21 @@
 <template>
-    <div class="post-item" 
-         :class="{
-             'gallery-mode': galleryMode, 
-             'has-image': post && post.picture,
-             'type-project': post && post.type === 'project',
-             'type-objective': post && post.type === 'objective',
-             'type-skill': post && post.type === 'skill',
-             'type-text': post && post.type === 'text' || !post
-         }" 
-         :data-post-type="post ? post.type : 'text'">
+    <div class="post-item" :class="{
+        'gallery-mode': galleryMode,
+        'has-image': post && post.picture,
+        'type-project': post && post.type === 'project',
+        'type-objective': post && post.type === 'objective',
+        'type-skill': post && post.type === 'skill',
+        'type-text': post && post.type === 'text' || !post
+    }" :data-post-type="post ? post.type : 'text'">
         <!-- Clone the image at the top for gallery mode -->
         <div v-if="galleryMode && post && post.picture" class="gallery-image-top">
             <img :src="post.picture" alt="Post Image" class="gallery-image" />
         </div>
-        
+
         <!-- Remove the standalone type badge -->
-        
-        <div
-            class="post-content-wrapper"
-            :class="{ 'loading-active': postloading || userloading }"
-        >
-            <LoadingOverlay
-                v-if="postloading || userloading"
-                message="Loading post..."
-                transparent
-            />
+
+        <div class="post-content-wrapper" :class="{ 'loading-active': postloading || userloading }">
+            <LoadingOverlay v-if="postloading || userloading" message="Loading post..." transparent />
 
             <div v-else-if="posterror">
                 <div class="error-message">
@@ -41,10 +32,7 @@
 
             <div v-else-if="post && user">
                 <!-- Delete confirmation modal -->
-                <div
-                    v-if="showDeleteConfirmation"
-                    class="delete-confirmation-overlay"
-                >
+                <div v-if="showDeleteConfirmation" class="delete-confirmation-overlay">
                     <div class="delete-confirmation-modal">
                         <h3>Delete Post</h3>
                         <p>
@@ -52,18 +40,10 @@
                             action cannot be undone.
                         </p>
                         <div class="delete-confirmation-actions">
-                            <button
-                                class="cancel-delete-btn"
-                                @click="cancelDeletePost"
-                                :disabled="isDeleting"
-                            >
+                            <button class="cancel-delete-btn" @click="cancelDeletePost" :disabled="isDeleting">
                                 Cancel
                             </button>
-                            <button
-                                class="confirm-delete-btn"
-                                @click="deletePost"
-                                :disabled="isDeleting"
-                            >
+                            <button class="confirm-delete-btn" @click="deletePost" :disabled="isDeleting">
                                 {{ isDeleting ? "Deleting..." : "Delete" }}
                             </button>
                         </div>
@@ -71,31 +51,30 @@
                 </div>
 
                 <div class="user-info">
-                    <img :src="user.avatar || require('@/assets/default_pfp.jpg')" alt="User Avatar" class="avatar" @click="navigateToProfile" />
+                    <img :src="user.avatar || require('@/assets/default_pfp.jpg')" alt="User Avatar" class="avatar"
+                        @click="navigateToProfile" />
                     <div class="text-inf">
                         <h3 class="username" @click="navigateToProfile">{{ user.username }}</h3>
                         <p class="date">{{ formatDate(post.addedAt) }}</p>
                     </div>
                     <!-- Add delete button for user's own posts -->
                     <div v-if="isCurrentUserPost" class="post-actions">
-                        <button
-                            class="delete-post-btn"
-                            @click="confirmDeletePost"
-                        >
+                        <button class="delete-post-btn" @click="confirmDeletePost">
                             <i class="fas fa-trash-alt"></i>
                         </button>
                     </div>
                     <router-link v-if="auth.currentUser.uid !== post.uid" :to="{
-                                path: '/newreport',
-                                query: { targetID: postId,
-                                         targetType: 'post',
-                                         targetTitle: post.summary,
-                                         targetOwner: post.uid
-                                },
-                            }">
-                            <button  class="btn btn-outline-light">
-                                Report
-                            </button>
+                        path: '/newreport',
+                        query: {
+                            targetID: postId,
+                            targetType: 'post',
+                            targetTitle: post.summary,
+                            targetOwner: post.uid
+                        },
+                    }">
+                        <button class="btn btn-outline-light">
+                            Report
+                        </button>
                     </router-link>
                 </div>
 
@@ -105,7 +84,7 @@
                             {{ post.summary }}
                             <span class="title-type-badge">{{ post.type }}</span>
                         </h4>
-                        
+
                     </div>
 
                     <!-- Common content for all post types -->
@@ -113,30 +92,15 @@
 
                     <!-- Type-specific content -->
                     <div v-if="post.type === 'project'" class="project-details">
-                        <LoadingOverlay
-                            v-if="projectLoading"
-                            message="Loading project details..."
-                            transparent
-                        />
+                        <LoadingOverlay v-if="projectLoading" message="Loading project details..." transparent />
                         <div v-else-if="projectData" class="project-info">
                             <div class="stack-tags">
-                                <span
-                                    v-for="(tech, index) in projectData.stack"
-                                    :key="index"
-                                    class="stack-tag"
-                                >
+                                <span v-for="(tech, index) in projectData.stack" :key="index" class="stack-tag">
                                     {{ tech }}
                                 </span>
                             </div>
-                            <div
-                                v-if="projectData.githubURL"
-                                class="github-link"
-                            >
-                                <a
-                                    :href="projectData.githubURL"
-                                    target="_blank"
-                                    rel="noopener"
-                                >
+                            <div v-if="projectData.githubURL" class="github-link">
+                                <a :href="projectData.githubURL" target="_blank" rel="noopener">
                                     <i class="fab fa-github"></i> GitHub
                                     Repository
                                 </a>
@@ -144,129 +108,73 @@
                         </div>
                     </div>
 
-                    <div
-                        v-else-if="post.type === 'objective'"
-                        class="objective-details"
-                    >
-                        <LoadingOverlay
-                            v-if="objectiveLoading"
-                            message="Loading objective details..."
-                            transparent
-                        />
+                    <div v-else-if="post.type === 'objective'" class="objective-details">
+                        <LoadingOverlay v-if="objectiveLoading" message="Loading objective details..." transparent />
                         <div v-else-if="objectiveData" class="objective-info">
-                            <div
-                                class="objective-status"
-                                :class="objectiveData.status"
-                            >
+                            <div class="objective-status" :class="objectiveData.status">
                                 Status: {{ objectiveData.status }}
                             </div>
                             <div class="objective-timeline">
-                                <span
-                                    >Started:
+                                <span>Started:
                                     {{
                                         formatDate(objectiveData.startDate)
-                                    }}</span
-                                >
-                                <span
-                                    >Last updated:
+                                    }}</span>
+                                <span>Last updated:
                                     {{
                                         formatDate(objectiveData.lastUpdated)
-                                    }}</span
-                                >
+                                    }}</span>
                             </div>
                         </div>
                     </div>
 
-                    <div
-                        v-else-if="post.type === 'skill'"
-                        class="skill-details"
-                    >
-                        <LoadingOverlay
-                            v-if="skillLoading"
-                            message="Loading skill details..."
-                            transparent
-                        />
+                    <div v-else-if="post.type === 'skill'" class="skill-details">
+                        <LoadingOverlay v-if="skillLoading" message="Loading skill details..." transparent />
                         <div v-else-if="skillData" class="skill-info">
-                            <div
-                                class="skill-level"
-                                :class="'level-' + skillData.level"
-                            >
+                            <div class="skill-level" :class="'level-' + skillData.level">
                                 <i class="fas fa-chart-line"></i>
                                 {{ skillData.level }}
                             </div>
                             <div class="skill-dates">
-                                <span
-                                    >Acquired:
-                                    {{ formatDate(skillData.acquiredAt) }}</span
-                                >
+                                <span>Acquired:
+                                    {{ formatDate(skillData.acquiredAt) }}</span>
                             </div>
                         </div>
                     </div>
 
                     <div class="post-images" v-if="post.picture">
-                        <img
-                            :src="post.picture"
-                            alt="Post Image"
-                            class="post-image"
-                        />
+                        <img :src="post.picture" alt="Post Image" class="post-image" />
                     </div>
                 </div>
                 <div class="post-footer">
                     <div class="post-actions-row">
                         <!-- Voting System -->
                         <div class="vote-container">
-                            <button 
-                                class="vote-btn upvote-btn" 
-                                :class="{ 'active': userVote === 'upvote' }"
-                                @click="handleUpvote"
-                                :disabled="isVoting || !isLoggedIn"
-                                title="Upvote"
-                            >
+                            <button class="vote-btn upvote-btn" :class="{ 'active': userVote === 'upvote' }"
+                                @click="handleUpvote" :disabled="isVoting || !isLoggedIn" title="Upvote">
                                 <i class="fas fa-arrow-up"></i>
                             </button>
                             <span class="vote-count" :class="getVoteCountClass">{{ post.votes || 0 }}</span>
-                            <button 
-                                class="vote-btn downvote-btn" 
-                                :class="{ 'active': userVote === 'downvote' }"
-                                @click="handleDownvote"
-                                :disabled="isVoting || !isLoggedIn"
-                                title="Downvote"
-                            >
+                            <button class="vote-btn downvote-btn" :class="{ 'active': userVote === 'downvote' }"
+                                @click="handleDownvote" :disabled="isVoting || !isLoggedIn" title="Downvote">
                                 <i class="fas fa-arrow-down"></i>
                             </button>
                         </div>
                         <button class="comment-btn" @click="toggleComments">
                             <i class="fa-solid fa-comment-dots"></i>
                             {{ showComments ? "Hide Comments" : "Comment" }}
-                            <span v-if="commentsCount > 0" class="comments-count"
-                                >({{ commentsCount }})</span
-                            >
+                            <span v-if="commentsCount >= 0" class="comments-count">({{ commentsCount }})</span>
                         </button>
                     </div>
                     <div v-if="showComments" class="comments-section">
                         <div class="new-comment">
-                            <img
-                                :src="
-                                    currentUserAvatar ||
-                                    require('@/assets/default_pfp.jpg')
-                                "
-                                alt="Current User Avatar"
-                                class="comment-avatar"
-                            />
+                            <img :src="currentUserAvatar ||
+                                require('@/assets/default_pfp.jpg')
+                                " alt="Current User Avatar" class="comment-avatar" />
                             <div class="comment-input-wrapper">
-                                <textarea
-                                    v-model="newCommentText"
-                                    placeholder="Write a comment..."
-                                    class="comment-input"
-                                    @keyup.enter="submitComment"
-                                ></textarea>
-                                <button
-                                    class="post-comment-btn"
-                                    @click="submitComment"
-                                    :disabled="
-                                        !newCommentText.trim() || addingComment
-                                    "
-                                >
+                                <textarea v-model="newCommentText" placeholder="Write a comment..."
+                                    class="comment-input" @keyup.enter="submitComment"></textarea>
+                                <button class="post-comment-btn" @click="submitComment" :disabled="!newCommentText.trim() || addingComment
+                                    ">
                                     {{ addingComment ? "Posting..." : "Post" }}
                                 </button>
                             </div>
@@ -284,28 +192,16 @@
                             </button>
                         </div>
 
-                        <div
-                            v-else-if="comments.length === 0"
-                            class="no-comments"
-                        >
+                        <div v-else-if="comments.length === 0" class="no-comments">
                             <p>No comments yet. Be the first to comment!</p>
                         </div>
 
                         <div class="comments-list">
-                            <div
-                                v-for="comment in comments"
-                                :key="comment.id"
-                                class="comment-item"
-                            >
+                            <div v-for="comment in comments" :key="comment.id" class="comment-item">
                                 <div class="comment-user-info">
-                                    <img
-                                        :src="
-                                            comment.userAvatar ||
-                                            require('@/assets/default_pfp.jpg')
-                                        "
-                                        alt="User Avatar"
-                                        class="comment-avatar"
-                                    />
+                                    <img :src="comment.userAvatar ||
+                                        require('@/assets/default_pfp.jpg')
+                                        " alt="User Avatar" class="comment-avatar" />
                                     <div class="comment-user-text">
                                         <h4 class="comment-username">
                                             {{ comment.username }}
@@ -315,13 +211,9 @@
                                         </p>
                                     </div>
 
-                                    <button
-                                        v-if="isCommentOwner(comment)"
-                                        class="delete-comment-btn"
-                                        @click="
-                                            confirmDeleteComment(comment.id)
-                                        "
-                                    >
+                                    <button v-if="isCommentOwner(comment)" class="delete-comment-btn" @click="
+                                        confirmDeleteComment(comment.id)
+                                        ">
                                         <i class="fas fa-trash-alt"></i>
                                     </button>
                                 </div>
@@ -331,41 +223,26 @@
 
                                 <!-- Comment actions -->
                                 <div class="comment-actions">
-                                    <button
-                                        class="reply-btn"
-                                        @click="
-                                            startReply(
-                                                comment.id,
-                                                comment.username
-                                            )
-                                        "
-                                    >
+                                    <button class="reply-btn" @click="
+                                        startReply(
+                                            comment.id,
+                                            comment.username
+                                        )
+                                        ">
                                         <i class="fas fa-reply"></i> Reply
                                     </button>
                                 </div>
 
                                 <!-- Replies -->
-                                <div
-                                    v-if="
-                                        comment.replies &&
-                                        comment.replies.length > 0
-                                    "
-                                    class="comment-replies"
-                                >
-                                    <div
-                                        v-for="reply in comment.replies"
-                                        :key="reply.id"
-                                        class="reply-item"
-                                    >
+                                <div v-if="
+                                    comment.replies &&
+                                    comment.replies.length > 0
+                                " class="comment-replies">
+                                    <div v-for="reply in comment.replies" :key="reply.id" class="reply-item">
                                         <div class="comment-user-info">
-                                            <img
-                                                :src="
-                                                    reply.userAvatar ||
-                                                    require('@/assets/default_pfp.jpg')
-                                                "
-                                                alt="User Avatar"
-                                                class="comment-avatar reply-avatar"
-                                            />
+                                            <img :src="reply.userAvatar ||
+                                                require('@/assets/default_pfp.jpg')
+                                                " alt="User Avatar" class="comment-avatar reply-avatar" />
                                             <div class="comment-user-text">
                                                 <h4 class="comment-username">
                                                     {{ reply.username }}
@@ -379,15 +256,11 @@
                                                 </p>
                                             </div>
 
-                                            <button
-                                                v-if="isCommentOwner(reply)"
-                                                class="delete-comment-btn"
-                                                @click="
-                                                    confirmDeleteComment(
-                                                        reply.id
-                                                    )
-                                                "
-                                            >
+                                            <button v-if="isCommentOwner(reply)" class="delete-comment-btn" @click="
+                                                confirmDeleteComment(
+                                                    reply.id
+                                                )
+                                                ">
                                                 <i class="fas fa-trash-alt"></i>
                                             </button>
                                         </div>
@@ -398,45 +271,23 @@
                                 </div>
 
                                 <!-- Reply form -->
-                                <div
-                                    v-if="replyingTo === comment.id"
-                                    class="reply-form"
-                                >
+                                <div v-if="replyingTo === comment.id" class="reply-form">
                                     <div class="reply-input-container">
-                                        <img
-                                            :src="
-                                                currentUserAvatar ||
-                                                require('@/assets/default_pfp.jpg')
-                                            "
-                                            alt="Current User Avatar"
-                                            class="comment-avatar reply-avatar"
-                                        />
+                                        <img :src="currentUserAvatar ||
+                                            require('@/assets/default_pfp.jpg')
+                                            " alt="Current User Avatar" class="comment-avatar reply-avatar" />
                                         <div class="reply-input-wrapper">
-                                            <textarea
-                                                v-model="replyText"
-                                                :placeholder="
-                                                    'Reply to ' +
-                                                    replyingToUsername +
-                                                    '...'
-                                                "
-                                                class="reply-input"
-                                                @keyup.enter="submitReply"
-                                            ></textarea>
+                                            <textarea v-model="replyText" :placeholder="'Reply to ' +
+                                                replyingToUsername +
+                                                '...'
+                                                " class="reply-input" @keyup.enter="submitReply"></textarea>
                                             <div class="reply-actions">
-                                                <button
-                                                    class="cancel-reply-btn"
-                                                    @click="cancelReply"
-                                                >
+                                                <button class="cancel-reply-btn" @click="cancelReply">
                                                     Cancel
                                                 </button>
-                                                <button
-                                                    class="post-reply-btn"
-                                                    @click="submitReply()"
-                                                    :disabled="
-                                                        !replyText.trim() ||
-                                                        addingReply
-                                                    "
-                                                >
+                                                <button class="post-reply-btn" @click="submitReply()" :disabled="!replyText.trim() ||
+                                                    addingReply
+                                                    ">
                                                     {{
                                                         addingReply
                                                             ? "Posting..."
@@ -450,14 +301,8 @@
                             </div>
                         </div>
 
-                        <div
-                            v-if="comments.length > 5 && !showAllComments"
-                            class="show-more-comments"
-                        >
-                            <button
-                                class="show-more-btn"
-                                @click="showAllComments = true"
-                            >
+                        <div v-if="comments.length > 5 && !showAllComments" class="show-more-comments">
+                            <button class="show-more-btn" @click="showAllComments = true">
                                 <i class="fas fa-chevron-down"></i> Show more
                                 comments
                             </button>
@@ -466,10 +311,7 @@
                 </div>
 
                 <!-- Delete comment confirmation modal -->
-                <div
-                    v-if="showDeleteCommentConfirmation"
-                    class="delete-confirmation-overlay"
-                >
+                <div v-if="showDeleteCommentConfirmation" class="delete-confirmation-overlay">
                     <div class="delete-confirmation-modal">
                         <h3>Delete Comment</h3>
                         <p>
@@ -477,18 +319,12 @@
                             action cannot be undone.
                         </p>
                         <div class="delete-confirmation-actions">
-                            <button
-                                class="cancel-delete-btn"
-                                @click="cancelDeleteComment"
-                                :disabled="isDeletingComment"
-                            >
+                            <button class="cancel-delete-btn" @click="cancelDeleteComment"
+                                :disabled="isDeletingComment">
                                 Cancel
                             </button>
-                            <button
-                                class="confirm-delete-btn"
-                                @click="deleteCommentConfirmed"
-                                :disabled="isDeletingComment"
-                            >
+                            <button class="confirm-delete-btn" @click="deleteCommentConfirmed"
+                                :disabled="isDeletingComment">
                                 {{
                                     isDeletingComment ? "Deleting..." : "Delete"
                                 }}
@@ -538,6 +374,8 @@ const props = defineProps({
 });
 
 // State variables
+const comments = ref([]);
+const commentsCount = ref(0);
 const post = ref(null);
 const posterror = ref(null);
 const postloading = ref(true);
@@ -631,8 +469,55 @@ const deletePost = async () => {
         showDeleteConfirmation.value = false;
     }
 };
+const loadComments = async () => {
+
+    commentsLoading.value = true;
+    commentsError.value = null;
+    commentsNeedRefresh.value = false;
+
+    try {
+        // Set up real-time comments subscription
+        const commentsUnsubscribe = subscribeToComments(
+            props.postId,
+            (result) => {
+                // Update comments reactively
+                comments.value = result.comments;
+                commentsError.value = result.error;
+                commentsLoading.value = result.loading;
+
+                // Update comment count
+                commentsCount.value = comments.value.length;
+            }
+        );
+
+        // Store unsubscribe function to clean up later
+        onBeforeUnmount(() => {
+            if (commentsUnsubscribe) {
+                commentsUnsubscribe();
+                console.log("Unsubscribed from comments");
+            }
+        });
+
+        // Load current user's avatar for the comment form
+        const currentUser = firebase.auth().currentUser;
+        if (currentUser) {
+            const userDoc = await db
+                .collection("users")
+                .doc(currentUser.uid)
+                .get();
+            const userData = userDoc.data();
+            currentUserAvatar.value = userData?.avatar || null;
+        }
+    } catch (error) {
+        console.error("Error setting up comments subscription:", error);
+        commentsError.value = error.message;
+        commentsLoading.value = false;
+    }
+}
+
 
 onMounted(() => {
+    loadComments(); // Load comments when the component mounts
     // Get post data with the composable
     const {
         post: postData,
@@ -682,7 +567,7 @@ onMounted(() => {
     watch(postLoad, (loading) => {
         postloading.value = loading;
     });
-    
+
     // Listen for auth state changes to update voting UI
     firebase.auth().onAuthStateChanged((user) => {
         if (user) {
@@ -691,21 +576,22 @@ onMounted(() => {
             userVote.value = null;
         }
     });
+
 });
 
 // Initialize the voting system
 const initializeVotingSystem = (userId) => {
     // Create a single voting instance to avoid duplication
     const votingSystem = usePostVoting(props.postId);
-    
+
     // Get current vote
     votingSystem.getCurrentUserVote(userId);
-    
+
     // Use the watch function to update local userVote state
     watch(votingSystem.userVote, (newVote) => {
         userVote.value = newVote;
     });
-    
+
     // Store references to the voting functions
     upvotePost = () => votingSystem.upvote(userId);
     downvotePost = () => votingSystem.downvote(userId);
@@ -721,7 +607,7 @@ const handleUpvote = async () => {
         alert("You must be logged in to vote");
         return;
     }
-    
+
     try {
         isVoting.value = true;
         await upvotePost();
@@ -738,7 +624,7 @@ const handleDownvote = async () => {
         alert("You must be logged in to vote");
         return;
     }
-    
+
     try {
         isVoting.value = true;
         await downvotePost();
@@ -856,12 +742,12 @@ function formatDate(timestamp) {
 
 // Comments functionality
 const showComments = ref(false);
-const comments = ref([]);
+
 const commentsLoading = ref(false);
 const commentsError = ref(null);
 const newCommentText = ref("");
 const addingComment = ref(false);
-const commentsCount = ref(0);
+
 const currentUserAvatar = ref(null);
 const showDeleteCommentConfirmation = ref(false);
 const commentToDeleteId = ref(null);
@@ -873,55 +759,10 @@ const addingReply = ref(false);
 const showAllComments = ref(false);
 const commentsNeedRefresh = ref(false);
 
+
 // Toggle comments visibility
 const toggleComments = async () => {
     showComments.value = !showComments.value;
-
-    // Load comments if showing and not already loaded or need refresh
-    if (showComments.value) {
-        commentsLoading.value = true;
-        commentsError.value = null;
-        commentsNeedRefresh.value = false;
-
-        try {
-            // Set up real-time comments subscription
-            const commentsUnsubscribe = subscribeToComments(
-                props.postId,
-                (result) => {
-                    // Update comments reactively
-                    comments.value = result.comments;
-                    commentsError.value = result.error;
-                    commentsLoading.value = result.loading;
-
-                    // Update comment count
-                    commentsCount.value = comments.value.length;
-                }
-            );
-
-            // Store unsubscribe function to clean up later
-            onBeforeUnmount(() => {
-                if (commentsUnsubscribe) {
-                    commentsUnsubscribe();
-                    console.log("Unsubscribed from comments");
-                }
-            });
-
-            // Load current user's avatar for the comment form
-            const currentUser = firebase.auth().currentUser;
-            if (currentUser) {
-                const userDoc = await db
-                    .collection("users")
-                    .doc(currentUser.uid)
-                    .get();
-                const userData = userDoc.data();
-                currentUserAvatar.value = userData?.avatar || null;
-            }
-        } catch (error) {
-            console.error("Error setting up comments subscription:", error);
-            commentsError.value = error.message;
-            commentsLoading.value = false;
-        }
-    }
 };
 
 // Submit a new comment
@@ -1085,7 +926,8 @@ const navigateToProfile = () => {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
     transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
     padding: 0;
-    height: 100%; /* Make sure all items have the same height in gallery mode */
+    height: 100%;
+    /* Make sure all items have the same height in gallery mode */
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -1142,7 +984,8 @@ const navigateToProfile = () => {
     border: 2px solid #3498db;
     box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
     transition: transform 0.3s ease, border-color 0.3s ease;
-    cursor: pointer; /* Add cursor pointer for clickable avatar */
+    cursor: pointer;
+    /* Add cursor pointer for clickable avatar */
 }
 
 .post-item:hover .avatar {
@@ -1163,7 +1006,8 @@ const navigateToProfile = () => {
     font-weight: 600;
     letter-spacing: 0.01em;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-    cursor: pointer; /* Add cursor pointer for clickable username */
+    cursor: pointer;
+    /* Add cursor pointer for clickable username */
 }
 
 .date {
@@ -1193,7 +1037,8 @@ const navigateToProfile = () => {
     position: relative;
     padding: 1.5rem;
     padding-top: 1rem;
-    padding-bottom: 2.5rem; /* Add padding to accommodate the vote container */
+    padding-bottom: 2.5rem;
+    /* Add padding to accommodate the vote container */
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -1201,28 +1046,29 @@ const navigateToProfile = () => {
 
 /* Gallery image top section */
 .gallery-image-top {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 180px;
-  width: 100%;
-  overflow: hidden;
-  z-index: 3; /* Above the gradient background */
-  border-radius: 10px 10px 0 0;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 180px;
+    width: 100%;
+    overflow: hidden;
+    z-index: 3;
+    /* Above the gradient background */
+    border-radius: 10px 10px 0 0;
 }
 
 .gallery-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
-  display: block;
-  transition: transform 0.5s ease;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+    transition: transform 0.5s ease;
 }
 
 .post-item.gallery-mode:hover .gallery-image {
-  transform: scale(1.08);
+    transform: scale(1.08);
 }
 
 .post-title {
@@ -1459,8 +1305,10 @@ const navigateToProfile = () => {
 
 .post-actions {
     margin-left: auto;
-    z-index: 21; /* Ensure it's above the type badge */
-    position: relative; /* Ensure z-index works */
+    z-index: 21;
+    /* Ensure it's above the type badge */
+    position: relative;
+    /* Ensure z-index works */
 }
 
 .delete-post-btn {
@@ -1511,13 +1359,14 @@ const navigateToProfile = () => {
 }
 
 @keyframes modalSlideIn {
-    from { 
-        transform: translateY(20px) scale(0.95); 
-        opacity: 0; 
+    from {
+        transform: translateY(20px) scale(0.95);
+        opacity: 0;
     }
-    to { 
-        transform: translateY(0) scale(1); 
-        opacity: 1; 
+
+    to {
+        transform: translateY(0) scale(1);
+        opacity: 1;
     }
 }
 
@@ -2030,6 +1879,7 @@ const navigateToProfile = () => {
     from {
         opacity: 0;
     }
+
     to {
         opacity: 1;
     }
@@ -2140,205 +1990,211 @@ const navigateToProfile = () => {
 
 /* Gallery mode styles */
 .post-item.gallery-mode {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  border-radius: 10px;
-  overflow: hidden;
-  border: 1px solid rgba(85, 93, 105, 0.5);
-  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
-  background-color: #0d1117;
-  position: relative;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid rgba(85, 93, 105, 0.5);
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+    background-color: #0d1117;
+    position: relative;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
 }
 
 .post-item.gallery-mode:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
-  border-color: #3498db;
+    transform: translateY(-8px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+    border-color: #3498db;
 }
 
 .post-item.gallery-mode .post-content-wrapper {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
 }
 
 /* Create placeholder for images */
 .post-item.gallery-mode::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 180px;
-  background: linear-gradient(120deg, #1e3a8a 0%, #1a2233 100%);
-  z-index: 1;
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 180px;
+    background: linear-gradient(120deg, #1e3a8a 0%, #1a2233 100%);
+    z-index: 1;
 }
 
 /* Image area at the top - moved to start of post structure */
 .post-item.gallery-mode .post-images {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 180px;
-  margin: 0;
-  padding: 0;
-  border-radius: 10px 10px 0 0;
-  overflow: hidden;
-  z-index: 2;
-  display: block; /* Changed from flex to block */
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 180px;
+    margin: 0;
+    padding: 0;
+    border-radius: 10px 10px 0 0;
+    overflow: hidden;
+    z-index: 2;
+    display: block;
+    /* Changed from flex to block */
 }
 
 /* Fixed image styling */
 .post-item.gallery-mode .post-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 0;
-  box-shadow: none;
-  border: none;
-  transition: transform 0.5s ease;
-  margin: 0; /* Reset margin */
-  object-position: center;
-  display: block; /* Ensure image displays properly */
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 0;
+    box-shadow: none;
+    border: none;
+    transition: transform 0.5s ease;
+    margin: 0;
+    /* Reset margin */
+    object-position: center;
+    display: block;
+    /* Ensure image displays properly */
 }
 
 .post-item.gallery-mode:hover .post-image {
-  transform: scale(1.08);
+    transform: scale(1.08);
 }
 
 /* User info overlay on image */
 .post-item.gallery-mode .user-info {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 5;
-  padding: 12px;
-  background: linear-gradient(to bottom, rgba(13, 17, 23, 0.9), rgba(13, 17, 23, 0.5) 60%, transparent);
-  border-bottom: none;
-  margin: 0;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 5;
+    padding: 12px;
+    background: linear-gradient(to bottom, rgba(13, 17, 23, 0.9), rgba(13, 17, 23, 0.5) 60%, transparent);
+    border-bottom: none;
+    margin: 0;
 }
 
 .post-item.gallery-mode .avatar {
-  width: 38px;
-  height: 38px;
-  border: 2px solid rgba(52, 152, 219, 0.8);
+    width: 38px;
+    height: 38px;
+    border: 2px solid rgba(52, 152, 219, 0.8);
 }
 
 .post-item.gallery-mode .username {
-  font-size: 0.95rem;
-  color: white;
-  font-weight: 600;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+    font-size: 0.95rem;
+    color: white;
+    font-weight: 600;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
 }
 
 .post-item.gallery-mode .date {
-  font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.8);
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.8);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
 }
 
 /* Type badge */
 .post-item.gallery-mode::after {
-  display: none; /* Hide gradient background when we have an image */
+    display: none;
+    /* Hide gradient background when we have an image */
 }
 
 /* Post type badges */
 .post-item.gallery-mode[data-post-type="project"]::after {
-  background-color: #3498db;
-  color: white;
+    background-color: #3498db;
+    color: white;
 }
 
 .post-item.gallery-mode[data-post-type="objective"]::after {
-  background-color: #f1c40f;
-  color: #1a2233;
+    background-color: #f1c40f;
+    color: #1a2233;
 }
 
 .post-item.gallery-mode[data-post-type="skill"]::after {
-  background-color: #2ecc71;
-  color: white;
+    background-color: #2ecc71;
+    color: white;
 }
 
 .post-item.gallery-mode[data-post-type="text"]::after {
-  background-color: #9b59b6;
-  color: white;
+    background-color: #9b59b6;
+    color: white;
 }
 
 /* Content area - always starts after image space */
 .post-item.gallery-mode .post-info {
-  padding: 16px;
-  margin-top: 180px; /* Fixed space for image area */
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  z-index: 3;
+    padding: 16px;
+    margin-top: 180px;
+    /* Fixed space for image area */
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    z-index: 3;
 }
 
 /* Don't display images in their normal location in gallery mode */
 .post-item.gallery-mode .post-info .post-images {
-  display: none;
+    display: none;
 }
 
 /* Add a duplicate of images at the top for gallery mode */
 .post-item.gallery-mode.has-image::before {
-  display: none; /* Hide gradient background when we have an image */
+    display: none;
+    /* Hide gradient background when we have an image */
 }
 
 .post-item.gallery-mode .post-title {
-  font-size: 1rem;
-  font-weight: 600;
-  margin-bottom: 8px;
-  line-height: 1.3;
-  display: -webkit-box;
-  line-clamp: 2;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-height: 2.6em;
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+    line-height: 1.3;
+    display: -webkit-box;
+    line-clamp: 2;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-height: 2.6em;
 }
 
 .post-item.gallery-mode .post-content {
-  font-size: 0.85rem;
-  color: #a0aec0;
-  margin-bottom: 12px;
-  display: -webkit-box;
-  line-clamp: 3;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  line-height: 1.5;
+    font-size: 0.85rem;
+    color: #a0aec0;
+    margin-bottom: 12px;
+    display: -webkit-box;
+    line-clamp: 3;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.5;
 }
 
 /* Footer and actions area */
 .post-item.gallery-mode .post-footer {
-  padding: 12px;
-  margin-top: auto;
-  background: rgba(16, 21, 31, 0.4);
-  border-top: 1px solid rgba(52, 152, 219, 0.1);
+    padding: 12px;
+    margin-top: auto;
+    background: rgba(16, 21, 31, 0.4);
+    border-top: 1px solid rgba(52, 152, 219, 0.1);
 }
 
 /* Media queries for gallery mode */
 @media (max-width: 768px) {
-  .post-item.gallery-mode .post-info {
-    padding: 12px;
-  }
-  
-  .post-item.gallery-mode .post-footer {
-    padding: 10px;
-  }
-  
-  .post-item.gallery-mode .post-title {
-    font-size: 0.95rem;
-  }
-  
-  .post-item.gallery-mode .post-content {
-    font-size: 0.8rem;
-  }
+    .post-item.gallery-mode .post-info {
+        padding: 12px;
+    }
+
+    .post-item.gallery-mode .post-footer {
+        padding: 10px;
+    }
+
+    .post-item.gallery-mode .post-title {
+        font-size: 0.95rem;
+    }
+
+    .post-item.gallery-mode .post-content {
+        font-size: 0.8rem;
+    }
 }
 
 /* Responsive design */
@@ -2346,11 +2202,11 @@ const navigateToProfile = () => {
     .post-item {
         padding: 0;
     }
-    
+
     .post-info {
         padding: 1rem 1.25rem 2.5rem;
     }
-    
+
     .user-info {
         padding: 1rem 1.25rem 0.5rem;
     }
@@ -2367,7 +2223,7 @@ const navigateToProfile = () => {
         width: 40px;
         height: 40px;
     }
-    
+
     .vote-container {
         left: 1.25rem;
     }
@@ -2376,7 +2232,7 @@ const navigateToProfile = () => {
         flex-direction: row;
         gap: 12px;
     }
-    
+
     .comment-actions {
         margin-left: 0;
     }
@@ -2416,48 +2272,48 @@ const navigateToProfile = () => {
     .user-info {
         padding: 0.75rem 1rem 0.5rem;
     }
-    
+
     .post-info {
         padding: 0.75rem 1rem 2.5rem;
     }
-    
+
     .avatar {
         width: 36px;
         height: 36px;
     }
-    
+
     .username {
         font-size: 0.95rem;
     }
-    
+
     .date {
         font-size: 0.8rem;
     }
-    
+
     .post-title {
         font-size: 1rem;
     }
-    
+
     .post-content {
         font-size: 0.9rem;
         line-height: 1.5;
     }
-    
-    .comment-btn, 
+
+    .comment-btn,
     .post-comment-btn,
     .post-reply-btn,
     .cancel-reply-btn {
         font-size: 0.8rem;
     }
-    
+
     .vote-container {
         left: 1rem;
     }
-    
+
     .post-actions-row {
         gap: 8px;
     }
-    
+
     .comment-item {
         padding: 12px 10px;
     }
@@ -2473,6 +2329,7 @@ const navigateToProfile = () => {
         opacity: 0;
         transform: translateY(20px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -2488,6 +2345,7 @@ const navigateToProfile = () => {
         opacity: 0;
         transform: translateY(-10px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -2496,306 +2354,307 @@ const navigateToProfile = () => {
 
 /* List mode styles - modernized and inspired by gallery mode */
 .post-item:not(.gallery-mode) {
-  background-color: #0d1117;
-  border: 1px solid rgba(85, 93, 105, 0.5);
-  border-radius: 12px;
-  margin-bottom: 1.5rem;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
-  overflow: hidden;
-  position: relative;
-  display: flex;
-  flex-direction: column;
+    background-color: #0d1117;
+    border: 1px solid rgba(85, 93, 105, 0.5);
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
 }
 
 .post-item:not(.gallery-mode):hover {
-  transform: translateY(-5px);
-  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.35);
-  border-color: #3498db;
+    transform: translateY(-5px);
+    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.35);
+    border-color: #3498db;
 }
 
 /* Improved user section for list mode */
 .post-item:not(.gallery-mode) .user-info {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 1.25rem 1.5rem 0.75rem;
-  background: linear-gradient(to right, rgba(26, 34, 51, 0.8), rgba(26, 34, 51, 0.4));
-  border-bottom: 1px solid rgba(85, 93, 105, 0.2);
-  border-radius: 12px 12px 0 0;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.25rem 1.5rem 0.75rem;
+    background: linear-gradient(to right, rgba(26, 34, 51, 0.8), rgba(26, 34, 51, 0.4));
+    border-bottom: 1px solid rgba(85, 93, 105, 0.2);
+    border-radius: 12px 12px 0 0;
 }
 
 .post-item:not(.gallery-mode) .avatar {
-  width: 48px;
-  height: 48px;
-  border: 2px solid #3498db;
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+    width: 48px;
+    height: 48px;
+    border: 2px solid #3498db;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
 }
 
 .post-item:not(.gallery-mode) .username {
-  font-size: 1.1rem;
-  color: #ffffff;
-  font-weight: 600;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    font-size: 1.1rem;
+    color: #ffffff;
+    font-weight: 600;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 .post-item:not(.gallery-mode) .date {
-  color: #7d8796;
-  font-size: 0.85rem;
+    color: #7d8796;
+    font-size: 0.85rem;
 }
 
 /* Improved content section for list mode */
 .post-item:not(.gallery-mode) .post-info {
-  padding: 1.25rem 1.5rem;
-  background: linear-gradient(135deg, rgba(16, 22, 36, 0.6), rgba(13, 17, 23, 0.9));
-  flex: 1;
+    padding: 1.25rem 1.5rem;
+    background: linear-gradient(135deg, rgba(16, 22, 36, 0.6), rgba(13, 17, 23, 0.9));
+    flex: 1;
 }
 
 .post-item:not(.gallery-mode) .post-title {
-  font-size: 1.3rem;
-  font-weight: 600;
-  margin-bottom: 0.8rem;
-  color: #ffffff;
-  line-height: 1.4;
-  letter-spacing: 0.01em;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin-bottom: 0.8rem;
+    color: #ffffff;
+    line-height: 1.4;
+    letter-spacing: 0.01em;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
 }
 
 /* Add post type badge inline with title */
 .post-item:not(.gallery-mode) .post-title::before {
-  content: attr(data-post-type);
-  background-color: rgba(52, 152, 219, 0.2);
-  color: #5dade2;
-  padding: 0.2rem 0.75rem;
-  border-radius: 20px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  border: 1px solid rgba(52, 152, 219, 0.3);
-  text-shadow: none;
+    content: attr(data-post-type);
+    background-color: rgba(52, 152, 219, 0.2);
+    color: #5dade2;
+    padding: 0.2rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: 1px solid rgba(52, 152, 219, 0.3);
+    text-shadow: none;
 }
 
 .post-item:not(.gallery-mode)[data-post-type="project"] .post-title::before {
-  background-color: rgba(52, 152, 219, 0.2);
-  color: #5dade2;
-  border-color: rgba(52, 152, 219, 0.3);
+    background-color: rgba(52, 152, 219, 0.2);
+    color: #5dade2;
+    border-color: rgba(52, 152, 219, 0.3);
 }
 
 .post-item:not(.gallery-mode)[data-post-type="objective"] .post-title::before {
-  background-color: rgba(241, 196, 15, 0.2);
-  color: #f4d03f;
-  border-color: rgba(241, 196, 15, 0.3);
+    background-color: rgba(241, 196, 15, 0.2);
+    color: #f4d03f;
+    border-color: rgba(241, 196, 15, 0.3);
 }
 
 .post-item:not(.gallery-mode)[data-post-type="skill"] .post-title::before {
-  background-color: rgba(46, 204, 113, 0.2);
-  color: #58d68d;
-  border-color: rgba(46, 204, 113, 0.3);
+    background-color: rgba(46, 204, 113, 0.2);
+    color: #58d68d;
+    border-color: rgba(46, 204, 113, 0.3);
 }
 
 .post-item:not(.gallery-mode)[data-post-type="text"] .post-title::before {
-  background-color: rgba(155, 89, 182, 0.2);
-  color: #bb8fce;
-  border-color: rgba(155, 89, 182, 0.3);
+    background-color: rgba(155, 89, 182, 0.2);
+    color: #bb8fce;
+    border-color: rgba(155, 89, 182, 0.3);
 }
 
 .post-item:not(.gallery-mode) .post-content {
-  font-size: 1rem;
-  line-height: 1.6;
-  color: #cfd8dc;
-  margin-bottom: 1.25rem;
+    font-size: 1rem;
+    line-height: 1.6;
+    color: #cfd8dc;
+    margin-bottom: 1.25rem;
 }
 
 /* Improved image display for list mode */
 .post-item:not(.gallery-mode) .post-images {
-  margin: 1rem 0;
-  width: 100%;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
-  background: linear-gradient(120deg, #1e3a8a 0%, #1a2233 100%);
-  max-height: 350px;
+    margin: 1rem 0;
+    width: 100%;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+    background: linear-gradient(120deg, #1e3a8a 0%, #1a2233 100%);
+    max-height: 350px;
 }
 
 .post-item:not(.gallery-mode) .post-image {
-  width: 100%;
-  border-radius: 8px;
-  object-fit: cover;
-  max-height: 350px;
-  transition: transform 0.5s ease;
-  display: block;
+    width: 100%;
+    border-radius: 8px;
+    object-fit: cover;
+    max-height: 350px;
+    transition: transform 0.5s ease;
+    display: block;
 }
 
 .post-item:not(.gallery-mode) .post-images:hover .post-image {
-  transform: scale(1.03);
+    transform: scale(1.03);
 }
 
 /* Improved type-specific sections for list mode */
 .post-item:not(.gallery-mode) .project-details,
 .post-item:not(.gallery-mode) .objective-details,
 .post-item:not(.gallery-mode) .skill-details {
-  border-radius: 8px;
-  padding: 1.25rem;
-  margin: 1rem 0;
-  background-color: rgba(16, 21, 31, 0.5);
-  backdrop-filter: blur(4px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  border-left: 4px solid #3498db;
+    border-radius: 8px;
+    padding: 1.25rem;
+    margin: 1rem 0;
+    background-color: rgba(16, 21, 31, 0.5);
+    backdrop-filter: blur(4px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    border-left: 4px solid #3498db;
 }
 
 .post-item:not(.gallery-mode) .project-details {
-  border-left-color: #3498db;
+    border-left-color: #3498db;
 }
 
 .post-item:not(.gallery-mode) .objective-details {
-  border-left-color: #f1c40f;
+    border-left-color: #f1c40f;
 }
 
 .post-item:not(.gallery-mode) .skill-details {
-  border-left-color: #2ecc71;
+    border-left-color: #2ecc71;
 }
 
 /* Improved footer section for list mode */
 .post-item:not(.gallery-mode) .post-footer {
-  padding: 0.75rem 1.5rem 1.25rem;
-  background: linear-gradient(to bottom, rgba(16, 21, 31, 0.2), rgba(16, 21, 31, 0.6));
-  border-top: 1px solid rgba(52, 152, 219, 0.1);
-  border-radius: 0 0 12px 12px;
+    padding: 0.75rem 1.5rem 1.25rem;
+    background: linear-gradient(to bottom, rgba(16, 21, 31, 0.2), rgba(16, 21, 31, 0.6));
+    border-top: 1px solid rgba(52, 152, 219, 0.1);
+    border-radius: 0 0 12px 12px;
 }
 
 .post-item:not(.gallery-mode) .post-actions-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-  margin-bottom: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 15px;
 }
 
 .post-item:not(.gallery-mode) .vote-container {
-  position: static;
-  display: flex;
-  align-items: center;
-  background-color: rgba(16, 21, 31, 0.7);
-  border-radius: 8px;
-  padding: 5px 10px;
-  border: 1px solid rgba(85, 93, 105, 0.5);
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+    position: static;
+    display: flex;
+    align-items: center;
+    background-color: rgba(16, 21, 31, 0.7);
+    border-radius: 8px;
+    padding: 5px 10px;
+    border: 1px solid rgba(85, 93, 105, 0.5);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
 }
 
 .post-item:not(.gallery-mode) .comment-btn {
-  margin-bottom: 0;
-  background-color: rgba(16, 21, 31, 0.7);
-  border: 1px solid rgba(52, 152, 219, 0.3);
-  border-radius: 8px;
-  padding: 8px 16px;
-  font-size: 0.95rem;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+    margin-bottom: 0;
+    background-color: rgba(16, 21, 31, 0.7);
+    border: 1px solid rgba(52, 152, 219, 0.3);
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .post-item:not(.gallery-mode) .comment-btn:hover {
-  background-color: rgba(52, 152, 219, 0.2);
-  transform: translateY(-2px);
+    background-color: rgba(52, 152, 219, 0.2);
+    transform: translateY(-2px);
 }
 
 /* Type badge common styles */
 .type-badge {
-  position: absolute;
-  padding: 5px 12px;
-  border-radius: 20px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-  z-index: 20;
+    position: absolute;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    z-index: 20;
 }
 
 /* Type badge for gallery mode */
 .post-item.gallery-mode .type-badge {
-  top: 150px;
-  right: 12px;
+    top: 150px;
+    right: 12px;
 }
 
 /* Type badge for list mode */
 .post-item:not(.gallery-mode) .type-badge {
-  top: 15px;
-  right: 60px; /* Adjust to avoid overlapping with the delete button */
+    top: 15px;
+    right: 60px;
+    /* Adjust to avoid overlapping with the delete button */
 }
 
 /* Type colors */
 .post-item.type-project .type-badge {
-  background-color: #3498db;
-  color: white;
+    background-color: #3498db;
+    color: white;
 }
 
 .post-item.type-objective .type-badge {
-  background-color: #f1c40f;
-  color: #1a2233;
+    background-color: #f1c40f;
+    color: #1a2233;
 }
 
 .post-item.type-skill .type-badge {
-  background-color: #2ecc71;
-  color: white;
+    background-color: #2ecc71;
+    color: white;
 }
 
 .post-item.type-text .type-badge {
-  background-color: #9b59b6;
-  color: white;
+    background-color: #9b59b6;
+    color: white;
 }
 
 /* Hide the pseudo-element type badges we created earlier */
 .post-item.gallery-mode::after {
-  display: none;
+    display: none;
 }
 
 .title-type-badge {
-  display: inline-block;
-  margin-left: 12px;
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  background-color: rgba(52, 152, 219, 0.15);
-  color: #5dade2;
-  border: 1px solid rgba(52, 152, 219, 0.3);
-  vertical-align: middle;
+    display: inline-block;
+    margin-left: 12px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background-color: rgba(52, 152, 219, 0.15);
+    color: #5dade2;
+    border: 1px solid rgba(52, 152, 219, 0.3);
+    vertical-align: middle;
 }
 
 .post-item.type-project .title-type-badge {
-  background-color: rgba(52, 152, 219, 0.15);
-  color: #5dade2;
-  border-color: rgba(52, 152, 219, 0.3);
+    background-color: rgba(52, 152, 219, 0.15);
+    color: #5dade2;
+    border-color: rgba(52, 152, 219, 0.3);
 }
 
 .post-item.type-objective .title-type-badge {
-  background-color: rgba(241, 196, 15, 0.15);
-  color: #f4d03f;
-  border-color: rgba(241, 196, 15, 0.3);
+    background-color: rgba(241, 196, 15, 0.15);
+    color: #f4d03f;
+    border-color: rgba(241, 196, 15, 0.3);
 }
 
 .post-item.type-skill .title-type-badge {
-  background-color: rgba(46, 204, 113, 0.15);
-  color: #58d68d;
-  border-color: rgba(46, 204, 113, 0.3);
+    background-color: rgba(46, 204, 113, 0.15);
+    color: #58d68d;
+    border-color: rgba(46, 204, 113, 0.3);
 }
 
 .post-item.type-text .title-type-badge {
-  background-color: rgba(155, 89, 182, 0.15);
-  color: #bb8fce;
-  border-color: rgba(155, 89, 182, 0.3);
+    background-color: rgba(155, 89, 182, 0.15);
+    color: #bb8fce;
+    border-color: rgba(155, 89, 182, 0.3);
 }
 
 /* Hide the standalone type badge when we show it inline with title */
 .post-item:not(.gallery-mode) .type-badge {
-  display: none;
+    display: none;
 }
 </style>
