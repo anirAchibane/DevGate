@@ -17,7 +17,10 @@
             </div>
             <p class="last-message" :class="{ 'unread-message': hasUnreadMessages }">
                 <span v-if="loading" class="loading-message">Loading...</span>
-                <span v-else>{{ chat.lastMessage?.content || "No messages yet" }}</span>
+                <span v-else>
+                    <span v-if="isCurrentUserLastSender" class="message-sender">You: </span>
+                    {{ chat.lastMessage?.content || "No messages yet" }}
+                </span>
             </p>
         </div>
     </div>
@@ -55,6 +58,14 @@ const unreadCount = computed(() => {
         return 0;
     }
     return props.chat.unreadMessages[currentUserId];
+});
+
+// Computed property to check if the current user is the last sender
+const isCurrentUserLastSender = computed(() => {
+    const currentUserId = auth.currentUser?.uid;
+
+    // Check against sender_id (not senderId) based on the database field name
+    return currentUserId && props.chat?.lastMessage?.sender_id === currentUserId;
 });
 
 onMounted(() => {
@@ -154,8 +165,12 @@ const formatTime = (timestamp) => {
     border-color: var(--primary-color);
 }
 
-
-
+.message-sender {
+    font-weight: 600;
+    color: var(--primary-color);
+    display: inline;
+    /* Ensure it displays inline */
+}
 
 .conversation-content {
     flex-grow: 1;
