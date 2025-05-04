@@ -120,7 +120,19 @@
             <h5>Skills</h5>
           </div>
           <div class="card-body">
-            <div class="skills">
+            <!-- Loading state for skills -->
+            <div v-if="skillsLoading" class="section-loading">
+              <LoadingOverlay message="Loading skills..." transparent />
+            </div>
+            <div v-else class="skills">
+              <div v-if="userSkills.length === 0" class="empty-state">
+                <i class="fas fa-code"></i>
+                <p>No skills yet</p>
+                <button v-if="isCurrent" @click="navigateToAdd('Skill')" class="btn btn-outline-primary btn-sm">
+                  <i class="fas fa-plus-circle me-1"></i> Add Skill
+                </button>
+                <p v-else class="empty-state-message">This user hasn't added any skills yet</p>
+              </div>
               <div v-for="(skill, index) in userSkills" :key="skill.id" class="skill mb-2">
                 <template v-if="editingSkillIndex === index">
                   <div class="edit-skill-form p-3 bg-dark text-white rounded shadow-sm mb-3">
@@ -175,7 +187,19 @@
             <h5>Projects</h5>
           </div>
           <div class="card-body">
-            <div class="projects">
+            <!-- Loading state for projects -->
+            <div v-if="projectsLoading" class="section-loading">
+              <LoadingOverlay message="Loading projects..." transparent />
+            </div>
+            <div v-else class="projects">
+              <div v-if="userProjects.length === 0" class="empty-state">
+                <i class="fas fa-project-diagram"></i>
+                <p>No projects yet</p>
+                <button v-if="isCurrent" @click="navigateToAdd('Project')" class="btn btn-outline-primary btn-sm">
+                  <i class="fas fa-plus-circle me-1"></i> Add Project
+                </button>
+                <p v-else class="empty-state-message">This user hasn't added any projects yet</p>
+              </div>
               <div v-for="(project, index) in userProjects" :key="project.id" class="project mb-3 p-3 border rounded bg-secondary">
                 <template v-if="editingProjectIndex === index">
                   <div class="edit-project-form p-3 bg-dark text-white rounded shadow-sm mb-3">
@@ -252,7 +276,19 @@
             <h5>Objectives</h5>
           </div>
           <div class="card-body">
-            <div class="objectives">
+            <!-- Loading state for objectives -->
+            <div v-if="objectivesLoading" class="section-loading">
+              <LoadingOverlay message="Loading objectives..." transparent />
+            </div>
+            <div v-else class="objectives">
+              <div v-if="userObjectives.length === 0" class="empty-state">
+                <i class="fas fa-bullseye"></i>
+                <p>No objectives yet</p>
+                <button v-if="isCurrent" @click="navigateToAdd('Objective')" class="btn btn-outline-primary btn-sm">
+                  <i class="fas fa-plus-circle me-1"></i> Add Objective
+                </button>
+                <p v-else class="empty-state-message">This user hasn't added any objectives yet</p>
+              </div>
               <div v-for="(objective, index) in userObjectives" :key="objective.id" class="objective mb-3 p-3 border rounded bg-secondary">
                 <template v-if="editingObjectiveIndex === index">
                   <div class="edit-objective-form p-3 bg-dark text-white rounded shadow-sm mb-3">
@@ -320,6 +356,16 @@
                   </template>
               </div>
             </div>
+          </div>
+        </div>
+
+        <!-- Dev.to Articles (moved to bottom) -->
+        <div v-if="isCurrent" class="card text-white bg-dark mb-4 edit-card">
+          <div class="card-header">
+            <h5>Dev.to Articles</h5>
+          </div>
+          <div class="card-body">
+            <DevToArticles :userId="userId" />
           </div>
         </div>
 
@@ -572,6 +618,7 @@ import LevelProgressionChart from "@/components/charts/LevelProgressionChart.vue
 import ProjectCompletionChart from "@/components/charts/ProjectCompletionChart.vue";
 import ContributionHeatmap from "@/components/charts/ContributionHeatmap.vue";
 import LoadingOverlay from "@/components/LoadingOverlay.vue";
+import DevToArticles from "@/components/DevToArticles.vue";
 
 // Import analytics composables
 import useSkillsAnalytics from "@/composables/analytics/useSkillsAnalytics";
@@ -648,7 +695,8 @@ const {
 
 const {
     projectsData,
-    isLoading: projectsLoading,
+    // eslint-disable-next-line no-unused-vars
+    isLoading: projectsDataLoading,
     fetchProjectData,
 } = useProjectCompletionStats();
 
@@ -666,6 +714,9 @@ const showLevelSystem = ref(false);
 const completedProjectCount = computed(() => {
   return userProjects.value.length;
 });
+
+const objectivesLoading = ref(true);
+const projectsLoading = ref(true);
 
 watch(() => route.params.id, (newId) => {
   userId.value = newId;
@@ -763,6 +814,9 @@ const loadProfileData = async () => {
     
   } catch (error) {
     console.error("Error fetching user data:", error);
+  } finally {
+    projectsLoading.value = false;
+    objectivesLoading.value = false;
   }
 };
 
@@ -1100,7 +1154,15 @@ const scrollToSkills = () => {
   }
 };
 
-
+// Function to navigate to Add New page with type preselected
+const navigateToAdd = (type) => {
+  if (auth.currentUser) {
+    router.push({
+      path: `/add/${auth.currentUser.uid}`,
+      query: { type }
+    });
+  }
+};
 
 // Level system modal
 const levelSystemInfo = {
@@ -2019,6 +2081,49 @@ body,
 .objective-actions { 
   display: flex; 
   gap: 8px; 
+}
+
+/* Empty state styling */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 30px 20px;
+  border-radius: 6px;
+  background-color: rgba(33, 38, 45, 0.4);
+  border: 1px dashed var(--github-border);
+  text-align: center;
+}
+
+.empty-state i {
+  font-size: 32px;
+  color: var(--github-secondary-text);
+  margin-bottom: 16px;
+}
+
+.empty-state p {
+  font-size: 16px;
+  color: var(--github-secondary-text);
+  margin-bottom: 16px;
+}
+
+.empty-state .btn-outline-primary {
+  background-color: transparent;
+  border: 1px solid var(--github-link);
+  color: var(--github-link);
+  transition: all 0.2s ease;
+}
+
+.empty-state .btn-outline-primary:hover {
+  background-color: rgba(56, 139, 253, 0.1);
+  border-color: #58a6ff;
+}
+
+.empty-state-message {
+  font-size: 14px;
+  color: var(--github-secondary-text);
+  font-style: italic;
 }
 
 </style>
