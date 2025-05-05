@@ -1,6 +1,13 @@
-# devgatee
+# DevGate
 
+## Deployement URL
 https://devgate-6df87.web.app/
+
+## Members
+- Manal ZAIDI
+- Youssef BENTALEB
+- Youssef GUERAIRATE
+- Anir ACHIBANE
 
 ## Project setup
 ```
