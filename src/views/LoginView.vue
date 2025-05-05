@@ -3,7 +3,11 @@
         <div class="auth-card-wrapper">
             <div class="auth-card">
                 <div class="auth-header">
-                    <h1>Login</h1>
+                    <div class="logo-container">
+                        <img src="@/assets/devgate_logo.png" alt="DevGate Logo" class="auth-logo">
+                    </div>
+                    <h1>Welcome Back</h1>
+                    <p class="auth-subtitle">Sign in to continue your developer journey</p>
                 </div>
 
                 <!-- ALERTS -->
@@ -633,5 +637,36 @@ const signInWithGitHub = async () => {
 
 .btn-github i {
     font-size: 1.3rem;
+}
+
+.logo-container {
+    margin-bottom: 1.5rem;
+    display: flex;
+    justify-content: center;
+}
+
+.auth-logo {
+    width: 120px;
+    height: auto;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+    transition: transform 0.3s ease;
+    animation: float 3s ease-in-out infinite;
+}
+
+.auth-logo:hover {
+    transform: scale(1.05);
+}
+
+@keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-8px); }
+    100% { transform: translateY(0px); }
+}
+
+.auth-subtitle {
+    color: #a0aec0;
+    font-size: 1.1rem;
+    margin-top: 0.5rem;
+    margin-bottom: 1.5rem;
 }
 </style>
