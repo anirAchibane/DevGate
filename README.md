@@ -1,4 +1,5 @@
 # DevGate
+A web app solution where developers can interact, share their projects, progress and achivements.
 
 ## Deployement URL
 https://devgate-6df87.web.app/
